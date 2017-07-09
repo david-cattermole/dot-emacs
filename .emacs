@@ -1,5 +1,4 @@
 ;; .emacs
-;; Time-stamp: <2014-01-05 18:34:08 davidc>
 
 ;;; uncomment this line to disable loading of "default.el" at startup
 ;; (setq inhibit-default-init t)
@@ -45,6 +44,9 @@
  '(mouse-wheel-mode t)
  '(require-final-newline (quote query))
  '(show-paren-mode t)
+ '(speedbar-frame-parameters (quote ((minibuffer) (width . 50) (border-width . 0) (menu-bar-lines . 0) (tool-bar-lines . 0) (unsplittable . t) (left-fringe . 0))))
+ '(speedbar-indentation-width 2)
+ '(speedbar-use-images nil)
  '(uniquify-buffer-name-style (quote forward) nil (uniquify)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -95,12 +97,44 @@
 ;; editing based on visual lines
 ;; (global-visual-line-mode t)
 
-;; Set Subword as default
+;; ;; Set Subword as default
 ;; (global-subword-mode t)
 
 ;; ;; Code Folding (using "folding")
 ;; (load "folding" 'nomessage 'noerror)
 ;; (folding-mode-add-find-file-hook)
+
+;; Add MELPA package repo (latest)
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+;; ;; Add MELPA package repo (stable)
+;; (require 'package)
+;; (add-to-list 'package-archives
+;;              '("melpa-stable" . "https://stable.melpa.org/packages/"))
+;; ;; Dracula-Theme
+;; (add-to-list 'custom-theme-load-path "~davidc/bin/emacsLisp/themes")
+;; (load-theme 'dracula t)
+;; (load-file "~davidc/bin/emacsLisp/themes/dracula-theme.el")
+;; (color-theme-dracula)
+
+
+;; Auto-Complete setup
+(require 'auto-complete)
+(global-auto-complete-mode 1)
+(setq ac-auto-start 2)  ;; start completion when entered 3 characters
+(setq ac-dwim t)  ;; "do what I mean"
+(defun my-auto-complete-hook ()
+  (auto-complete-mode 1)
+  ;; (local-set-key "\t" 'ac-complete)
+  (local-set-key [(control return)] 'hippie-expand)
+  (local-set-key [(meta return)] 'ac-complete)
+  ;; (local-set-key [(meta return)] 'ac-complete-imenu)
+  ;; (local-set-key "." 'auto-complete)
+  ;; (local-set-key ">" 'auto-complete)
+  ;; (local-set-key [(control return)] 'ac-complete)
+  )
+(add-hook 'c-mode-common-hook 'my-auto-complete-hook)
+
 
 ;; mel-mode hook
 (load-library '"$HOME/emacsLisp/mel-mode") ;; manually load the libray
@@ -112,18 +146,35 @@
 (add-to-list 'auto-mode-alist '("\\.rib$" . rib-mode))
 (autoload 'rib-mode "rib-mode" nil t)
 
+;; Graphviz DOT Mode
+(add-to-list 'auto-mode-alist '("\\.dot$" . graphviz-dot-mode))
+(autoload 'graphviz-dot-mode "graphviz-dot-mode" nil t)
+
 ;; rsl-mode
-;; (add-to-list 'auto-mode-alist '("\\.sl$" . rsl-mode))
-;; (autoload 'rsl-mode "rsl-mode" nil t)
 (load-library '"$HOME/emacsLisp/rsl-mode") ;; manually load the libray
 (autoload 'rsl-mode "rsl-mode" "RenderMan Shading Language Editing Mode" t)
 (setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
 (autoload 'rsl-mode "rsl-mode" nil t)
 
+;; Task Juggler Project Files.
+(load-library '"$HOME/emacsLisp/taskjuggler-mode") ;; manually load the libray
+;; (autoload 'tjp-mode "tjp-mode" "Task Juggler Project" t)
+;; (setq auto-mode-alist (append '(("\\.tjp$" . tjp-mode)) auto-mode-alist))
+;; (autoload 'tjp-mode "tjp-mode" nil t)
+
 ;; ;; Newest version of python-mode
-;; (add-to-list 'load-path "$HOME/bin/emacsLisp/python-mode-6.1.2/") 
-;; (setq py-install-directory "$HOME/bin/emacsLisp/python-mode-6.1.2/")
+;; (add-to-list 'load-path "$HOME/emacsLisp/python-mode-6.1.2/") 
+;; (setq py-install-directory "$HOME/emacsLisp/python-mode-6.1.2/")
 ;; (require 'python-mode)
+
+; cmake-mode for "CMakeLists.txt" files.
+(setq auto-mode-alist
+	  (append
+	   '(("CMakeLists\\.txt\\'" . cmake-mode))
+	   '(("\\.cmake\\'" . cmake-mode))
+	   auto-mode-alist))
+;; (autoload 'cmake-mode "cmake-mode" nil t)
+(autoload 'cmake-mode "/usr/share/cmake/editors/emacs/cmake-mode.el" t)
 
 ;; Text Hooks
 (add-hook 'text-mode-hook 'turn-on-flyspell)
@@ -140,44 +191,43 @@
 	    (linum-mode 1)
 	    (imenu-add-to-menubar "Functions")))
 
-;; C Hook
-(add-hook 'c-mode-hook 
-	  (lambda () 
+;; C and C++ Hook
+(add-hook 'c-mode-common-hook
+	  (lambda ()
 	    (flyspell-prog-mode)
 	    (linum-mode 1)
-	    (hs-minor-mode 1)
+	    (cwarn-mode 1)
+	    (semantic-mode 1)
+	    ;; (company-mode 1)
 	    (imenu-add-to-menubar "Functions")
 	    (c-toggle-electric-state 1)
-	    (c-toggle-auto-newline 0)
-	    (c-toggle-auto-hungry-state 1)
-	    (c-toggle-syntactic-indentation 1)))
-
-;; C++ Hook
-(add-hook 'c++-mode-hook 
-	  (lambda () 
-	    (flyspell-prog-mode)
-	    (linum-mode 1)
-	    (hs-minor-mode 1)
-	    (imenu-add-to-menubar "Functions")
-	    (c-toggle-electric-state 1)
-	    (c-toggle-auto-newline 0)
+	    (c-toggle-auto-newline 1)
 	    (c-toggle-auto-hungry-state 1)
 	    (c-toggle-syntactic-indentation 1)))
 
 ;; MEL Hook
-(add-hook 'mel-mode-hook 
-	  (lambda () 
+(add-hook 'mel-mode-hook
+	  (lambda ()
 	    (flyspell-prog-mode)
 	    (linum-mode 1)
-	    (hs-minor-mode 1)
+	    ;; (hs-minor-mode 1)
 	    (imenu-add-to-menubar "Functions")
 	    (c-toggle-electric-state 1)
 	    (c-toggle-auto-newline 0)
 	    (c-toggle-auto-hungry-state 1)
 	    (c-toggle-syntactic-indentation 1)))
 
-;; Emacs For Python
-;; (load-file "$HOME/bin/emacsLisp/emacsForPython/epy-init.el")
+
+;; ;; Emacs For Python
+;; (load-file "~$HOME/emacsLisp/emacsForPython/epy-init.el")
+
+;; Fullscreen
+(defun fullscreen (&optional f)
+  (interactive)
+  (set-frame-parameter f 'fullscreen
+		       (if (frame-parameter f 'fullscreen) nil 'fullboth)))
+;(add-hook 'after-make-frame-functions 'fullscreen) ;; on startup
+(global-set-key [f11] 'fullscreen)
 
 (global-set-key "\C-f" 'compile)
 (global-set-key [ (f1) ] 'previous-buffer)
@@ -192,8 +242,8 @@
 ;; Ctrl+tab mapped to Alt+tab
 (define-key function-key-map [(control tab)] [?\M-\t])
 
-;; Timestamp
-(add-hook 'before-save-hook 'time-stamp)
+;; ;; Timestamp
+;; (add-hook 'before-save-hook 'time-stamp)
 
 ;; HideShow shortcuts.
 ;; Note: We could have problems overriding keys, 
@@ -212,9 +262,13 @@
 ;; remove the toolbar from the GUI
 ;; (tool-bar-mode nil)
 
-;; ;; Startup the Speedbar
-;; (speedbar-frame-mode)
+;; Startup the Speedbar
+;; (speedbar)
+;; (require 'speedbar)
+;; (speedbar-change-initial-expansion-list "quick buffers")
 
 ;; ;; run a shell
 ;; (shell)
 
+;; ;; CScope
+;; (require 'xcscope)
