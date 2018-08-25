@@ -37,7 +37,6 @@
  '(indicate-empty-lines t)
  '(inhibit-startup-screen t)
  '(inverse-video t)
- '(ispell-dictionary "british")
  '(ispell-highlight-face (quote flyspell-incorrect))
  '(ispell-program-name "aspell")
  '(keyboard-coding-system (quote utf-8-unix))
@@ -60,6 +59,12 @@
 
 ;; FROM HERE ON DOWN, THIS IS CUSTOM
 
+;; ;; variable to determine which operating system we are running on.
+;; (setq running-windows (or (eq system-type 'windows-nt)
+;;                              (eq system-type 'ms-dos)
+;;                              (eq system-type 'cygwin)))
+;; (setq running-linux (eq system-type 'gnu/linux))
+
 ;; find some files, add to the "load-librapath".
 (setq load-path (cons "$HOME/emacsLisp" load-path))
 
@@ -71,7 +76,7 @@
 (setq ispell-program-name "aspell")
 
 ;; Fix flyspell problem
-(setq flyspell-issue-welcome-flag nil) 
+(setq flyspell-issue-welcome-flag nil)
 
 ;; Sets Emacs to show the column and line number at the bottom bar.
 (column-number-mode t)
@@ -102,8 +107,8 @@
 
 ;; rsl-mode - RenderMan Shading Language
 (load-library '"$HOME/emacsLisp/rsl-mode") ;; manually load the libray
-(setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
 (autoload 'rsl-mode "rsl-mode" "RenderMan Shading Language" t)
+(setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
 
 ;; Mathematica support (*.m files)
 (load-file "$HOME/emacsLisp/wolfram-mode.el")
@@ -111,14 +116,11 @@
 (add-to-list 'auto-mode-alist '("\.m$" . wolfram-mode))
 
 ;; cmake-mode for "CMakeLists.txt" files.
-(if (eq system-type 'gnu/linux)
-    ((setq auto-mode-alist
-	  (append
-	   '(("CMakeLists\\.txt\\'" . cmake-mode))
-	   '(("\\.cmake\\'" . cmake-mode))
-	   auto-mode-alist))
-     (autoload 'cmake-mode "/usr/share/cmake/editors/emacs/cmake-mode.el" t))
-)
+(load-library '"$HOME/emacsLisp/cmake-mode") ;; manually load the libray
+(setq auto-mode-alist
+      (append '(("CMakeLists\\.txt\\'" . cmake-mode)
+                ("\\.cmake\\'" . cmake-mode))
+              auto-mode-alist))
 
 ;; Task Juggler Project Files.
 (load-library '"$HOME/emacsLisp/taskjuggler-mode") ;; manually load the libray
@@ -130,45 +132,45 @@
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 
 ;; Python Hook
-(add-hook 'python-mode-hook 
-	  (lambda () 
-	    (flyspell-prog-mode)
-	    (subword-mode 1)
-	    (linum-mode 1)
-	    (imenu-add-to-menubar "Functions")))
+(add-hook 'python-mode-hook
+          (lambda ()
+            (flyspell-prog-mode)
+            (subword-mode 1)
+            (linum-mode 1)
+            (imenu-add-to-menubar "Functions")))
 
 ;; C and C++ Hook
 (add-hook 'c-mode-common-hook
-	  (lambda ()
-	    (flyspell-prog-mode)
-	    (linum-mode 1)
-	    (cwarn-mode 1)
-	    (semantic-mode 1)
-	    (subword-mode 1)
-	    (imenu-add-to-menubar "Functions")
-	    (c-set-style "k&r")
-	    (c-toggle-electric-state 1)
-	    (c-toggle-auto-newline 0)
-	    (c-toggle-auto-hungry-state 1)
-	    (c-toggle-syntactic-indentation 1)))
+          (lambda ()
+            (flyspell-prog-mode)
+            (linum-mode 1)
+            (cwarn-mode 1)
+            (semantic-mode 1)
+            (subword-mode 1)
+            (imenu-add-to-menubar "Functions")
+            (c-set-style "k&r")
+            (c-toggle-electric-state 1)
+            (c-toggle-auto-newline 0)
+            (c-toggle-auto-hungry-state 1)
+            (c-toggle-syntactic-indentation 1)))
 
 ;; MEL Hook
 (add-hook 'mel-mode-hook
-	  (lambda ()
-	    (flyspell-prog-mode)
-	    (linum-mode 1)
-	    (subword-mode 1)
-	    (imenu-add-to-menubar "Functions")
-	    (c-toggle-electric-state 1)
-	    (c-toggle-auto-newline 0)
-	    (c-toggle-auto-hungry-state 1)
-	    (c-toggle-syntactic-indentation 1)))
+          (lambda ()
+            (flyspell-prog-mode)
+            (linum-mode 1)
+            (subword-mode 1)
+            (imenu-add-to-menubar "Functions")
+            (c-toggle-electric-state 1)
+            (c-toggle-auto-newline 0)
+            (c-toggle-auto-hungry-state 1)
+            (c-toggle-syntactic-indentation 1)))
 
 ;; Fullscreen
 (defun fullscreen (&optional f)
   (interactive)
   (set-frame-parameter f 'fullscreen
-		       (if (frame-parameter f 'fullscreen) nil 'fullboth)))
+                       (if (frame-parameter f 'fullscreen) nil 'fullboth)))
 (global-set-key [f11] 'fullscreen)
 ;; (add-hook 'after-make-frame-functions 'fullscreen) ;; on startup
 ;; (global-set-key [ (f11) ] 'toggle-fullscreen) ;; won't work, WHY!?
