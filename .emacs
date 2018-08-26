@@ -128,6 +128,9 @@
 (setq auto-mode-alist (append '(("\\.tjp$" . tjp-mode)) auto-mode-alist))
 (autoload 'tjp-mode "tjp-mode" nil t)
 
+;; Flychecker
+(add-hook 'after-init-hook #'global-flycheck-mode)
+
 ;; Text Hooks
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 
@@ -192,3 +195,14 @@
 (setq org-log-done t)
 (setq org-agenda-files (list "$HOME/org/work.org"
                              "$HOME/org/home.org"))
+
+;; MELPA Packages for Emacs 24+ only
+(require 'package)
+(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+                    (not (gnutls-available-p))))
+       (proto (if no-ssl "http" "https")))
+  (add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
+  (when (< emacs-major-version 24)
+    ;; For important compatibility libraries like cl-lib
+    (add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))))
+(package-initialize)
