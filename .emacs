@@ -50,7 +50,7 @@
  '(ispell-dictionary "en_US")
  '(ispell-highlight-face (quote flyspell-incorrect))
  '(ispell-program-name
-   "C:/Program Files (x86)/Hunspell/hunspell-mingw-1.3.2-win32/bin/hunspell" t)
+   "C:/Hunspell/hunspell.exe" t)
  '(keyboard-coding-system (quote utf-8-unix))
  '(mouse-wheel-mode t)
  '(package-selected-packages
@@ -75,6 +75,14 @@
 
 ;; FROM HERE ON DOWN, THIS IS CUSTOM
 
+(setq-default ispell-hunspell-dict-paths-alist
+	      '(
+		("default" "C:\\Hunspell\\default.aff")
+		("en_US" "C:\\Hunspell\\en_US.aff")
+		("en_AU" "C:\\Hunspell\\en_AU.aff")
+        ("en_GB" "C:\\Hunspell\\en_GB.aff")
+		))
+
 ;; Do not save back up files.
 (setq make-backup-files nil)
 
@@ -87,9 +95,6 @@
 ;; Up/Down Case is not disabled!
 (put 'downcase-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
-
-;; Set the default spell checking program to aspell.
-(setq ispell-program-name "aspell")
 
 ;; Fix flyspell problem
 (setq flyspell-issue-welcome-flag nil)
