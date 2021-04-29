@@ -124,7 +124,7 @@
 
 ;; Windows Commands Scripts (.bat)
 (autoload 'dos-mode "dos" "Edit Windows DOS scripts." t)
-(add-to-list 'auto-mode-alist '("\\.bat$" . dos-mode))
+(add-to-list 'auto-mode-alist '("\\.bat$" . bat-mode))
 
 ;; GLSL - OpenGL Shaders
 (autoload 'glsl-mode "glsl-mode" nil t)
