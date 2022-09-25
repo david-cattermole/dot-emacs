@@ -1,131 +1,164 @@
-;; .emacs
+;; .emacs.d/init.el
 
 ;;; uncomment this line to disable loading of "default.el" at startup
 ;; (setq inhibit-default-init t)
 
-;; enable visual feedback on selections
-;(setq transient-mark-mode t)
+;; Move customization variables to a separate file and load it
+(setq custom-file (locate-user-emacs-file "custom-vars.el"))
+(load custom-file 'noerror 'nomessage)
 
-;; default to better frame titles
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Custom Settings.
 
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
-(require 'package)
-(add-to-list
- 'package-archives
- '("melpa" . "http://melpa.org/packages/") t)
-(package-initialize)
-
-(setq frame-title-format
-      (concat  "%b - emacs@" (system-name)))
-
-;; default to unified diffs
-(setq diff-switches "-u")
-
-;; always end a file with a newline
-(setq require-final-newline 'query)
-
-;;; uncomment for CJK utf-8 support for non-Asian users
-;; (require 'un-define)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(baud-rate 19200)
- '(column-number-mode t)
- '(default-major-mode (quote text-mode) t)
- '(display-time-mode t)
- '(eol-mnemonic-dos "(DOS)")
- '(eol-mnemonic-mac "(Mac)")
- '(flyspell-issue-welcome-flag nil t)
- '(focus-follows-mouse nil)
- '(fringe-mode (quote (0)) nil (fringe))
- '(global-auto-complete-mode nil)
- '(indicate-buffer-boundaries (quote right))
- '(indicate-empty-lines t)
- '(inhibit-startup-screen t)
- '(ispell-dictionary "en_US")
- '(ispell-highlight-face (quote flyspell-incorrect))
- '(ispell-program-name
-   "C:/Hunspell/hunspell.exe" t)
- '(keyboard-coding-system (quote utf-8-unix))
- '(mouse-wheel-mode t)
- '(package-selected-packages
-   (quote
-    (typescript-mode yaml-mode markdown-mode ox-pandoc ox-slimhtml ox-wk flymake-python-pyflakes flycheck-pycheckers darcula-theme csv cpputils-cmake company-dict cmake-project cmake-ide cmake-mode cargo flycheck-rust csv-mode gited dired-git-info diff-hl company)))
- '(require-final-newline (quote query))
- '(show-paren-mode t)
- '(speedbar-frame-parameters
-   (quote
-    ((minibuffer)
-     (width . 50)
-     (border-width . 0)
-     (menu-bar-lines . 0)
-     (tool-bar-lines . 0)
-     (unsplittable . t)
-     (left-fringe . 0))))
- '(speedbar-indentation-width 2)
- '(speedbar-use-images nil)
- '(tab-width 4)
- '(tool-bar-mode nil)
- '(uniquify-buffer-name-style (quote forward) nil (uniquify)))
-
-;; FROM HERE ON DOWN, THIS IS CUSTOM
-
-(setq-default ispell-hunspell-dict-paths-alist
-	      '(
-		("default" "C:\\Hunspell\\default.aff")
-		("en_US" "C:\\Hunspell\\en_US.aff")
-		("en_AU" "C:\\Hunspell\\en_AU.aff")
-        ("en_GB" "C:\\Hunspell\\en_GB.aff")
-		))
-
-;; Do not save back up files.
-(setq make-backup-files nil)
-
-;; Black is the background colour
-(invert-face 'default)
-
-;; find some files, add to the "load-librapath".
-(setq load-path (cons "~/emacsLisp" load-path))
-
-;; Up/Down Case is not disabled!
-(put 'downcase-region 'disabled nil)
-(put 'upcase-region 'disabled nil)
-
-;; Fix flyspell problem
-(setq flyspell-issue-welcome-flag nil)
-
-;; Sets Emacs to show the column and line number at the bottom bar.
-(column-number-mode t)
-
-;; Make org-mode default
+;; Use org-mode for new buffers.
 (setq default-major-mode 'org-mode)
 
-;; Use spaces, not tabs.
-(setq-default indent-tabs-mode nil)
+'(global-auto-complete-mode nil)
 
-;; Display one tab character as N number of spaces; what is the tab
+;; Don't show the Emacs toolbar or start-up screen.
+(tool-bar-mode -1)
+'(inhibit-startup-screen t)
+
+(mouse-wheel-mode t)  ;; Allow use of mouse scroll wheel.
+(display-time-mode t)  ;; Display the time at the bottom of Emacs.
+(global-subword-mode t)  ;; Treat camelCase words as "camel" and "case".
+(setq show-paren-mode t)   ;; Show highlights for matching brackets ().
+(setq show-paren-style 'mixed)  ;; Highlight the matching parenthesis if it
+                           ;; is visible, or the body otherwise.
+
+(setq require-final-newline 'query)  ;; Ask the user to enter a newline or not.
+
+;; How to auto-name conflicting buffer names.
+'(uniquify-buffer-name-style 'forward nil (uniquify))
+
+;; Set up the fringe (sides of an Emacs buffer)
+'(fringe-mode '(0) nil (fringe))
+'(indicate-buffer-boundaries 'right)
+'(indicate-empty-lines t)
+
+(setq transient-mark-mode t)  ;; enable visual feedback on selections
+(setq frame-title-format ;; Default to better frame titles
+      (concat "%b - emacs@" (system-name)))
+(setq diff-switches "-u")  ;; default to unified diffs
+(setq make-backup-files nil)  ;; Do not save back up files.
+(invert-face 'default)        ;; Black is the background colour
+(put 'downcase-region 'disabled nil) ;; Up/Down Case is not disabled!
+(put 'upcase-region 'disabled nil)
+(setq ispell-program-name "aspell")  ;; Set the default spell checking
+                                     ;; program to aspell.
+(setq flyspell-issue-welcome-flag nil)  ;; Fix flyspell problem
+(column-number-mode t)  ;; Sets Emacs to show the column and line
+                        ;; number at the bottom bar.
+(setq-default indent-tabs-mode nil)  ;; Use spaces, not tabs.
+(setq confirm-kill-emacs 'y-or-n-p) ;; Emacs prompts me before I kill it.
+
+;; Display one tab character as N number of spaces - what is the tab
 ;; width? 4.
 (setq-default tab-width 4)
 
-;; ;; Hide back-up files in Dired.
-;; ; Load Dired X when Dired is loaded.
-;; (add-hook 'dired-load-hook '(lambda () (require 'dired-x)))
-;; ; Turn on Omit mode.
-;; (setq dired-omit-mode t)
 
-;; Show Git information inside dired.
-(with-eval-after-load 'dired
-  (define-key dired-mode-map ")" 'dired-git-info-mode))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Set default font
+(cond
+ ((string-equal system-type "windows-nt") ; Microsoft Windows
+  (when (member "Consolas" (font-family-list))
+    (set-frame-font "Consolas" t t)))
+ ((string-equal system-type "darwin") ; MacOS
+  (when (member "Menlo" (font-family-list))
+    (set-frame-font "Menlo" t t)))
+ ((string-equal system-type "gnu/linux") ; Linux
+  (when (member "DejaVu Sans Mono" (font-family-list))
+    (set-frame-font "DejaVu Sans Mono" t t))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Load libraries.
+
+;; find some files, add to the library path.
+(setq load-path (cons "~/.emacs.d/lisp/" load-path))
+
+;; My custom functions.
+(load-library '"davidc.el")
+
+;; Automatic highlighting of lines.
+(add-hook 'find-file-hook 'davidc-highlight-it)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Hotkeys
+
+;; Show the Interative Menu (IMenu) for the currently active buffer.
+(global-set-key (kbd "<f2>") 'imenu)
+
+;; Go to previous/next buffer.
+(global-set-key (kbd "<f3>") 'previous-buffer)
+(global-set-key (kbd "<f4>") 'next-buffer)
+
+;; Revert/Refresh the file in the active buffer.
+(global-set-key (kbd "<f5>") 'revert-buffer)
+
+;; Display and remove excessive whitespace.
+(global-set-key (kbd "<f6>") 'whitespace-mode)
+(global-set-key (kbd "<f7>") 'whitespace-cleanup)
+
+;; Toggle `ls -1` and `ls -l` output in Dried.
+(global-set-key (kbd "<f8>") 'dired-hide-details-mode)
+
+;; ;; Lookup definition.
+;; (global-set-key (kbd "<f7>") 'dictionary-lookup-definition)
+;; (global-set-key (kbd "<f8>") 'davidc-lookup-word)
+;; (global-set-key (kbd "<f9>") 'davidc-lookup-region)
+
+;; Toggle Fullscreen.
+(global-set-key (kbd "<f11>") 'davidc-fullscreen)
+
+;; C/C++ - 'find other file' - Toggle between source and header file.
+(global-set-key (kbd "C-M-o") 'ff-find-other-file)
+
+;; ;; Press CTRL+RETURN to Compile
+;; (global-set-key (kbd "C-<return>") 'compile)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Customize Dired.
+(require 'dired )
+
+;; Don't show full `ls` command output by default in Dired.
+(add-hook 'dired-mode-hook 'davidc-dired-mode-details-setup)
+
+;; ;; Make dired use the same buffer for viewing directory.
+;; (define-key dired-mode-map (kbd "RET")
+;;   'dired-find-alternate-file) ;; was dired-advertised-find-file
+;; (define-key dired-mode-map (kbd "^")
+;;   (lambda ()
+;;     (interactive)
+;;     (find-alternate-file "..")))  ;; was dired-up-directory
+;; (put 'dired-find-alternate-file 'disabled nil)
+
+;; Jump to File in Dired
+;;
+;; In any open file, Alt+x dired-jump [Ctrl+x Ctrl+]to jump to the
+;; directory of current buffer.
+(if (version< emacs-version "28.1")
+    nil
+  (progn
+    ;; for dired-jump
+    (require 'dired-x)))
+
+;; Revert Dired and other buffers.
+;;
+;; When files in a directory change, the buffer will update
+;; automatically.
+(setq global-auto-revert-non-file-buffers t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows Commands Scripts (.bat)
-(autoload 'dos-mode "dos" "Edit Windows DOS scripts." t)
+(require 'bat-mode)
+(autoload 'bat-mode "Edit Windows DOS scripts." t)
 (add-to-list 'auto-mode-alist '("\\.bat$" . bat-mode))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GLSL - OpenGL Shaders
 (autoload 'glsl-mode "glsl-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.glsl\\'" . glsl-mode))
@@ -134,46 +167,56 @@
 (add-to-list 'auto-mode-alist '("\\.geom\\'" . glsl-mode))
 (add-to-list 'auto-mode-alist '("\\.ogsfx\\'" . glsl-mode))
 
-;; Graphviz DOT Mode
-(add-to-list 'auto-mode-alist '("\\.dot$" . graphviz-dot-mode))
-(autoload 'graphviz-dot-mode "graphviz-dot-mode" nil t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; Graphviz DOT Mode
+;; (add-to-list 'auto-mode-alist '("\\.dot$" . graphviz-dot-mode))
+;; (autoload 'graphviz-dot-mode "graphviz-dot-mode" nil t)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mel-mode - Autodesk Maya Embedded Language
-(load-library '"$HOME/emacsLisp/mel-mode.el") ;; manually load the libray
+(load-library '"mel-mode.el") ;; manually load the libray
 (add-to-list 'auto-mode-alist '("\\.mel$" . mel-mode))
 (autoload 'mel-mode "mel-mode" nil t)
 
-;; rib-mode - RenderMan Interface Bytestream
-(load-library '"$HOME/emacsLisp/rib-mode.el") ;; manually load the libray
-(add-to-list 'auto-mode-alist '("\\.rib$" . rib-mode))
-(autoload 'rib-mode "rib-mode" nil t)
 
-;; rsl-mode - RenderMan Shading Language
-(load-library '"$HOME/emacsLisp/rsl-mode.el") ;; manually load the libray
-(autoload 'rsl-mode "rsl-mode" "RenderMan Shading Language" t)
-(setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; rib-mode - RenderMan Interface Bytestream
+;; (load-library '"rib-mode.el") ;; manually load the libray
+;; (add-to-list 'auto-mode-alist '("\\.rib$" . rib-mode))
+;; (autoload 'rib-mode "rib-mode" nil t)
 
-;; Mathematica support (*.m files)
-(load-file "$HOME/emacsLisp/wolfram-mode.el")
-(autoload 'wolfram-mode "wolfram-mode" nil t)
-(add-to-list 'auto-mode-alist '("\.m$" . wolfram-mode))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; rsl-mode - RenderMan Shading Language
+;; (load-library '"rsl-mode.el") ;; manually load the libray
+;; (autoload 'rsl-mode "rsl-mode" "RenderMan Shading Language" t)
+;; (setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; Mathematica support (*.m files)
+;; (load-file "wolfram-mode.el")
+;; (autoload 'wolfram-mode "wolfram-mode" nil t)
+;; (add-to-list 'auto-mode-alist '("\.m$" . wolfram-mode))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cmake-mode for "CMakeLists.txt" files.
-(load-library '"$HOME/emacsLisp/cmake-mode") ;; manually load the libray
+(require 'cmake-mode)
 (setq auto-mode-alist
       (append '(("CMakeLists\\.txt\\'" . cmake-mode)
                 ("\\.cmake\\'" . cmake-mode))
               auto-mode-alist))
 
-;; Task Juggler Project Files.
-(load-library '"$HOME/emacsLisp/taskjuggler-mode") ;; manually load the libray
-(autoload 'tjp-mode "tjp-mode" "Task Juggler Project" t)
-(setq auto-mode-alist (append '(("\\.tjp$" . tjp-mode)) auto-mode-alist))
-(autoload 'tjp-mode "tjp-mode" nil t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Text Hooks
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Python Hook
 (add-hook 'python-mode-hook
           (lambda ()
@@ -182,33 +225,37 @@
             (linum-mode 1)
             (imenu-add-to-menubar "Functions")))
 
-;; C and C++ Hook
-(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
-(c-add-style "MyStyle"
-             '("k&r"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; C and C++ Hooks
+
+(c-add-style "mmsolver"
+             '("gnu"
                (c-basic-offset . 4)     ; Guessed value
                (c-offsets-alist
+                (arglist-cont . 0)      ; Guessed value
+                (arglist-intro . +)     ; Guessed value
+                (block-close . 0)       ; Guessed value
                 (defun-block-intro . +) ; Guessed value
                 (defun-close . 0)       ; Guessed value
                 (innamespace . 0)       ; Guessed value
-                (member-init-intro . ++) ; Guessed value
                 (namespace-close . 0)   ; Guessed value
                 (statement . 0)         ; Guessed value
+                (statement-block-intro . +) ; Guessed value
+                (statement-cont . +)    ; Guessed value
                 (topmost-intro . 0)     ; Guessed value
+                (topmost-intro-cont . 0) ; Guessed value
                 (access-label . -)
                 (annotation-top-cont . 0)
                 (annotation-var-cont . +)
                 (arglist-close . c-lineup-close-paren)
-                (arglist-cont c-lineup-gcc-asm-reg 0)
                 (arglist-cont-nonempty . c-lineup-arglist)
-                (arglist-intro . +)
-                (block-close . 0)
                 (block-open . 0)
                 (brace-entry-open . 0)
                 (brace-list-close . 0)
-                (brace-list-entry . c-lineup-under-anchor)
-                (brace-list-intro . +)
-                (brace-list-open . 0)
+                (brace-list-entry . 0)
+                (brace-list-intro first c-lineup-2nd-brace-entry-in-arglist c-lineup-class-decl-init-+ +)
+                (brace-list-open . +)
                 (c . c-lineup-C-comments)
                 (case-label . 0)
                 (catch-clause . 0)
@@ -234,35 +281,34 @@
                 (inextern-lang . +)
                 (inher-cont . c-lineup-multi-inher)
                 (inher-intro . +)
-                (inlambda . c-lineup-inexpr-block)
+                (inlambda . 0)
                 (inline-close . 0)
-                (inline-open . +)
+                (inline-open . 0)
                 (inmodule . +)
                 (knr-argdecl . 0)
-                (knr-argdecl-intro . 0)
+                (knr-argdecl-intro . 5)
                 (label . 0)
                 (lambda-intro-cont . +)
                 (member-init-cont . c-lineup-multi-inher)
+                (member-init-intro . +)
                 (module-close . 0)
                 (module-open . 0)
                 (namespace-open . 0)
                 (objc-method-args-cont . c-lineup-ObjC-method-args)
                 (objc-method-call-cont c-lineup-ObjC-method-call-colons c-lineup-ObjC-method-call +)
-                (objc-method-intro .
-                                   [0])
-                (statement-block-intro . +)
+                (objc-method-intro . [0])
                 (statement-case-intro . +)
-                (statement-case-open . 0)
-                (statement-cont . +)
+                (statement-case-open . +)
                 (stream-op . c-lineup-streamop)
                 (string . -1000)
                 (substatement . +)
                 (substatement-label . 0)
-                (substatement-open . 0)
-                (template-args-cont c-lineup-template-args +)
-                (topmost-intro-cont . c-lineup-topmost-intro-cont))))
-(setq c-default-style "MyStyle"
-      c-basic-offset 4)
+                (substatement-open . +)
+                (template-args-cont c-lineup-template-args +))))
+
+;; Treat header files ending with '.h' as C++ code, not C.
+(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
+
 (add-hook 'c-mode-common-hook
           (lambda ()
             (flyspell-prog-mode)
@@ -271,12 +317,16 @@
             (semantic-mode 1)
             (subword-mode 1)
             (imenu-add-to-menubar "Functions")
-            (c-set-style "MyStyle")
+            (indent-tabs-mode . 0)
             (c-toggle-electric-state 1)
             (c-toggle-auto-newline 0)
             (c-toggle-auto-hungry-state 0)
-            (c-toggle-syntactic-indentation 1)))
+            (c-toggle-syntactic-indentation 1)
+            (c-set-style "mmsolver")))
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; MEL Hook
 (add-hook 'mel-mode-hook
           (lambda ()
@@ -289,45 +339,47 @@
             (c-toggle-auto-hungry-state 1)
             (c-toggle-syntactic-indentation 1)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Rust Hook
 (setq rust-format-on-save t)
 (add-hook 'rust-mode-hook
           (lambda () (setq indent-tabs-mode nil)))
 
-;; Fullscreen
-(defun fullscreen (&optional f)
-  (interactive)
-  (set-frame-parameter f 'fullscreen
-                       (if (frame-parameter f 'fullscreen) nil 'fullboth)))
-(global-set-key [f11] 'fullscreen)
-;; (add-hook 'after-make-frame-functions 'fullscreen) ;; on startup
-;; (global-set-key [ (f11) ] 'toggle-fullscreen) ;; won't work, WHY!?
-(global-set-key "\C-f" 'compile)
-;; (global-set-key [ (f1) ] 'previous-buffer)
-;; (global-set-key [ (f2) ] 'next-buffer)
 
-(global-set-key [ (f5) ] 'imenu)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Dynamic Abbreviations (dabbrev).
+;;
+;; https://www.emacswiki.org/emacs/DynamicAbbreviations
+;;
+;; You can use "C-<return>" to on a word to auto-expand the word, and
+;; if it's not correct you can use "C-<return>" again to cycle the
+;; word list until you find what you want.
+;;
+;; By default this is set as "M-/".
+(global-set-key (kbd "C-<return>") 'dabbrev-expand)
+(define-key minibuffer-local-map (kbd "C-<return>") 'dabbrev-expand)
 
-;; Copy-Cut-Paste from clipboard with Super-C Super-X Super-V
-(global-set-key (kbd "s-x") 'clipboard-kill-region) ;;cut
-(global-set-key (kbd "s-c") 'clipboard-kill-ring-save) ;;copy
-(global-set-key (kbd "s-v") 'clipboard-yank) ;;paste
 
-;; C/C++ - 'find other file' - Toggle between source and header file.
-(global-set-key (kbd "C-M-o") 'ff-find-other-file)
-
-;; Ctrl+tab mapped to Alt+tab
-(define-key function-key-map [(control tab)] [?\M-\t])
-
-;; Org-Mode customisation.
-(define-key global-map "\C-cl" 'org-store-link)
-(define-key global-map "\C-ca" 'org-agenda)
-(setq org-log-done t)
-(setq org-agenda-files (list "$HOME/org/work.org"
-                             "$HOME/org/home.org"))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; dumb-jump (https://github.com/jacktasia/dumb-jump)
+;;
+;; Put your cursor on a symbol and use "M-," to display a list of
+;; suggestions.
+(add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+;; More details on Xref:
+;;
+;; M-. = Find definitions of an identifier (xref-find-definitions).
+;;
+;; M-, = Go back to where you previously invoked M-. and friends
+;; (xref-pop-marker-stack).
+;;
+;; To find the definition of a specific identifier (i.e.: function,
+;; method, class, etc) we can use "M-." which is bound to
+;; xref-find-definitions and it will look for the identifier at point.
+;;
+;; To get back where you previously were, use "M-," which invokes
+;; xref-pop-marker-stack and pops back to where M-. was last invoked.
+;;
+;; C-M-o = Jump to/from C++ source and C++ header file.
+;;
