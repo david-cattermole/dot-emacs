@@ -227,14 +227,21 @@
 (defun davidc-highlight-it ()
   "Highlight certain lines."
   (interactive)
-  (if t ;; (equal "log" (file-name-extension (buffer-file-name)))
-      (progn
-        (highlight-lines-matching-regexp "ERROR:" 'hi-red-b)
-        (highlight-lines-matching-regexp "TODO:" 'hi-green-b)
-        (highlight-lines-matching-regexp ".. todo::" 'hi-green-b)
-        (highlight-lines-matching-regexp "NOTE:" 'hi-pink-b)
-        (highlight-lines-matching-regexp ".. note::" 'hi-pink-b)
-        )))
+  (if (equal "log" (file-name-extension (buffer-file-name)))
+    (progn
+      (highlight-lines-matching-regexp "ERROR:" 'hi-red-b)
+      (highlight-lines-matching-regexp "WARN:" 'hi-yellow-b)
+      (highlight-lines-matching-regexp "WARNING:" 'hi-yellow-b)
+      (highlight-lines-matching-regexp "NOTE:" 'hi-green-b)
+      )
+    (progn
+      (highlight-phrase "ERROR:" 'hi-red-b)
+      (highlight-phrase "TODO:" 'hi-green-b)
+      (highlight-phrase ".. todo::" 'hi-green-b)
+      (highlight-phrase "NOTE:" 'hi-green-b)
+      (highlight-phrase ".. note::" 'hi-green-b)
+      )
+    ))
 
 ;; (defun davidc-highlight-it ()
 ;;   "Highlight certain lines."
