@@ -102,7 +102,10 @@
 (global-set-key (kbd "<f7>") 'whitespace-cleanup)
 
 ;; Toggle `ls -1` and `ls -l` output in Dried.
-(global-set-key (kbd "<f8>") 'dired-hide-details-mode)
+(if (version< emacs-version "24.4")
+    nil
+  (progn
+    (global-set-key (kbd "<f8>") 'dired-hide-details-mode)))
 
 ;; ;; Lookup definition.
 ;; (global-set-key (kbd "<f7>") 'dictionary-lookup-definition)
@@ -124,7 +127,10 @@
 (require 'dired )
 
 ;; Don't show full `ls` command output by default in Dired.
-(add-hook 'dired-mode-hook 'davidc-dired-mode-details-setup)
+(if (version< emacs-version "24.4")
+    nil
+  (progn
+    (add-hook 'dired-mode-hook 'davidc-dired-mode-details-setup)))
 
 ;; ;; Make dired use the same buffer for viewing directory.
 ;; (define-key dired-mode-map (kbd "RET")
