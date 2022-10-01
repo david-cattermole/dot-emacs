@@ -110,10 +110,9 @@
   (progn
     (global-set-key (kbd "<f8>") 'dired-hide-details-mode)))
 
-;; ;; Lookup definition.
-;; (global-set-key (kbd "<f7>") 'dictionary-lookup-definition)
-;; (global-set-key (kbd "<f8>") 'davidc-lookup-word)
-;; (global-set-key (kbd "<f9>") 'davidc-lookup-region)
+;; Increase/decrease font size.
+(global-set-key (kbd "<f9>") 'text-scale-decrease)
+(global-set-key (kbd "<f12>") 'text-scale-increase)
 
 ;; Toggle Fullscreen.
 (global-set-key (kbd "<f11>") 'davidc-fullscreen)
