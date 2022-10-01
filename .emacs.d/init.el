@@ -31,6 +31,10 @@
 ;; How to auto-name conflicting buffer names.
 '(uniquify-buffer-name-style 'forward nil (uniquify))
 
+;; The color theme of Emacs.
+(custom-set-variables
+ '(custom-enabled-themes '(tsdh-dark)))
+
 ;; Set up the fringe (sides of an Emacs buffer)
 '(fringe-mode '(0) nil (fringe))
 '(indicate-buffer-boundaries 'right)
@@ -41,7 +45,6 @@
       (concat "%b - emacs@" (system-name)))
 (setq diff-switches "-u")  ;; default to unified diffs
 (setq make-backup-files nil)  ;; Do not save back up files.
-(invert-face 'default)        ;; Black is the background colour
 (put 'downcase-region 'disabled nil) ;; Up/Down Case is not disabled!
 (put 'upcase-region 'disabled nil)
 (setq ispell-program-name "aspell")  ;; Set the default spell checking
