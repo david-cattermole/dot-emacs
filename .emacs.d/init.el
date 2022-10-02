@@ -375,7 +375,8 @@
 ;;
 ;; Put your cursor on a symbol and use "M-," to display a list of
 ;; suggestions.
-(add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+(if (fboundp 'dumb-jump-xref-activate)
+    (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 ;; More details on Xref:
 ;;
 ;; M-. = Find definitions of an identifier (xref-find-definitions).
@@ -392,3 +393,9 @@
 ;;
 ;; C-M-o = Jump to/from C++ source and C++ header file.
 ;;
+;; Once the *xref* opens, you can use the following bindings:
+;; n or . = Next reference.
+;; p or , = Previous reference.
+;; TAB    = Display the reference on the current line and bury the *xref* buffer.
+;; g      = Refresh the contents of *xref* buffer.
+;; q      = Quit the *xref* buffer.
