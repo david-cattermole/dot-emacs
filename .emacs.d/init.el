@@ -92,8 +92,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hotkeys
 
-;; Show the Interative Menu (IMenu) for the currently active buffer.
-(global-set-key (kbd "<f2>") 'imenu)
+;; Toggle `ls -1` and `ls -l` output in Dried.
+(if (version< emacs-version "24.4")
+    nil
+  (progn
+    (global-set-key (kbd "<f2>") 'dired-hide-details-mode)))
 
 ;; Go to previous/next buffer.
 (global-set-key (kbd "<f3>") 'previous-buffer)
@@ -106,15 +109,12 @@
 (global-set-key (kbd "<f6>") 'whitespace-mode)
 (global-set-key (kbd "<f7>") 'whitespace-cleanup)
 
-;; Toggle `ls -1` and `ls -l` output in Dried.
-(if (version< emacs-version "24.4")
-    nil
-  (progn
-    (global-set-key (kbd "<f8>") 'dired-hide-details-mode)))
-
 ;; Increase/decrease font size.
 (global-set-key (kbd "<f9>") 'text-scale-decrease)
 (global-set-key (kbd "<f12>") 'text-scale-increase)
+
+;; Show the Interative Menu (IMenu) for the currently active buffer.
+;; (global-set-key (kbd "<f8>") 'imenu)
 
 ;; Toggle Fullscreen.
 (global-set-key (kbd "<f11>") 'davidc-fullscreen)
