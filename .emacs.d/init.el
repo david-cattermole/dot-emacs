@@ -59,6 +59,11 @@
 ;; width? 4.
 (setq-default tab-width 4)
 
+;; Set up Grep on Windows to use
+(when (string-equal system-type "windows-nt") ; Microsoft Windows
+  (setenv "PATH" (concat "C:\\GnuWin32\\bin;" (getenv "PATH")))
+  (setq find-program "C:\\GnuWin32\\bin\\find.exe")
+  (setq grep-program "C:\\GnuWin32\\bin\\grep.exe"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Set default font
