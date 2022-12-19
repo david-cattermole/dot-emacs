@@ -336,6 +336,12 @@
             (c-toggle-syntactic-indentation 1)))
 
 
+;; Auto-formatting with Clang-format.
+(require 'clang-format)
+(setq clang-format-style "file")
+(global-set-key [C-tab] 'clang-format-region)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; MEL Hook
 (add-hook 'mel-mode-hook
