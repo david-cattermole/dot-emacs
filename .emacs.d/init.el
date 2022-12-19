@@ -49,8 +49,6 @@
 (setq make-backup-files nil)  ;; Do not save back up files.
 (put 'downcase-region 'disabled nil) ;; Up/Down Case is not disabled!
 (put 'upcase-region 'disabled nil)
-(setq ispell-program-name "aspell")  ;; Set the default spell checking
-                                     ;; program to aspell.
 (setq flyspell-issue-welcome-flag nil)  ;; Fix flyspell problem
 (column-number-mode t)  ;; Sets Emacs to show the column and line
                         ;; number at the bottom bar.
