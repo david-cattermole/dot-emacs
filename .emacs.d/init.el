@@ -232,8 +232,7 @@
           (lambda ()
             (flyspell-prog-mode)
             (subword-mode 1)
-            (linum-mode 1)
-            (imenu-add-to-menubar "Functions")))
+            (linum-mode 1)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -326,7 +325,6 @@
             (cwarn-mode 1)
             (semantic-mode 1)
             (subword-mode 1)
-            (imenu-add-to-menubar "Functions")
             (indent-tabs-mode . 0)
             (c-toggle-electric-state 1)
             (c-toggle-auto-newline 0)
@@ -342,7 +340,6 @@
             (flyspell-prog-mode)
             (linum-mode 1)
             (subword-mode 1)
-            (imenu-add-to-menubar "Functions")
             (c-toggle-electric-state 1)
             (c-toggle-auto-newline 0)
             (c-toggle-auto-hungry-state 1)
