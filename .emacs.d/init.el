@@ -95,7 +95,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hotkeys
 
-;; Toggle `ls -1` and `ls -l` output in Dried.
+;; Toggle `ls -1` (dash one) and `ls -l` (dash lower case L) output in
+;; Dried.
 (if (version< emacs-version "24.4")
     nil
   (progn
