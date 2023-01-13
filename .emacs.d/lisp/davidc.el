@@ -5,16 +5,14 @@
 ;; http://xahlee.info/emacs/emacs/elisp_examples.html
 
 
-;; Open init.el file
 (defun davidc-open-init-file ()
-  ""
+  "Open init.el file."
   (interactive)
   (find-file "~/.emacs.d/init.el"))
 
 
-;; Open davidc.el file
 (defun davidc-open-package-file ()
-  ""
+  "Open davidc.el file."
   (interactive)
   (find-file "~/.emacs.d/lisp/davidc.el"))
 
@@ -291,8 +289,8 @@
 ;;     (shell-command-on-region (region-beginning) (region-end) cmdStr nil "REPLACE" nil t)))
 
 
-;; Fullscreen
 (defun davidc-fullscreen (&optional f)
+  "Toggle Fullscreen mode."
   (interactive)
   (set-frame-parameter f 'fullscreen
                        (if (frame-parameter f 'fullscreen) nil 'fullboth)))
