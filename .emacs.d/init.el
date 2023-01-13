@@ -392,6 +392,7 @@
 ;;
 ;; Put your cursor on a symbol and use "M-," to display a list of
 ;; suggestions.
+(require 'dumb-jump)
 (if (fboundp 'dumb-jump-xref-activate)
     (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 ;; More details on Xref:
