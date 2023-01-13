@@ -19,6 +19,13 @@
   (find-file "~/.emacs.d/lisp/davidc.el"))
 
 
+(defun davidc-open-custom-vars ()
+  "Open custom-vars.el file."
+  (interactive)
+  ;; *custom-vars-file* is a global variable.
+  (find-file *custom-vars-file*))
+
+
 ;; ;; Insert Text
 ;; ;;
 ;; ;; This code shows how to insert a string, and also position cursor
