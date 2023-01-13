@@ -49,7 +49,6 @@
 (setq make-backup-files nil)  ;; Do not save back up files.
 (put 'downcase-region 'disabled nil) ;; Up/Down Case is not disabled!
 (put 'upcase-region 'disabled nil)
-(setq flyspell-issue-welcome-flag nil)  ;; Fix flyspell problem
 (column-number-mode t)  ;; Sets Emacs to show the column and line
                         ;; number at the bottom bar.
 (setq-default indent-tabs-mode nil)  ;; Use spaces, not tabs.
@@ -64,6 +63,17 @@
   (setenv "PATH" (concat "C:\\GnuWin32\\bin;" (getenv "PATH")))
   (setq find-program "C:\\GnuWin32\\bin\\find.exe")
   (setq grep-program "C:\\GnuWin32\\bin\\grep.exe"))
+
+;; Interactive Spelling
+;;
+;; https://www.emacswiki.org/emacs/InteractiveSpell
+;;
+;; On Windows, the ezwinports project binaries seem to work well:
+;; https://sourceforge.net/projects/ezwinports/
+;;
+;; On Windows, make sure to set the 'DICTIONARY' environment variable
+;; to (for example) 'en_US'.
+(setq flyspell-issue-welcome-flag nil)  ;; Fix flyspell problem
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Set default font
