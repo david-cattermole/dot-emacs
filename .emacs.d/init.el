@@ -348,7 +348,7 @@
             (flyspell-prog-mode)
             (linum-mode 1)
             (cwarn-mode 1)
-            (semantic-mode 1)
+            (semantic-mode 0)
             (subword-mode 1)
             (indent-tabs-mode . 0)
             (c-toggle-electric-state 1)
