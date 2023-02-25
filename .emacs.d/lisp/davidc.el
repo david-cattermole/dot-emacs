@@ -374,3 +374,81 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
    ((string-equal major-mode "python-mode") (call-interactively 'davidc-format-buffer-python))
    )
   )
+
+;; https://stackoverflow.com/questions/2423834/move-line-region-up-and-down-in-emacs
+(defun davidc-move-text-internal (arg)
+  (cond
+   ((and mark-active transient-mark-mode)
+    (if (> (point) (mark))
+        (exchange-point-and-mark))
+    (let ((column (current-column))
+          (text (delete-and-extract-region (point) (mark))))
+      (forward-line arg)
+      (move-to-column column t)
+      (set-mark (point))
+      (insert text)
+      (exchange-point-and-mark)
+      (setq deactivate-mark nil)))
+   (t
+    (let ((column (current-column)))
+      (beginning-of-line)
+      (when (or (> arg 0) (not (bobp)))
+        (forward-line)
+        (when (or (< arg 0) (not (eobp)))
+          (transpose-lines arg)
+          (when (and (eval-when-compile
+                       '(and (>= emacs-major-version 24)
+                             (>= emacs-minor-version 3)))
+                     (< arg 0))
+            (forward-line -1)))
+        (forward-line -1))
+      (move-to-column column t)))
+   ))
+
+
+(defun davidc-move-text-down (arg)
+  "Move region (transient-mark-mode active) or current line
+  arg lines down."
+  (interactive "*p")
+  (davidc-move-text-internal arg))
+
+
+(defun davidc-move-text-up (arg)
+  "Move region (transient-mark-mode active) or current line
+  arg lines up."
+  (interactive "*p")
+  (davidc-move-text-internal (- arg)))
+
+
+;; https://emacs.stackexchange.com/questions/13941/move-selected-lines-up-and-down
+(defun davidc-move-line-up ()
+  "Move up the current line."
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2)
+  (indent-according-to-mode))
+
+
+(defun davidc-move-line-down ()
+  "Move down the current line."
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1)
+  (indent-according-to-mode))
+
+
+(defun davidc-move-line-or-region-up ()
+  "Move up the active region, or the current line."
+  (interactive)
+  (if (and mark-active transient-mark-mode)
+      (call-interactively 'davidc-move-text-up)
+    (call-interactively 'davidc-move-line-up)))
+
+
+(defun davidc-move-line-or-region-down ()
+  "Move down the active region, or the current line."
+  (interactive)
+  (if (and mark-active transient-mark-mode)
+      (call-interactively 'davidc-move-text-down)
+    (call-interactively 'davidc-move-line-down)))

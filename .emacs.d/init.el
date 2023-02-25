@@ -119,6 +119,10 @@
 ;; Same as "C-M-p" - the default function is the same as "C-M-u".
 (global-set-key (kbd "C-M-<up>") 'backward-list)
 
+;; Move text up or down.
+(global-set-key (kbd "M-<down>") 'davidc-move-line-or-region-down)
+(global-set-key (kbd "M-<up>") 'davidc-move-line-or-region-up)
+
 ;; Toggle `ls -1` (dash one) and `ls -l` (dash lower case L) output in
 ;; Dried.
 (if (version< emacs-version "24.4")
