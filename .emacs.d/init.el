@@ -146,9 +146,12 @@
 ;; C/C++ - 'find other file' - Toggle between source and header file.
 (global-set-key (kbd "C-M-o") 'ff-find-other-file)
 
+;; 'Shift + Tab' (or 'C-x Tab') key will setup an interactive mode to
+;; indent selected code.
+(global-set-key (kbd "<backtab>") 'indent-rigidly)
+
 ;; ;; Press CTRL+RETURN to Compile
 ;; (global-set-key (kbd "C-<return>") 'compile)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customize Dired.
