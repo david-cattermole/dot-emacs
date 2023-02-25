@@ -105,6 +105,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hotkeys
 
+;; Easily reformat the current region of text, using different methods
+;; for different major-modes.
+(global-set-key [C-tab] 'davidc-format)
+
 ;; Navigation improvements using the arrow keys.
 ;;
 ;; This allows moving to the matching parentheses using "C-M-<up>" and
@@ -261,6 +265,8 @@
             (subword-mode 1)
             (linum-mode 1)))
 
+;; Auto formatting with 'black'.
+(require 'python-black)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; C and C++ Hooks
@@ -363,8 +369,6 @@
 ;; Auto-formatting with Clang-format.
 (require 'clang-format)
 (setq clang-format-style "file")
-(global-set-key [C-tab] 'clang-format-region)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; MEL Hook
