@@ -105,6 +105,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hotkeys
 
+;; Navigation improvements using the arrow keys.
+;;
+;; This allows moving to the matching parentheses using "C-M-<up>" and
+;; "C-M-<down>".
+;;
+;; Same as "C-M-n" - the default function is the same as "C-M-d".
+(global-set-key (kbd "C-M-<down>") 'forward-list)
+;; Same as "C-M-p" - the default function is the same as "C-M-u".
+(global-set-key (kbd "C-M-<up>") 'backward-list)
+
 ;; Toggle `ls -1` (dash one) and `ls -l` (dash lower case L) output in
 ;; Dried.
 (if (version< emacs-version "24.4")
