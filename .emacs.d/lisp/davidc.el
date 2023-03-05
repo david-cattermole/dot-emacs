@@ -425,8 +425,7 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
   "Move up the current line."
   (interactive)
   (transpose-lines 1)
-  (forward-line -2)
-  (indent-according-to-mode))
+  (forward-line -2))
 
 
 (defun davidc-move-line-down ()
@@ -434,8 +433,7 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
   (interactive)
   (forward-line 1)
   (transpose-lines 1)
-  (forward-line -1)
-  (indent-according-to-mode))
+  (forward-line -1))
 
 
 (defun davidc-move-line-or-region-up ()
