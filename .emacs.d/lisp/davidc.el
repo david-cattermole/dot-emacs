@@ -385,11 +385,13 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
    (if (> (point) (mark))
        (exchange-point-and-mark))
 
+   ;; Ensure the region uses contents of the first line, so the line
+   ;; is not chopped off.
+   (move-to-column 0 t)
+
    ;; Move active (selection) region up/down
-   (let ((column (current-column))
-         (text (delete-and-extract-region (point) (mark))))
+   (let ((text (delete-and-extract-region (point) (mark))))
      (forward-line line-offset-number)
-     (move-to-column column t)
      (set-mark (point))
      (insert text)
      (exchange-point-and-mark)
