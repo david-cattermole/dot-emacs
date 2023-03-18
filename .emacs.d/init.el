@@ -465,3 +465,36 @@
 ;;
 (require 'project)
 (add-hook 'project-find-functions 'davidc-git-project-finder)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Perforce Version Control Integration - https://github.com/gareth-rees/p4.el
+;;
+;; This does not integrate with 'vc-mode', but rather provides a
+;; mapping of perforce commands to emacs commands.
+;;
+;; p4-add        (C-x v a)  Open file for add.
+;; p4-annotate   (C-x v V)  Annotate each line with the revision it was last updated.
+;; p4-client     (C-x v c)  Edit client workspace mapping.
+;; p4-edit       (C-x v e)  Open file for edit.
+;; p4-delete     (C-x v x)  Open file for delete.
+;; p4-diff       (C-x v =)  Diff local file against the depot.
+;; p4-filelog    (C-x v f)  Show revision history of file.
+;; p4-move       (C-x v m)  Move (rename) a file that’s open for edit.
+;; p4-opened     (C-x v o)  List open files.
+;; p4-reconcile  (C-x v z)  Reconcile client with workspace changes.
+;; p4-revert     (C-x v r)  Revert file, discarding local changes.
+;; p4-status     (C-x v s)  Identify differences between the workspace and the depot.
+;; p4-submit     (C-x v S)  Submit changes to the depot.
+;; p4-update     (C-x v g)  Get files from depot.
+;;
+;; Other cool commands are:
+;; p4-grep    - Grep search the perforce workspace for files containing a text string.
+;; p4-login   - Log into perforce.
+;; p4-changes - List all changelists that are open.
+;; p4-change  - Create a change list.
+;;
+;; The default global key binding prefix is "C-x p", but that
+;; conflicts with project.el.
+(setq p4-global-key-prefix (kbd "C-x v"))
+(require 'p4 )
