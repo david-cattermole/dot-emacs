@@ -96,7 +96,7 @@
 (setq load-path (cons "~/.emacs.d/lisp/" load-path))
 
 ;; My custom functions.
-(load-library '"davidc.el")
+(load-library '"davidc")
 
 ;; Automatic highlighting of lines.
 (add-hook 'find-file-hook 'davidc-highlight-it)
@@ -221,28 +221,28 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mel-mode - Autodesk Maya Embedded Language
-(load-library '"mel-mode.el") ;; manually load the libray
+(load-library '"mel-mode") ;; manually load the libray
 (add-to-list 'auto-mode-alist '("\\.mel$" . mel-mode))
 (autoload 'mel-mode "mel-mode" nil t)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;; rib-mode - RenderMan Interface Bytestream
-;; (load-library '"rib-mode.el") ;; manually load the libray
+;; (load-library '"rib-mode") ;; manually load the libray
 ;; (add-to-list 'auto-mode-alist '("\\.rib$" . rib-mode))
 ;; (autoload 'rib-mode "rib-mode" nil t)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;; rsl-mode - RenderMan Shading Language
-;; (load-library '"rsl-mode.el") ;; manually load the libray
+;; (load-library '"rsl-mode") ;; manually load the libray
 ;; (autoload 'rsl-mode "rsl-mode" "RenderMan Shading Language" t)
 ;; (setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ;; Mathematica support (*.m files)
-;; (load-file "wolfram-mode.el")
+;; (load-file "wolfram-mode")
 ;; (autoload 'wolfram-mode "wolfram-mode" nil t)
 ;; (add-to-list 'auto-mode-alist '("\.m$" . wolfram-mode))
 
