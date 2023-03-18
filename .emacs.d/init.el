@@ -438,3 +438,30 @@
 ;; TAB    = Display the reference on the current line and bury the *xref* buffer.
 ;; g      = Refresh the contents of *xref* buffer.
 ;; q      = Quit the *xref* buffer.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; project.el Setup - used to find and manage projects
+;;
+;; https://www.youtube.com/watch?v=vBQh2BeGhio
+;;
+;; C-x p p - Open a (or create) a Project.
+;;
+;; C-x p c - Compile the current project, using a command.
+;;
+;; C-x p k - Kill all buffers under the given project.
+;;
+;; C-x p D - Open Dired at project directory.
+;;
+;; C-x p e - Open eshell at project directory.
+;;
+;; C-x p s - Open shell at project directory.
+;;
+;; C-x p ! - Run project command.
+;;
+;; C-x p & - Run project command in the "background".
+;;
+;; C-x p ? - Show list of bindings starting with 'C-x p'
+;;
+(require 'project)
+(add-hook 'project-find-functions 'davidc-git-project-finder)

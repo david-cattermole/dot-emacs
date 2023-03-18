@@ -443,3 +443,16 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
   (if (and mark-active transient-mark-mode)
       (call-interactively 'davidc-move-region-down)
     (call-interactively 'davidc-move-line-down)))
+
+
+;; As the built-in project.el support expects to use vc-mode hooks to
+;; find the root of projects we need to provide something equivalent
+;; for it.
+;;
+;; https://www.reddit.com/r/emacs/comments/nf2k5y/comment/gyjs516/?utm_source=share&utm_medium=web2x&context=3
+(defun davidc-git-project-finder (dir)
+  "Integrate .git project roots."
+  (let ((dotgit (and (setq dir (locate-dominating-file dir ".git"))
+                     (expand-file-name dir))))
+    (and dotgit
+         (cons 'transient (file-name-directory dotgit)))))
