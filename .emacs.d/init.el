@@ -114,10 +114,23 @@
 ;; This allows moving to the matching parentheses using "C-M-<up>" and
 ;; "C-M-<down>".
 ;;
+;; We can also remap the normal "C-M-f" and "C-M-b" keys to the arrow
+;; keys, so we can jump between sexpr (which is a language specific
+;; concept).
+;;
+;; NOTE: "C-M-k" will kill the text between the matching
+;; parentheses. "C-M-k" can be used in conjunction with "C-M-<up>" and
+;; "C-M-<down>" to select then kill a block of code.
+;;
 ;; Same as "C-M-n" - the default function is the same as "C-M-d".
 (global-set-key (kbd "C-M-<down>") 'forward-list)
 ;; Same as "C-M-p" - the default function is the same as "C-M-u".
 (global-set-key (kbd "C-M-<up>") 'backward-list)
+
+;; Remapping "C-M-f" to "C-M-<right>".
+(global-set-key (kbd "C-M-<right>") 'forward-sexp)
+;; Remapping "C-M-b" to "C-M-<left>".
+(global-set-key (kbd "C-M-<left>") 'backward-sexp)
 
 ;; Move text up or down.
 (global-set-key (kbd "M-<down>") 'davidc-move-line-or-region-down)
