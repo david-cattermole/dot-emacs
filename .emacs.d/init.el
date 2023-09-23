@@ -558,6 +558,61 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; String Inflection - https://github.com/akicho8/string-inflection/
+;;
+;; Convert selection to different case conventions.
+;;
+(require 'string-inflection)
+(global-set-key (kbd "M-U") 'my-string-inflection-cycle-auto)
+(global-set-key (kbd "M-L") 'string-inflection-toggle)
+
+;; When t make string-inflection moves the cursor to the start of the
+;; word.
+(setq string-inflection-skip-backward-when-done t)
+
+(defun davidc-string-inflection-toggle-function (str)
+  "Not so much the case that in all caps when using normal foo_bar <--> fooBar"
+  (cond
+   ((string-inflection-underscore-p str)
+    (string-inflection-lower-camelcase-function str))
+   ((string-inflection-lower-camelcase-p str)
+    (string-inflection-underscore-function str))
+   (t
+    (string-inflection-underscore-function str))))
+
+(defun davidc-string-inflection-toggle ()
+  "Toggle foo_bar <=> fooBar"
+  (interactive)
+  (string-inflection-insert
+   (davidc-string-inflection-toggle-function (string-inflection-get-current-word))))
+
+(defun davidc-string-inflection-cycle-auto ()
+  "Switching case cylcing by major-mode"
+  (interactive)
+  (cond
+   ;; for emacs-lisp-mode
+   ((eq major-mode 'emacs-lisp-mode)
+    (string-inflection-all-cycle))
+
+   ;; for java
+   ((eq major-mode 'java-mode)
+    (string-inflection-java-style-cycle))
+
+   ;; for python
+   ((eq major-mode 'python-mode)
+    (string-inflection-python-style-cycle))
+
+   ;; for elixir
+   ((eq major-mode 'elixir-mode)
+    (string-inflection-elixir-style-cycle))
+
+   ;; default
+   (t
+    (string-inflection-python-style-cycle)))
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Perforce Version Control Integration - https://github.com/gareth-rees/p4.el
 ;;
 ;; This does not integrate with 'vc-mode', but rather provides a
