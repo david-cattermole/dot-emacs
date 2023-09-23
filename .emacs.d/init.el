@@ -64,7 +64,7 @@
   (setq find-program "C:\\GnuWin32\\bin\\find.exe")
   (setq grep-program "C:\\GnuWin32\\bin\\grep.exe"))
 
-;; Interactive Spelling
+;; Interactive Spelling Checker
 ;;
 ;; https://www.emacswiki.org/emacs/InteractiveSpell
 ;;
