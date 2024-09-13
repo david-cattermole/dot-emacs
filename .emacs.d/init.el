@@ -291,7 +291,7 @@
           (lambda ()
             (flyspell-prog-mode)
             (subword-mode 1)
-            (linum-mode 1)))
+            (hs-minor-mode 1)))
 
 ;; Auto formatting with 'black'.
 (require 'python-black)
@@ -460,10 +460,10 @@
 (add-hook 'c-mode-common-hook
           (lambda ()
             (flyspell-prog-mode)
-            (linum-mode 1)
             (cwarn-mode 1)
             (semantic-mode 0)
             (subword-mode 1)
+            (hs-minor-mode 1)
             (indent-tabs-mode . 0)
             (c-toggle-electric-state 1)
             (c-toggle-auto-newline 0)
@@ -480,8 +480,8 @@
 (add-hook 'mel-mode-hook
           (lambda ()
             (flyspell-prog-mode)
-            (linum-mode 1)
             (subword-mode 1)
+            (hs-minor-mode 1)
             (c-toggle-electric-state 1)
             (c-toggle-auto-newline 0)
             (c-toggle-auto-hungry-state 1)
@@ -493,6 +493,9 @@
 (setq rust-format-on-save t)
 (add-hook 'rust-mode-hook
           (lambda () (setq indent-tabs-mode nil)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code Folding - Hide/Show (hs-minor-mode)
+(require 'hideshow)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
