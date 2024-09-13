@@ -49,8 +49,8 @@
 (setq make-backup-files nil)  ;; Do not save back up files.
 (put 'downcase-region 'disabled nil) ;; Up/Down Case is not disabled!
 (put 'upcase-region 'disabled nil)
-(column-number-mode t)  ;; Sets Emacs to show the column and line
-                        ;; number at the bottom bar.
+(column-number-mode nil)  ;; Sets Emacs to show only the line
+                          ;; number at the bottom bar.
 (setq-default indent-tabs-mode nil)  ;; Use spaces, not tabs.
 (setq confirm-kill-emacs 'y-or-n-p) ;; Emacs prompts me before I kill it.
 
