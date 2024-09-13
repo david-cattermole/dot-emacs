@@ -13,12 +13,8 @@
 ;; Use org-mode for new buffers.
 (setq default-major-mode 'org-mode)
 
-(custom-set-variables
- '(global-auto-complete-mode nil))
-
 ;; Don't show the Emacs toolbar or start-up screen.
 (tool-bar-mode -1)
-(custom-set-variables '(inhibit-startup-screen t))
 
 (mouse-wheel-mode t)  ;; Allow use of mouse scroll wheel.
 (display-time-mode t)  ;; Display the time at the bottom of Emacs.
@@ -27,20 +23,6 @@
 (setq show-paren-style 'mixed)  ;; Highlight the matching parenthesis if it
                                 ;; is visible, or the body otherwise.
 (setq require-final-newline 'query)  ;; Ask the user to enter a newline or not.
-
-;; How to auto-name conflicting buffer names.
-(custom-set-variables
- '(uniquify-buffer-name-style 'forward nil (uniquify)))
-
-;; The color theme of Emacs.
-(custom-set-variables
- '(custom-enabled-themes '(tsdh-dark)))
-
-;; Set up the fringe (sides of an Emacs buffer)
-(custom-set-variables
- '(fringe-mode '(0) nil (fringe))
- '(indicate-buffer-boundaries 'right)
- '(indicate-empty-lines t))
 
 (setq transient-mark-mode t)  ;; enable visual feedback on selections
 (setq frame-title-format ;; Default to better frame titles
