@@ -102,7 +102,11 @@
 ;; find some files, add to the library path.
 (setq load-path (cons "~/.emacs.d/lisp/" load-path))
 
-;; My custom functions.
+;; Common library used by many scripts.
+(require 's)
+
+;; My custom functions, loads them from source code (not byte-compiled
+;; on Emacs 29.x+).
 (load-library '"davidc")
 
 ;; Automatic highlighting of lines.
