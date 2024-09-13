@@ -54,6 +54,13 @@
 (setq-default indent-tabs-mode nil)  ;; Use spaces, not tabs.
 (setq confirm-kill-emacs 'y-or-n-p) ;; Emacs prompts me before I kill it.
 
+;; Display line numbers for programming language buffers.
+(if (version< emacs-version "26.0")
+    (progn
+      (add-hook 'prog-mode-hook #'linum-mode))
+  (progn
+    (add-hook 'prog-mode-hook #'display-line-numbers-mode)))
+
 ;; Display one tab character as N number of spaces - what is the tab
 ;; width? 4.
 (setq-default tab-width 4)
