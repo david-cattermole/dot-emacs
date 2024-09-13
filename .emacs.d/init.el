@@ -474,7 +474,13 @@
 ;; Rust Hook
 (setq rust-format-on-save t)
 (add-hook 'rust-mode-hook
-          (lambda () (setq indent-tabs-mode nil)))
+          (lambda ()
+            (setq indent-tabs-mode nil)
+            (flyspell-prog-mode)
+            (subword-mode 1)
+            (hs-minor-mode 1)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Folding - Hide/Show (hs-minor-mode)
 (require 'hideshow)
