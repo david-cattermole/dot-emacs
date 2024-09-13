@@ -234,7 +234,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mel-mode - Autodesk Maya Embedded Language
-(load-library '"mel-mode") ;; manually load the libray
+(require 'mel-mode)
 (add-to-list 'auto-mode-alist '("\\.mel$" . mel-mode))
 (autoload 'mel-mode "mel-mode" nil t)
 
