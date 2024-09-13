@@ -605,3 +605,12 @@
 ;; ;; conflicts with project.el.
 ;; (setq p4-global-key-prefix (kbd "C-x v"))
 ;; (require 'p4 )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Ripgrep (rg) integration
+;;
+;; https://github.com/dajva/rg.el
+(if (version< emacs-version "26.1")
+    nil
+  (progn
+    (require 'rg)
+    (rg-enable-default-bindings)))
