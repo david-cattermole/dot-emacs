@@ -485,6 +485,35 @@
 ;; Code Folding - Hide/Show (hs-minor-mode)
 (require 'hideshow)
 
+;; Display line counts in the hidden areas, or use
+;; "davidc-hs-display-code-as-tooltip" to display the inner text as a
+;; tooltip when the user hovers over the area.
+(setq hs-set-up-overlay 'davidc-hs-display-code-line-counts)
+
+;; Cycling the code folding of the entire buffer.
+(global-set-key (kbd "C-=") 'davidc-hs-global-cycle)
+
+;; Cycling the active-block-at-point's folding.
+;; (global-set-key (kbd "C-+") 'davidc-hs-cycle)
+(global-set-key (kbd "C-S-<tab>") 'davidc-hs-cycle)
+
+;; Add code folding regular expressions for Rust
+;;
+;; Based on the Ruby implementation here;
+;; https://gist.github.com/Karina7777/e6207b027af0b391ff38
+(add-to-list 'hs-special-modes-alist
+             '(rust-mode
+               "{" ;; Block start.
+               "}" ;; Block end.
+               ;; NOTE: Does not handle comments with "/* */" style.
+               "//" ;; Comment start.
+               forward-sexp ;; FORWARD-SEXP-FUNC
+               hs-c-like-adjust-block-beginning ;; ADJUST-BEG-FUNC
+               nil  ;; FIND-BLOCK-BEGINNING-FUNC
+               nil  ;; FIND-NEXT-BLOCK-FUNC
+               nil  ;; LOOKING-AT-BLOCK-START-P-FUNC
+               ))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Dynamic Abbreviations (dabbrev).
