@@ -494,8 +494,7 @@
 (global-set-key (kbd "C-=") 'davidc-hs-global-cycle)
 
 ;; Cycling the active-block-at-point's folding.
-;; (global-set-key (kbd "C-+") 'davidc-hs-cycle)
-(global-set-key (kbd "C-S-<tab>") 'davidc-hs-cycle)
+(global-set-key (kbd "C--") 'davidc-hs-cycle)
 
 ;; Add code folding regular expressions for Rust
 ;;
