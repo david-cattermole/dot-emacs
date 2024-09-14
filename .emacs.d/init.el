@@ -602,11 +602,18 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Ripgrep (rg) integration
+;; rg.el
+;;
+;; Ripgrep (rg) integration - use ripgrep in Emacs.
+;;
+;; Ripgrep is a replacement for both grep like (search one file) and
+;; ag like (search many files) tools. It's fast and versatile and
+;; written in Rust.
 ;;
 ;; https://github.com/dajva/rg.el
 (if (version< emacs-version "26.1")
     nil
   (progn
     (require 'rg)
+    ;; This will setup the default key bindings in a non lazy way.
     (rg-enable-default-bindings)))
