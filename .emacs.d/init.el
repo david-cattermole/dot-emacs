@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t -*-
 ;; .emacs.d/init.el
 
 ;;; uncomment this line to disable loading of "default.el" at startup
@@ -10,11 +11,38 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Custom Settings.
 
+;; Enable/disable my features.
+(setq my-config-add-gnuwin32-binaries nil) ;; Use GnuWin32 binaries?
+(setq my-config-override-ispell-binary t)
+(setq my-config-override-rg-binary nil)
+(setq my-config-use-evil nil) ;; Use EVIL mode?
+(setq my-config-use-p4 nil) ;; Use P4 tool?
+(setq my-config-use-bat-mode t)
+(setq my-config-use-glsl-mode t)
+(setq my-config-use-mel-mode t)
+(setq my-config-use-rib-mode nil)
+(setq my-config-use-rsl-mode nil)
+(setq my-config-use-graphviz-dot-mode nil)
+(setq my-config-use-cmake-mode t)
+(setq my-config-use-rust-mode t)
+(setq my-config-use-python-black t)
+(setq my-config-use-python-flymake-ruff t)
+(setq my-config-use-clang-format t)
+(setq my-config-flymake-use-clang-tidy t)
+(setq my-config-use-hideshow t)
+(setq my-config-use-dynamic-abbreviations t)
+(setq my-config-use-string-inflection t)
+(setq my-config-use-project t)
+(setq my-config-use-dumb-jump t)
+(setq my-config-use-rg t)
+
+
 ;; Use org-mode for new buffers.
 (setq default-major-mode 'org-mode)
 
 ;; Don't show the Emacs toolbar or start-up screen.
 (tool-bar-mode -1)
+(setq inhibit-startup-screen t)
 
 (mouse-wheel-mode t)  ;; Allow use of mouse scroll wheel.
 (display-time-mode t)  ;; Display the time at the bottom of Emacs.
@@ -24,6 +52,20 @@
                                 ;; is visible, or the body otherwise.
 (setq require-final-newline 'query)  ;; Ask the user to enter a newline or not.
 
+;; How to auto-name conflicting buffer names.
+(custom-set-variables
+ '(uniquify-buffer-name-style 'forward nil (uniquify)))
+
+;; The color theme of Emacs.
+(custom-set-variables
+ '(custom-enabled-themes '(tsdh-dark)))
+
+;; Set up the fringe (sides of an Emacs buffer)
+(custom-set-variables
+ '(fringe-mode '(0) nil (fringe))
+ '(indicate-buffer-boundaries 'right)
+ '(indicate-empty-lines t))
+
 (setq transient-mark-mode t)  ;; enable visual feedback on selections
 (setq frame-title-format ;; Default to better frame titles
       (concat "%b - emacs@" (system-name)))
@@ -31,7 +73,7 @@
 (setq make-backup-files nil)  ;; Do not save back up files.
 (put 'downcase-region 'disabled nil) ;; Up/Down Case is not disabled!
 (put 'upcase-region 'disabled nil)
-(column-number-mode nil)  ;; Sets Emacs to show only the line
+(column-number-mode nil)  ;; Sets Emacs to show the column and line
                           ;; number at the bottom bar.
 (setq-default indent-tabs-mode nil)  ;; Use spaces, not tabs.
 (setq confirm-kill-emacs 'y-or-n-p) ;; Emacs prompts me before I kill it.
@@ -47,11 +89,16 @@
 ;; width? 4.
 (setq-default tab-width 4)
 
-;; ;; Set up Grep on Windows to use.
-;; (when (string-equal system-type "windows-nt") ; Microsoft Windows
-;;   (setenv "PATH" (concat "C:\\GnuWin32\\bin;" (getenv "PATH")))
-;;   (setq find-program "C:\\GnuWin32\\bin\\find.exe")
-;;   (setq grep-program "C:\\GnuWin32\\bin\\grep.exe"))
+;; Set up Grep on Windows to use.
+;;
+;; NOTE: These binaries work really, really poorly on Windows. They
+;; often just never finish running and I need to kill the sub-process
+;; to get Emacs to respond again.
+(when my-config-add-gnuwin32-binaries
+  (when (string-equal system-type "windows-nt") ; Microsoft Windows
+    (setenv "PATH" (concat "C:\\GnuWin32\\bin;" (getenv "PATH")))
+    (setq find-program "C:\\GnuWin32\\bin\\find.exe")
+    (setq grep-program "C:\\GnuWin32\\bin\\grep.exe")))
 
 ;; Interactive Spelling Checker
 ;;
@@ -63,6 +110,11 @@
 ;; On Windows, make sure to set the 'DICTIONARY' environment variable
 ;; to (for example) 'en_US'.
 (setq flyspell-issue-welcome-flag nil)  ;; Fix flyspell problem
+
+;; Set up HunSpell on Windows.
+(when my-config-override-ispell-binary
+  (when (string-equal system-type "windows-nt") ; Microsoft Windows
+    '(ispell-program-name "C:/Program Files (x86)/Hunspell/hunspell-1.3.2-3-w32-bin/bin/hunspell.exe")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Set default font
@@ -82,6 +134,14 @@
 ;; Load libraries.
 
 ;; find some files, add to the library path.
+(setq load-path (cons "~/.emacs.d/lisp/rg/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/wgrep/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/p4/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/evil/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/project/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/my-common/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/my-tools/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/my-modes/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/" load-path))
 
 ;; Common library used by many scripts.
@@ -94,6 +154,12 @@
 ;; Automatic highlighting of lines.
 (add-hook 'find-file-hook 'davidc-highlight-it)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; VIM Bindings
+(when my-config-use-evil
+   (require 'evil)
+   (evil-mode 1)
+   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hotkeys
@@ -169,7 +235,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customize Dired.
-(require 'dired )
+(require 'dired)
 
 ;; Don't show full `ls` command output by default in Dired.
 (if (version< emacs-version "24.4")
@@ -203,47 +269,56 @@
 (setq global-auto-revert-non-file-buffers t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Windows Commands Scripts (.bat)
-(require 'bat-mode)
-(autoload 'bat-mode "Edit Windows DOS scripts." t)
-(add-to-list 'auto-mode-alist '("\\.bat$" . bat-mode))
+;; Windows Commands Scripts (.bat) - Edit Windows DOS scripts.
+(when my-config-use-bat-mode
+   (require 'bat-mode)
+   (autoload 'bat-mode "Edit Windows DOS scripts." t)
+   (add-to-list 'auto-mode-alist '("\\.bat$" . bat-mode))
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GLSL - OpenGL Shaders
-(autoload 'glsl-mode "glsl-mode" nil t)
-(add-to-list 'auto-mode-alist '("\\.glsl\\'" . glsl-mode))
-(add-to-list 'auto-mode-alist '("\\.vert\\'" . glsl-mode))
-(add-to-list 'auto-mode-alist '("\\.frag\\'" . glsl-mode))
-(add-to-list 'auto-mode-alist '("\\.geom\\'" . glsl-mode))
-(add-to-list 'auto-mode-alist '("\\.ogsfx\\'" . glsl-mode))
+(when my-config-use-glsl-mode
+   (require 'glsl-mode)
+   (add-to-list 'auto-mode-alist '("\\.glsl\\'" . glsl-mode))
+   (add-to-list 'auto-mode-alist '("\\.vert\\'" . glsl-mode))
+   (add-to-list 'auto-mode-alist '("\\.frag\\'" . glsl-mode))
+   (add-to-list 'auto-mode-alist '("\\.geom\\'" . glsl-mode))
+   (add-to-list 'auto-mode-alist '("\\.ogsfx\\'" . glsl-mode))
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;; Graphviz DOT Mode
-;; (add-to-list 'auto-mode-alist '("\\.dot$" . graphviz-dot-mode))
-;; (autoload 'graphviz-dot-mode "graphviz-dot-mode" nil t)
+;; Graphviz DOT Mode
+(when my-config-use-graphviz-dot-mode
+   (require 'graphviz-dot-mode)
+   (add-to-list 'auto-mode-alist '("\\.dot$" . graphviz-dot-mode))
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mel-mode - Autodesk Maya Embedded Language
-(require 'mel-mode)
-(add-to-list 'auto-mode-alist '("\\.mel$" . mel-mode))
-(autoload 'mel-mode "mel-mode" nil t)
+(when my-config-use-mel-mode
+   (require 'mel-mode)
+   (add-to-list 'auto-mode-alist '("\\.mel$" . mel-mode))
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;; rib-mode - RenderMan Interface Bytestream
-;; (load-library '"rib-mode") ;; manually load the libray
-;; (add-to-list 'auto-mode-alist '("\\.rib$" . rib-mode))
-;; (autoload 'rib-mode "rib-mode" nil t)
+;; rib-mode - RenderMan Interface Bytestream
+(when my-config-use-rib-mode
+   (require 'rib-mode)
+   (add-to-list 'auto-mode-alist '("\\.rib$" . rib-mode))
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;; rsl-mode - RenderMan Shading Language
-;; (load-library '"rsl-mode") ;; manually load the libray
-;; (autoload 'rsl-mode "rsl-mode" "RenderMan Shading Language" t)
-;; (setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
+;; rsl-mode - RenderMan Shading Language
+(when my-config-use-rsl-mode
+   (require 'rsl-mode)
+   (setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -255,11 +330,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cmake-mode for "CMakeLists.txt" files.
-(require 'cmake-mode)
-(setq auto-mode-alist
-      (append '(("CMakeLists\\.txt\\'" . cmake-mode)
-                ("\\.cmake\\'" . cmake-mode))
-              auto-mode-alist))
+(when my-config-use-cmake-mode
+   (require 'cmake-mode)
+   (setq auto-mode-alist
+         (append '(("CMakeLists\\.txt\\'" . cmake-mode)
+                   ("\\.cmake\\'" . cmake-mode))
+                 auto-mode-alist))
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -269,14 +346,25 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Python Hook
+(setq python-forward-sexp-function #'python-nav-forward-sexp)
+
 (add-hook 'python-mode-hook
           (lambda ()
             (flyspell-prog-mode)
             (subword-mode 1)
+            (flymake-mode 1)
             (hs-minor-mode 1)))
 
 ;; Auto formatting with 'black'.
-(require 'python-black)
+(when my-config-use-python-black
+   (require 'python-black)
+   )
+
+;; Use Ruff with flymake.
+(when my-config-use-python-flymake-ruff
+  (add-hook 'python-mode-hook 'davidc-python-flymake-ruff-setup)
+   )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; C and C++ Hooks
@@ -452,67 +540,87 @@
             (c-toggle-auto-hungry-state 0)
             (c-toggle-syntactic-indentation 1)))
 
-
 ;; Auto-formatting with Clang-format.
-(require 'clang-format)
-(setq clang-format-style "file")
+(when my-config-use-clang-format
+   (require 'clang-format)
+   (setq clang-format-style "file")
+   )
+
+;; Flymake integration with clang-tidy
+(when my-config-flymake-use-clang-tidy
+  (message "my-config-flymake-use-clang-tidy")
+  (add-hook 'c-mode-common-hook 'davidc-flymake-clang-tidy-setup)
+  )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; MEL Hook
-(add-hook 'mel-mode-hook
-          (lambda ()
-            (flyspell-prog-mode)
-            (subword-mode 1)
-            (hs-minor-mode 1)
-            (c-toggle-electric-state 1)
-            (c-toggle-auto-newline 0)
-            (c-toggle-auto-hungry-state 1)
-            (c-toggle-syntactic-indentation 1)))
+(when my-config-use-mel-mode
+   (add-hook 'mel-mode-hook
+             (lambda ()
+               (flyspell-prog-mode)
+               (subword-mode 1)
+               (hs-minor-mode 1)
+               (c-toggle-electric-state 1)
+               (c-toggle-auto-newline 0)
+               (c-toggle-auto-hungry-state 1)
+               (c-toggle-syntactic-indentation 1)))
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Rust Hook
-(setq rust-format-on-save t)
-(add-hook 'rust-mode-hook
-          (lambda ()
-            (setq indent-tabs-mode nil)
-            (flyspell-prog-mode)
-            (subword-mode 1)
-            (hs-minor-mode 1)))
+(when my-config-use-rust-mode
+   (setq rust-format-on-save t)
+   (add-hook 'rust-mode-hook
+             (lambda ()
+               (setq indent-tabs-mode nil)
+               (flyspell-prog-mode)
+               (subword-mode 1)
+               (hs-minor-mode 1)))
+  )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Folding - Hide/Show (hs-minor-mode)
-(require 'hideshow)
+(when my-config-use-hideshow
+   (require 'hideshow)
 
-;; Display line counts in the hidden areas, or use
-;; "davidc-hs-display-code-as-tooltip" to display the inner text as a
-;; tooltip when the user hovers over the area.
-(setq hs-set-up-overlay 'davidc-hs-display-code-line-counts)
+   ;; Workaround hideshow interation problems with vc-diff and Ediff,
+   ;; as suggested in the hideshow.el source code documentation.
+   (add-hook 'ediff-prepare-buffer-hook #'turn-off-hideshow)
+   (add-hook 'vc-before-checkin-hook #'turn-off-hideshow)
 
-;; Cycling the code folding of the entire buffer.
-(global-set-key (kbd "C-=") 'davidc-hs-global-cycle)
+   ;; Display line counts in the hidden areas, or use
+   ;; "davidc-hs-display-code-as-tooltip" to display the inner text as a
+   ;; tooltip when the user hovers over the area.
+   (setq hs-set-up-overlay 'davidc-hs-display-code-line-counts)
 
-;; Cycling the active-block-at-point's folding.
-(global-set-key (kbd "C--") 'davidc-hs-cycle)
+   ;; Cycling the code folding of the entire buffer.
+   (global-set-key (kbd "C-=") 'davidc-hs-global-cycle)
 
-;; Add code folding regular expressions for Rust
-;;
-;; Based on the Ruby implementation here;
-;; https://gist.github.com/Karina7777/e6207b027af0b391ff38
-(add-to-list 'hs-special-modes-alist
-             '(rust-mode
-               "{" ;; Block start.
-               "}" ;; Block end.
-               ;; NOTE: Does not handle comments with "/* */" style.
-               "//" ;; Comment start.
-               forward-sexp ;; FORWARD-SEXP-FUNC
-               hs-c-like-adjust-block-beginning ;; ADJUST-BEG-FUNC
-               nil  ;; FIND-BLOCK-BEGINNING-FUNC
-               nil  ;; FIND-NEXT-BLOCK-FUNC
-               nil  ;; LOOKING-AT-BLOCK-START-P-FUNC
-               ))
+   ;; Cycling the active-block-at-point's folding.
+   (global-set-key (kbd "C--") 'davidc-hs-cycle)
 
+   ;; Add code folding regular expressions for Rust
+   ;;
+   ;; Based on the Ruby implementation here;
+   ;; https://gist.github.com/Karina7777/e6207b027af0b391ff38
+   (when my-config-use-rust-mode
+     (add-to-list 'hs-special-modes-alist
+                  '(rust-mode
+                    "{" ;; Block start.
+                    "}" ;; Block end.
+                    ;; NOTE: Does not handle comments with "/* */" style.
+                    "//" ;; Comment start.
+                    forward-sexp ;; FORWARD-SEXP-FUNC
+                    hs-c-like-adjust-block-beginning ;; ADJUST-BEG-FUNC
+                    nil  ;; FIND-BLOCK-BEGINNING-FUNC
+                    nil  ;; FIND-NEXT-BLOCK-FUNC
+                    nil  ;; LOOKING-AT-BLOCK-START-P-FUNC
+                    ))
+     )
+   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Dynamic Abbreviations (dabbrev).
@@ -524,8 +632,10 @@
 ;; word list until you find what you want.
 ;;
 ;; By default this is set as "M-/".
-(global-set-key (kbd "C-<return>") 'dabbrev-expand)
-(define-key minibuffer-local-map (kbd "C-<return>") 'dabbrev-expand)
+(when my-config-use-dynamic-abbreviations
+   (global-set-key (kbd "C-<return>") 'dabbrev-expand)
+   (define-key minibuffer-local-map (kbd "C-<return>") 'dabbrev-expand)
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -533,9 +643,11 @@
 ;;
 ;; Put your cursor on a symbol and use "M-," to display a list of
 ;; suggestions.
-(require 'dumb-jump)
-(if (fboundp 'dumb-jump-xref-activate)
-    (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+(when my-config-use-dumb-jump
+   (require 'dumb-jump)
+   (if (fboundp 'dumb-jump-xref-activate)
+       (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+   )
 ;; More details on Xref:
 ;;
 ;; M-. = Find definitions of an identifier (xref-find-definitions).
@@ -583,8 +695,10 @@
 ;;
 ;; C-x p ? - Show list of bindings starting with 'C-x p'
 ;;
-(require 'project)
-(add-hook 'project-find-functions 'davidc-git-project-finder)
+(when my-config-use-project
+   (require 'project)
+   (add-hook 'project-find-functions 'davidc-git-project-finder)
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -592,13 +706,50 @@
 ;;
 ;; Convert selection to different case conventions.
 ;;
-(require 'string-inflection)
-(global-set-key (kbd "M-U") 'my-string-inflection-cycle-auto)
-(global-set-key (kbd "M-L") 'string-inflection-toggle)
+(when my-config-use-string-inflection
+   (require 'string-inflection)
+   (global-set-key (kbd "M-U") 'my-string-inflection-cycle-auto)
+   (global-set-key (kbd "M-L") 'string-inflection-toggle)
 
-;; When t make string-inflection moves the cursor to the start of the
-;; word.
-(setq string-inflection-skip-backward-when-done t)
+   ;; When t make string-inflection moves the cursor to the start of the
+   ;; word.
+   (setq string-inflection-skip-backward-when-done t)
+   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Perforce Version Control Integration - https://github.com/gareth-rees/p4.el
+;;
+;; This does not integrate with 'vc-mode', but rather provides a
+;; mapping of perforce commands to emacs commands.
+;;
+;; p4-add        (C-x v a)  Open file for add.
+;; p4-annotate   (C-x v V)  Annotate each line with the revision it was last updated.
+;; p4-client     (C-x v c)  Edit client workspace mapping.
+;; p4-edit       (C-x v e)  Open file for edit.
+;; p4-delete     (C-x v x)  Open file for delete.
+;; p4-diff       (C-x v =)  Diff local file against the depot.
+;; p4-filelog    (C-x v f)  Show revision history of file.
+;; p4-move       (C-x v m)  Move (rename) a file that’s open for edit.
+;; p4-opened     (C-x v o)  List open files.
+;; p4-reconcile  (C-x v z)  Reconcile client with workspace changes.
+;; p4-revert     (C-x v r)  Revert file, discarding local changes.
+;; p4-status     (C-x v s)  Identify differences between the workspace and the depot.
+;; p4-submit     (C-x v S)  Submit changes to the depot.
+;; p4-update     (C-x v g)  Get files from depot.
+;;
+;; Other cool commands are:
+;; p4-grep    - Grep search the perforce workspace for files containing a text string.
+;; p4-login   - Log into perforce.
+;; p4-changes - List all changelists that are open.
+;; p4-change  - Create a change list.
+;;
+;; The default global key binding prefix is "C-x p", but that
+;; conflicts with project.el.
+(when my-config-use-p4
+   (setq p4-global-key-prefix (kbd "C-x v"))
+   (require 'p4 )
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -611,9 +762,12 @@
 ;; written in Rust.
 ;;
 ;; https://github.com/dajva/rg.el
-(if (version< emacs-version "26.1")
-    nil
-  (progn
-    (require 'rg)
-    ;; This will setup the default key bindings in a non lazy way.
-    (rg-enable-default-bindings)))
+(when my-config-use-rg
+   (if (version< emacs-version "26.1")
+       nil
+     (progn
+       (require 'rg)
+       ;; This will setup the default key bindings in a non lazy way.
+       (rg-enable-default-bindings)))
+   )
+

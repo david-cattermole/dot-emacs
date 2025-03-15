@@ -8,13 +8,9 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(baud-rate 19200)
- '(column-number-mode t)
  '(custom-enabled-themes '(tsdh-dark))
- '(default-major-mode 'text-mode t)
- '(display-time-mode t)
  '(eol-mnemonic-dos "(DOS)")
  '(eol-mnemonic-mac "(Mac)")
- '(flyspell-issue-welcome-flag nil)
  '(focus-follows-mouse nil)
  '(fringe-mode '(0) nil (fringe))
  '(global-auto-complete-mode nil)
@@ -43,6 +39,25 @@
      (tool-bar-lines . 0)
      (unsplittable . t)
      (left-fringe . 0)))
+ '(python-flymake-command '("C:/Program Files/ruff/ruff-x86_64-pc-windows-msvc-v0.0.256/ruff.exe" "check"
+                            "--stdin-filename=<stdin>"
+                            "-"))
+ '(python-flymake-command-output-pattern
+   '("^\\(?:<?stdin>?\\):\\(?1:[0-9]+\\):\\(?:\\(?2:[0-9]+\\):\\)? \\(?3:.*\\)$" 1 2 nil 3))
+ '(python-flymake-msg-alist
+   '(("\\(^redefinition\\|.*unused.*\\|used$\\)" . :warning)
+    ("^E999" . :error)
+    ("^[EW][0-9]+" . :note))
+   )
+ '(python-forward-sexp-function 'python-nav-forward-sexp)
+ '(project-switch-commands
+   '(
+     ;; (project-find-file "Find file")
+     ;; (project-find-regexp "Find regexp")
+     ;; (project-find-dir "Find directory")
+     (project-vc-dir "VC-Dir")
+     (project-eshell "Eshell"))
+   )
  '(speedbar-indentation-width 2)
  '(speedbar-use-images nil)
  '(tab-width 4)
