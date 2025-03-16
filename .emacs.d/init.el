@@ -4,38 +4,133 @@
 ;;; uncomment this line to disable loading of "default.el" at startup
 ;; (setq inhibit-default-init t)
 
+;; Define customization group for my configuration options
+(defgroup davidc-config nil
+  "Custom configuration options for my Emacs setup."
+  :group 'convenience)
+
+;; Define customizable variables with default values
+(defcustom davidc-config-add-gnuwin32-binaries nil
+  "Use GnuWin32 binaries?"
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-override-ispell-binary nil
+  "Override ispell binary path."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-override-rg-binary nil
+  "Override ripgrep binary path."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-evil nil
+  "Use EVIL mode?"
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-p4 nil
+  "Use P4 tool?"
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-bat-mode nil
+  "Use bat-mode for Windows batch files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-glsl-mode nil
+  "Use glsl-mode for OpenGL shader files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-mel-mode nil
+  "Use mel-mode for Maya Embedded Language files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-rib-mode nil
+  "Use rib-mode for RenderMan Interface Bytestream files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-rsl-mode nil
+  "Use rsl-mode for RenderMan Shading Language files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-graphviz-dot-mode nil
+  "Use graphviz-dot-mode for Graphviz DOT files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-cmake-mode nil
+  "Use cmake-mode for CMake files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-rust-mode nil
+  "Use rust-mode for Rust files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-python-black nil
+  "Use python-black for Python formatting."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-python-flymake-ruff nil
+  "Use ruff with flymake for Python linting."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-clang-format nil
+  "Use clang-format for C/C++ formatting."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-flymake-clang-tidy nil
+  "Use clang-tidy with flymake for C/C++ linting."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-hideshow nil
+  "Use hideshow for code folding."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-dynamic-abbreviations nil
+  "Use dynamic abbreviations."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-string-inflection nil
+  "Use string-inflection for case conversion."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-project nil
+  "Use project.el for project management."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-dumb-jump nil
+  "Use dumb-jump for jump-to-definition."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-rg nil
+  "Use rg.el for ripgrep integration."
+  :type 'boolean
+  :group 'davidc-config)
+
 ;; Move customization variables to a separate file and load it
 (setq *custom-vars-file* (locate-user-emacs-file "custom-vars.el"))
 (load *custom-vars-file* 'noerror 'nomessage)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Custom Settings.
-
-;; Enable/disable my features.
-(setq my-config-add-gnuwin32-binaries nil) ;; Use GnuWin32 binaries?
-(setq my-config-override-ispell-binary t)
-(setq my-config-override-rg-binary nil)
-(setq my-config-use-evil nil) ;; Use EVIL mode?
-(setq my-config-use-p4 nil) ;; Use P4 tool?
-(setq my-config-use-bat-mode t)
-(setq my-config-use-glsl-mode t)
-(setq my-config-use-mel-mode t)
-(setq my-config-use-rib-mode nil)
-(setq my-config-use-rsl-mode nil)
-(setq my-config-use-graphviz-dot-mode nil)
-(setq my-config-use-cmake-mode t)
-(setq my-config-use-rust-mode t)
-(setq my-config-use-python-black t)
-(setq my-config-use-python-flymake-ruff t)
-(setq my-config-use-clang-format t)
-(setq my-config-flymake-use-clang-tidy t)
-(setq my-config-use-hideshow t)
-(setq my-config-use-dynamic-abbreviations t)
-(setq my-config-use-string-inflection t)
-(setq my-config-use-project t)
-(setq my-config-use-dumb-jump t)
-(setq my-config-use-rg t)
-
 
 ;; Use org-mode for new buffers.
 (setq default-major-mode 'org-mode)
@@ -94,7 +189,7 @@
 ;; NOTE: These binaries work really, really poorly on Windows. They
 ;; often just never finish running and I need to kill the sub-process
 ;; to get Emacs to respond again.
-(when my-config-add-gnuwin32-binaries
+(when davidc-config-add-gnuwin32-binaries
   (when (string-equal system-type "windows-nt") ; Microsoft Windows
     (setenv "PATH" (concat "C:\\GnuWin32\\bin;" (getenv "PATH")))
     (setq find-program "C:\\GnuWin32\\bin\\find.exe")
@@ -112,7 +207,7 @@
 (setq flyspell-issue-welcome-flag nil)  ;; Fix flyspell problem
 
 ;; Set up HunSpell on Windows.
-(when my-config-override-ispell-binary
+(when davidc-config-override-ispell-binary
   (when (string-equal system-type "windows-nt") ; Microsoft Windows
     '(ispell-program-name "C:/Program Files (x86)/Hunspell/hunspell-1.3.2-3-w32-bin/bin/hunspell.exe")))
 
@@ -157,7 +252,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; VIM Bindings
-(when my-config-use-evil
+(when davidc-config-use-evil
    (require 'evil)
    (evil-mode 1)
    )
@@ -275,7 +370,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows Commands Scripts (.bat) - Edit Windows DOS scripts.
-(when my-config-use-bat-mode
+(when davidc-config-use-bat-mode
    (require 'bat-mode)
    (autoload 'bat-mode "Edit Windows DOS scripts." t)
    (add-to-list 'auto-mode-alist '("\\.bat$" . bat-mode))
@@ -284,7 +379,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GLSL - OpenGL Shaders
-(when my-config-use-glsl-mode
+(when davidc-config-use-glsl-mode
    (require 'glsl-mode)
    (add-to-list 'auto-mode-alist '("\\.glsl\\'" . glsl-mode))
    (add-to-list 'auto-mode-alist '("\\.vert\\'" . glsl-mode))
@@ -296,7 +391,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graphviz DOT Mode
-(when my-config-use-graphviz-dot-mode
+(when davidc-config-use-graphviz-dot-mode
    (require 'graphviz-dot-mode)
    (add-to-list 'auto-mode-alist '("\\.dot$" . graphviz-dot-mode))
    )
@@ -304,7 +399,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; mel-mode - Autodesk Maya Embedded Language
-(when my-config-use-mel-mode
+(when davidc-config-use-mel-mode
    (require 'mel-mode)
    (add-to-list 'auto-mode-alist '("\\.mel$" . mel-mode))
    )
@@ -312,7 +407,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rib-mode - RenderMan Interface Bytestream
-(when my-config-use-rib-mode
+(when davidc-config-use-rib-mode
    (require 'rib-mode)
    (add-to-list 'auto-mode-alist '("\\.rib$" . rib-mode))
    )
@@ -320,7 +415,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; rsl-mode - RenderMan Shading Language
-(when my-config-use-rsl-mode
+(when davidc-config-use-rsl-mode
    (require 'rsl-mode)
    (setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
    )
@@ -335,7 +430,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cmake-mode for "CMakeLists.txt" files.
-(when my-config-use-cmake-mode
+(when davidc-config-use-cmake-mode
    (require 'cmake-mode)
    (setq auto-mode-alist
          (append '(("CMakeLists\\.txt\\'" . cmake-mode)
@@ -361,12 +456,12 @@
             (hs-minor-mode 1)))
 
 ;; Auto formatting with 'black'.
-(when my-config-use-python-black
+(when davidc-config-use-python-black
    (require 'python-black)
    )
 
 ;; Use Ruff with flymake.
-(when my-config-use-python-flymake-ruff
+(when davidc-config-use-python-flymake-ruff
   (add-hook 'python-mode-hook 'davidc-python-flymake-ruff-setup)
    )
 
@@ -546,13 +641,13 @@
             (c-toggle-syntactic-indentation 1)))
 
 ;; Auto-formatting with Clang-format.
-(when my-config-use-clang-format
+(when davidc-config-use-clang-format
    (require 'clang-format)
    (setq clang-format-style "file")
    )
 
 ;; Flymake integration with clang-tidy
-(when my-config-flymake-use-clang-tidy
+(when davidc-config-use-flymake-clang-tidy
   (add-hook 'c-mode-common-hook
             (lambda ()
               (setq-local flymake-no-changes-timeout nil)
@@ -564,7 +659,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; MEL Hook
-(when my-config-use-mel-mode
+(when davidc-config-use-mel-mode
    (add-hook 'mel-mode-hook
              (lambda ()
                (flyspell-prog-mode)
@@ -579,7 +674,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Rust Hook
-(when my-config-use-rust-mode
+(when davidc-config-use-rust-mode
    (setq rust-format-on-save t)
    (add-hook 'rust-mode-hook
              (lambda ()
@@ -592,7 +687,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Code Folding - Hide/Show (hs-minor-mode)
-(when my-config-use-hideshow
+(when davidc-config-use-hideshow
    (require 'hideshow)
 
    ;; Workaround hideshow interation problems with vc-diff and Ediff,
@@ -615,7 +710,7 @@
    ;;
    ;; Based on the Ruby implementation here;
    ;; https://gist.github.com/Karina7777/e6207b027af0b391ff38
-   (when my-config-use-rust-mode
+   (when davidc-config-use-rust-mode
      (add-to-list 'hs-special-modes-alist
                   '(rust-mode
                     "{" ;; Block start.
@@ -641,7 +736,7 @@
 ;; word list until you find what you want.
 ;;
 ;; By default this is set as "M-/".
-(when my-config-use-dynamic-abbreviations
+(when davidc-config-use-dynamic-abbreviations
    (global-set-key (kbd "C-<return>") 'dabbrev-expand)
    (define-key minibuffer-local-map (kbd "C-<return>") 'dabbrev-expand)
    )
@@ -652,7 +747,7 @@
 ;;
 ;; Put your cursor on a symbol and use "M-," to display a list of
 ;; suggestions.
-(when my-config-use-dumb-jump
+(when davidc-config-use-dumb-jump
    (require 'dumb-jump)
    (if (fboundp 'dumb-jump-xref-activate)
        (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
@@ -704,7 +799,7 @@
 ;;
 ;; C-x p ? - Show list of bindings starting with 'C-x p'
 ;;
-(when my-config-use-project
+(when davidc-config-use-project
    (require 'project)
    (add-hook 'project-find-functions 'davidc-git-project-finder)
    )
@@ -715,7 +810,7 @@
 ;;
 ;; Convert selection to different case conventions.
 ;;
-(when my-config-use-string-inflection
+(when davidc-config-use-string-inflection
    (require 'string-inflection)
    (global-set-key (kbd "M-U") 'my-string-inflection-cycle-auto)
    (global-set-key (kbd "M-L") 'string-inflection-toggle)
@@ -755,7 +850,7 @@
 ;;
 ;; The default global key binding prefix is "C-x p", but that
 ;; conflicts with project.el.
-(when my-config-use-p4
+(when davidc-config-use-p4
    (setq p4-global-key-prefix (kbd "C-x v"))
    (require 'p4 )
    )
@@ -771,7 +866,7 @@
 ;; written in Rust.
 ;;
 ;; https://github.com/dajva/rg.el
-(when my-config-use-rg
+(when davidc-config-use-rg
    (if (version< emacs-version "26.1")
        nil
      (progn
@@ -779,4 +874,3 @@
        ;; This will setup the default key bindings in a non lazy way.
        (rg-enable-default-bindings)))
    )
-
