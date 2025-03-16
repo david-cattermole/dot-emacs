@@ -648,6 +648,17 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
                     ("^E999" . :error)
                     ("^[EW][0-9]+" . :note))))))
 
+;; Define default settings for clang-tidy path.
+(defvar davidc-flymake-clang-tidy-path
+  (cond
+   ((string-equal system-type "windows-nt") ; Windows
+    "clang-tidy.exe")
+   ((string-equal system-type "darwin") ; macOS
+    "clang-tidy")
+   (t ; Linux or other
+    "clang-tidy"))
+  "Path to the clang-tidy executable.")
+
 ;; Local variable to keep track of the currently running flymake
 ;; clang-tidy process.
 (defvar-local davidc--flymake-clang-tidy-proc nil
@@ -666,8 +677,9 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
   "Flymake backend for clang-tidy.
 REPORT-FN is the callback function for reporting diagnostics."
   ;; Check if clang-tidy exists.
-  (unless (executable-find "clang-tidy")
-    (error "Cannot find clang-tidy executable"))
+  (unless (executable-find davidc-flymake-clang-tidy-path)
+    (error "Flymake mode clang-tidy; Cannot find clang-tidy executable at \"%s\"." davidc-flymake-clang-tidy-path))
+  ;; (message "[DEBUG] Flymake mode clang-tidy; using clang-tidy executable at \"%s\"." davidc-flymake-clang-tidy-path)
 
   ;; Kill any existing process.
   (when (process-live-p davidc--flymake-clang-tidy-proc)
@@ -697,7 +709,7 @@ REPORT-FN is the callback function for reporting diagnostics."
                :connection-type 'pipe
                :buffer (generate-new-buffer " *flymake-clang-tidy*")
                :default-directory (file-name-directory source-file)
-               :command (list "clang-tidy"
+               :command (list davidc-flymake-clang-tidy-path
                               "-quiet"
                               (file-name-nondirectory source-file)
                               ;; NOTE: Passing this "--" seems to call
