@@ -139,6 +139,7 @@
 (setq load-path (cons "~/.emacs.d/lisp/p4/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/evil/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/project/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/compat/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/my-common/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/my-tools/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/my-modes/" load-path))
