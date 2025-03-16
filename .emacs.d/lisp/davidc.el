@@ -648,14 +648,20 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
                     ("^E999" . :error)
                     ("^[EW][0-9]+" . :note))))))
 
+;; Local variable to keep track of the currently running flymake
+;; clang-tidy process.
+(defvar-local davidc--flymake-clang-tidy-proc nil
+  "Current clang-tidy flymake process.")
+
+(defun davidc-flymake-clang-tidy-on-save ()
+  "Run Flymake only when buffer is saved."
+  (when flymake-mode
+    (flymake-start)))
 
 ;; Add Clang-tidy as a backend for Flymake.
 ;;
 ;; This uses this annotated example for ruby as a starting point:
 ;; https://www.gnu.org/software/emacs/manual/html_node/flymake/An-annotated-example-backend.html
-(defvar-local davidc--flymake-clang-tidy-proc nil
-  "Current clang-tidy flymake process.")
-
 (defun davidc-flymake-clang-tidy (report-fn &rest _args)
   "Flymake backend for clang-tidy.
 REPORT-FN is the callback function for reporting diagnostics."
@@ -672,74 +678,114 @@ REPORT-FN is the callback function for reporting diagnostics."
          (source-file (buffer-file-name)))
 
     (when source-file
+      ;; Save buffer before running clang-tidy to ensure all changes are analyzed
+      (when (buffer-modified-p)
+        ;; (message "Flymake mode clang-tidy; saving buffer before analysis...")
+        ;; (save-buffer)
+        (error "Flymake mode clang-tidy; buffer is not saved, cannot check it."))
+
+      ;; (message "[DEBUG] Flymake mode clang-tidy; Source File: \"%s\"." source-file)
       (save-restriction
         (widen)
-        ;; Create a temporary file for the current buffer contents.
-        (let ((temp-file (make-temp-file "flymake-clang-tidy" nil
-                                         (file-name-extension source-file t))))
-          ;; Write buffer contents to the temp file.
-          (write-region nil nil temp-file nil 'quiet)
 
-          ;; Reset the process variable and create a new process with
-          ;; improved options.
-          (setq davidc--flymake-clang-tidy-proc
-                (make-process
-                 :name "flymake-clang-tidy"
-                 :noquery t
-                 :connection-type 'pipe
-                 :buffer (generate-new-buffer " *flymake-clang-tidy*")
-                 :command (list "clang-tidy"
-                                "-quiet"
-                                temp-file
-                                "-checks=-*,modernize-*,readability-*,bugprone-*,clang-analyzer-*,misc-*,performance-*,cppcoreguidelines-*"
-                                "--")
-                 :sentinel
-                 (lambda (proc _event)
-                   ;; Check that the process has indeed exited.
-                   (when (memq (process-status proc) '(exit signal))
-                     (unwind-protect
-                         ;; Only proceed if proc is the current process.
-                         (if (with-current-buffer source (eq proc davidc--flymake-clang-tidy-proc))
-                             (with-current-buffer (process-buffer proc)
-                               (goto-char (point-min))
-                               (let ((diags '()))
-                                 ;; This will match both the temp file
-                                 ;; and original file paths.
-                                 (while (search-forward-regexp
-                                         "\\(?:.*\\):\\([0-9]+\\):\\([0-9]+\\): \\(warning\\|error\\|note\\): \\(.*?\\)\\(?: \\[.*\\]\\)?$"
-                                         nil t)
-                                   (let* ((line (string-to-number (match-string 1)))
-                                          (col (string-to-number (match-string 2)))
-                                          (type (match-string 3))
-                                          (msg (match-string 4))
-                                          (level (cond
-                                                  ((string= type "error") :error)
-                                                  ((string= type "warning") :warning)
-                                                  (t :note)))
-                                          ;; Get region for diagnostics.
-                                          (beg-end (flymake-diag-region
-                                                   source
-                                                   line
-                                                   col)))
-                                     ;; Check that we have valid positions.
-                                     (when beg-end
+        ;; Reset the process variable and create a new process with
+        ;; improved options.
+        (setq davidc--flymake-clang-tidy-proc
+              (make-process
+               :name "flymake-clang-tidy"
+               :noquery t
+               :connection-type 'pipe
+               :buffer (generate-new-buffer " *flymake-clang-tidy*")
+               :default-directory (file-name-directory source-file)
+               :command (list "clang-tidy"
+                              "-quiet"
+                              (file-name-nondirectory source-file)
+                              ;; NOTE: Passing this "--" seems to call
+                              ;; the compiler directly. On Windows
+                              ;; that is not possible, so we don't get
+                              ;; much value from enabling this.
+                              ;;
+                              ;; "--"
+                              )
+               :sentinel
+               (lambda (proc _event)
+                 ;; Check that the process has indeed exited.
+                 (when (memq (process-status proc) '(exit signal))
+                   (unwind-protect
+                       ;; Only proceed if proc is the current process.
+                       (if (with-current-buffer source (eq proc davidc--flymake-clang-tidy-proc))
+                           (with-current-buffer (process-buffer proc)
+                             ;; ;; Debug output - print the entire buffer content
+                             ;; (let ((output-content (buffer-string)))
+                             ;;   (message "[DEBUG] clang-tidy output: \n%s" output-content))
+
+                             (goto-char (point-min))
+                             (let ((diags '()))
+                               ;; Update regex to capture the file path as well
+                               (while (search-forward-regexp
+                                       "\\(.*\\):\\([0-9]+\\):\\([0-9]+\\): \\(warning\\|error\\|note\\): \\(.*\\)$"
+                                       nil t)
+                                 (let* ((full-match (match-string 0))
+                                        (file-path (match-string 1))
+                                        (line (string-to-number (match-string 2)))
+                                        (col (string-to-number (match-string 3)))
+                                        (type (match-string 4))
+                                        (msg (match-string 5))
+                                        (level (cond
+                                                ((string= type "error") :error)
+                                                ((string= type "warning") :warning)
+                                                (t :note)))
+
+                                        ;; Get region for diagnostics.
+                                        (beg-end (flymake-diag-region
+                                                 source
+                                                 line
+                                                 col)))
+
+                                   ;; ;; Debug output for each match
+                                   ;; (message "[DEBUG] Match: %s" full-match)
+                                   ;; (message "[DEBUG] File: %s" file-path)
+                                   ;; (message "[DEBUG] Current file: %s" source-file)
+                                   ;; (message "[DEBUG] Line: %d, Col: %d, Type: %s" line col type)
+                                   ;; (message "[DEBUG] Message: %s" msg)
+                                   ;; (message "[DEBUG] Level: %s" level)
+
+                                   ;; Check if this diagnostic is for the current file
+                                   ;; Try to match by comparing normalized paths
+                                   (let* ((normalized-source (expand-file-name source-file))
+                                          (normalized-file (expand-file-name (directory-file-name file-path)))
+                                          (is-current-file (or
+                                                            (string= normalized-file normalized-source)
+                                                            (string-suffix-p (file-name-nondirectory source-file) file-path))))
+
+                                     ;; (message "[DEBUG] Is current file: %s" is-current-file)
+
+                                     ;; Only add diagnostics for the current file, and ignore notes.
+                                     (when (and is-current-file
+                                                beg-end
+                                                (not (eq level :note))) ; Skip note-level diagnostics
+                                       ;; (message "[DEBUG] Adding diagnostic for current file")
+                                       ;; (message "[DEBUG] Region: %s-%s" (car beg-end) (cdr beg-end))
                                        (push (flymake-make-diagnostic source
                                                                     (car beg-end)
                                                                     (cdr beg-end)
                                                                     level
                                                                     msg)
-                                             diags))))
-                                 ;; Report the diagnostics.
-                                 (message "Found %d diagnostics" (length diags))
-                                 (funcall report-fn diags)))
-                           ;; If obsolete, log warning.
-                           (flymake-log :warning "Canceling obsolete check %s" proc))
+                                             diags)))))
 
-                       ;; Clean up resources.
-                       (when (process-buffer proc)
-                         (kill-buffer (process-buffer proc)))
-                       (when (file-exists-p temp-file)
-                         (delete-file temp-file))))))))))))
+                               ;; Report the diagnostics.
+                               (message "Flymake mode clang-tidy; Found %d diagnostics for \"%s\"."
+                                       (length diags)
+                                       (file-name-nondirectory source-file))
+                               (funcall report-fn diags)))
+
+                         ;; If obsolete, log warning.
+                         (flymake-log :warning "Canceling obsolete check %s" proc))
+
+                     ;; Clean up resources.
+                     (when (process-buffer proc)
+                       (kill-buffer (process-buffer proc))))))))))))
+
 
 (defun davidc-flymake-clang-tidy-setup ()
   "Set up flymake for clang-tidy."
