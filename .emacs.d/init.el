@@ -148,18 +148,15 @@
 (setq require-final-newline 'query)  ;; Ask the user to enter a newline or not.
 
 ;; How to auto-name conflicting buffer names.
-(custom-set-variables
- '(uniquify-buffer-name-style 'forward nil (uniquify)))
+(setq uniquify-buffer-name-style 'forward)
 
 ;; The color theme of Emacs.
-(custom-set-variables
- '(custom-enabled-themes '(tsdh-dark)))
+(load-theme 'tsdh-dark t)
 
 ;; Set up the fringe (sides of an Emacs buffer)
-(custom-set-variables
- '(fringe-mode '(0) nil (fringe))
- '(indicate-buffer-boundaries 'right)
- '(indicate-empty-lines t))
+(fringe-mode 0)
+(setq indicate-buffer-boundaries 'right)
+(setq indicate-empty-lines t)
 
 (setq transient-mark-mode t)  ;; enable visual feedback on selections
 (setq frame-title-format ;; Default to better frame titles
