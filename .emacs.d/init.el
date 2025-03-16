@@ -534,7 +534,7 @@
             (semantic-mode 0)
             (subword-mode 1)
             (hs-minor-mode 1)
-            (indent-tabs-mode . 0)
+            (setq indent-tabs-mode nil)
             (c-toggle-electric-state 1)
             (c-toggle-auto-newline 0)
             (c-toggle-auto-hungry-state 0)
