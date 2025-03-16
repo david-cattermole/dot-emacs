@@ -548,7 +548,6 @@
 
 ;; Flymake integration with clang-tidy
 (when my-config-flymake-use-clang-tidy
-  (message "my-config-flymake-use-clang-tidy")
   (add-hook 'c-mode-common-hook
             (lambda ()
               (setq-local flymake-no-changes-timeout nil)
