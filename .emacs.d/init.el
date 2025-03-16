@@ -183,14 +183,18 @@
 ;; "C-M-<down>" to select then kill a block of code.
 ;;
 ;; Same as "C-M-n" - the default function is the same as "C-M-d".
-(global-set-key (kbd "C-M-<down>") 'forward-list)
+;; (CTRL + ALT + Shift + Down arrow).
+(global-set-key (kbd "C-M-S-<down>") 'forward-list)
 ;; Same as "C-M-p" - the default function is the same as "C-M-u".
-(global-set-key (kbd "C-M-<up>") 'backward-list)
+;; (CTRL + ALT + Shift + Up arrow).
+(global-set-key (kbd "C-M-S-<up>") 'backward-list)
 
-;; Remapping "C-M-f" to "C-M-<right>".
-(global-set-key (kbd "C-M-<right>") 'forward-sexp)
-;; Remapping "C-M-b" to "C-M-<left>".
-(global-set-key (kbd "C-M-<left>") 'backward-sexp)
+;; Remapping "C-M-f" to "C-M-S-<right>".
+;; (CTRL + ALT + Shift + Right arrow)
+(global-set-key (kbd "C-M-S-<right>") 'forward-sexp)
+;; Remapping "C-M-b" to "C-M-S-<left>".
+;; (CTRL + ALT + Shift + Left arrow)
+(global-set-key (kbd "C-M-S-<left>") 'backward-sexp)
 
 ;; Move text up or down.
 (global-set-key (kbd "M-<down>") 'davidc-move-line-or-region-down)
