@@ -798,13 +798,161 @@ REPORT-FN is the callback function for reporting diagnostics."
                      (when (process-buffer proc)
                        (kill-buffer (process-buffer proc))))))))))))
 
-
 (defun davidc-flymake-clang-tidy-setup ()
   "Set up flymake for clang-tidy."
   (interactive)
   (message "Setting up clang-tidy for flymake.")
   ;; Add our clang-tidy backend to the list of diagnostic functions.
   (add-hook 'flymake-diagnostic-functions #'davidc-flymake-clang-tidy nil t)
+  ;; Enable flymake.
+  (flymake-mode 1))
+
+
+;; Define default settings for Rust's Cargo executable path.
+(defvar davidc-flymake-rust-cargo-path
+  (cond
+   ((string-equal system-type "windows-nt") ; Windows
+    "cargo.exe")
+   ((string-equal system-type "darwin") ; macOS
+    "cargo")
+   (t ; Linux or other
+    "cargo"))
+  "Path to the Rust cargo executable.")
+
+(defvar davidc-flymake-rust-cargo-clippy-args
+  '()
+  "Arguments to pass to cargo clippy.
+This should be a list of strings, each element being a separate argument.
+By default, no extra arguments are passed, using Clippy's default settings.
+
+Some common options include:
+* (\"-W\" \"clippy::all\") - Enable all clippy warnings
+* (\"-W\" \"clippy::pedantic\") - Enable pedantic clippy warnings
+* (\"-A\" \"clippy::some_lint\") - Disable a specific lint
+
+See `cargo clippy --help` for more options.")
+
+;; Local variable to keep track of the currently running flymake
+;; rust-cargo-clippy process.
+(defvar-local davidc--flymake-rust-cargo-clippy-proc nil
+  "Current cargo clippy flymake process.")
+
+(defun davidc-flymake-rust-cargo-clippy-on-save ()
+  "Run Flymake only when buffer is saved."
+  (when flymake-mode
+    (flymake-start)))
+
+(defun davidc-flymake-rust-cargo-clippy (report-fn &rest _args)
+  "Flymake backend for Rust's clippy.
+REPORT-FN is the callback function for reporting diagnostics."
+  ;; Check if rust-cargo-clippy exists.
+  (unless (executable-find davidc-flymake-rust-cargo-path)
+    (error "Flymake mode rust-cargo-clippy; Cannot find cargo executable at \"%s\"." davidc-flymake-rust-cargo-path))
+  ;; (message "[DEBUG] Flymake mode rust-cargo-clippy; using cargo executable at \"%s\"." davidc-flymake-rust-cargo-path)
+
+  ;; Kill any existing process.
+  (when (process-live-p davidc--flymake-rust-cargo-clippy-proc)
+    (kill-process davidc--flymake-rust-cargo-clippy-proc))
+
+  ;; Save the current buffer.
+  (let* ((source (current-buffer))
+         (source-file (buffer-file-name)))
+
+    (when source-file
+      ;; Ensure buffer is saved
+      (when (buffer-modified-p)
+        (error "Flymake mode rust-cargo-clippy; buffer is not saved, cannot check it."))
+
+      ;; (message "[DEBUG] Flymake mode rust-cargo-clippy; Source File: \"%s\"." source-file)
+      (save-restriction
+        (widen)
+
+        ;; Get the path components for the current file for later comparison
+        (let* ((source-dir (file-name-directory source-file))
+               (source-basename (file-name-nondirectory source-file))
+               (proj-dir (locate-dominating-file source-file "Cargo.toml")))
+
+          ;; If we can't find a Cargo.toml, warn the user
+          (unless proj-dir
+            (message "Warning: No Cargo.toml found in parent directories of %s" source-file))
+
+          ;; Create the process
+          (setq davidc--flymake-rust-cargo-clippy-proc
+                (make-process
+                 :name "flymake-rust-cargo-clippy"
+                 :noquery t
+                 :connection-type 'pipe
+                 :buffer (generate-new-buffer " *flymake-rust-cargo-clippy*")
+                 :default-directory (or proj-dir source-dir)
+                 :command (append (list davidc-flymake-rust-cargo-path
+                                        "clippy"
+                                        "--message-format=short"
+                                        "--")
+                                  davidc-flymake-rust-cargo-clippy-args)
+                 :sentinel
+                 (lambda (proc _event)
+                   ;; Check that the process has indeed exited.
+                   (when (memq (process-status proc) '(exit signal))
+                     (unwind-protect
+                         ;; Only proceed if proc is the current process.
+                         (if (with-current-buffer source (eq proc davidc--flymake-rust-cargo-clippy-proc))
+                             (with-current-buffer (process-buffer proc)
+                               ;; ;; Debug output - print the entire buffer content
+                               ;; (let ((output-content (buffer-string)))
+                               ;;   (message "[DEBUG] rust-cargo-clippy full output:\n%s" output-content))
+
+                               (goto-char (point-min))
+                               (let ((diags '()))
+
+                                 ;; Parse the Rust error/warning lines directly
+                                 ;; Format: file:line:col: warning/error: message
+                                 (while (re-search-forward "\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\): \\(warning\\|error\\(?:\\[E[0-9]+\\]\\)?\\): \\(.*\\)$" nil t)
+                                   (let* ((file-path (match-string 1))
+                                          (line (string-to-number (match-string 2)))
+                                          (col (string-to-number (match-string 3)))
+                                          (type-str (match-string 4))
+                                          (message-text (match-string 5))
+                                          (level (if (string-match-p "^error" type-str) :error :warning))
+                                          (file-basename (file-name-nondirectory file-path))
+                                          (is-current-file (string= file-basename source-basename)))
+
+                                     ;; (message "[DEBUG] Found: %s at %s:%d:%d - %s"
+                                     ;;          type-str file-path line col message-text)
+                                     ;; (message "[DEBUG] Current file: %s, Parsed file: %s, Match: %s"
+                                     ;;          source-basename file-basename is-current-file)
+
+                                     ;; Check if this is for the current file by comparing basenames
+                                     (when is-current-file
+                                       (let ((beg-end (flymake-diag-region source line col)))
+                                         (when beg-end
+                                           ;; (message "[DEBUG] Adding diagnostic: %s at %d:%d"
+                                           ;;          message-text line col)
+                                           (push (flymake-make-diagnostic source
+                                                                          (car beg-end)
+                                                                          (cdr beg-end)
+                                                                          level
+                                                                          message-text)
+                                                 diags))))))
+
+                                 ;; Report the diagnostics.
+                                 (message "Flymake mode rust-cargo-clippy; Found %d diagnostics for \"%s\"."
+                                          (length diags)
+                                          (file-name-nondirectory source-file))
+                                 (funcall report-fn diags)))
+
+                           ;; If obsolete, log warning.
+                           (flymake-log :warning "Canceling obsolete check %s" proc))
+
+                       ;; Clean up resources.
+                       (when (process-buffer proc)
+                         (kill-buffer (process-buffer proc)))))))))))))
+
+(defun davidc-flymake-rust-cargo-clippy-setup ()
+  "Set up flymake for rust clippy."
+  (interactive)
+  (message "Setting up Rust clippy for flymake.")
+  ;; Add our rust clippy backend to the list of diagnostic functions.
+  (add-hook 'flymake-diagnostic-functions #'davidc-flymake-rust-cargo-clippy nil t)
   ;; Enable flymake.
   (flymake-mode 1))
 

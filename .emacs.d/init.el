@@ -95,6 +95,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-flymake-rust-cargo-clippy nil
+  "Use clippy with flymake for Rust linting."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-hideshow nil
   "Use hideshow for code folding."
   :type 'boolean
@@ -679,6 +684,16 @@
                (flyspell-prog-mode)
                (subword-mode 1)
                (hs-minor-mode 1)))
+  )
+
+;; Flymake integration with clippy.
+(when davidc-config-use-flymake-rust-cargo-clippy
+  (add-hook 'rust-mode-hook
+            (lambda ()
+              (setq-local flymake-no-changes-timeout nil)
+              (add-hook 'after-save-hook 'davidc-flymake-rust-cargo-clippy-on-save nil t)
+              (davidc-flymake-rust-cargo-clippy-setup))
+            )
   )
 
 
