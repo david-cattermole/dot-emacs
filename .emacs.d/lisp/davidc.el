@@ -344,6 +344,11 @@ For now we use 'python black'."
   (interactive)
   (call-interactively 'python-black-buffer))
 
+(defun davidc-format-buffer-rust ()
+  "Format a Rust buffer.
+For now we use 'rustfmt'."
+  (interactive)
+  (call-interactively 'rust-format-buffer))
 
 (defun davidc-format ()
   "Format the buffer or region for supported major modes.
@@ -354,25 +359,27 @@ Supported major modes are C++ (c++-mode) and Python (python-mode)."
       (call-interactively 'davidc-format-region)
     (call-interactively 'davidc-format-buffer)))
 
-
 (defun davidc-format-region ()
   "Format the selected region of text for supported major modes.
-Supported major modes are C++ (c++-mode) and Python (python-mode)."
+Supported major modes are C++ (c++-mode) and Python (python-mode).
+For Rust (rust-mode), we format the entire buffer instead."
   (interactive)
   (cond
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-region-c++))
    ((string-equal major-mode "python-mode") (call-interactively 'davidc-format-region-python))
-   )
-  )
-
+   ((string-equal major-mode "rust-mode")
+    (message "Region formatting not supported for Rust - formatting entire buffer")
+    (call-interactively 'davidc-format-buffer-rust))
+   ))
 
 (defun davidc-format-buffer ()
   "Format the selected buffer of text for supported major modes.
-Supported major modes are C++ (c++-mode) and Python (python-mode)."
+Supported major modes are C++ (c++-mode), Python (python-mode) and Rust (rust-mode)."
   (interactive)
   (cond
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-buffer-c++))
    ((string-equal major-mode "python-mode") (call-interactively 'davidc-format-buffer-python))
+   ((string-equal major-mode "rust-mode") (call-interactively 'davidc-format-buffer-rust))
    )
   )
 

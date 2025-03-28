@@ -677,7 +677,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Rust Hook
 (when davidc-config-use-rust-mode
-   (setq rust-format-on-save t)
    (add-hook 'rust-mode-hook
              (lambda ()
                (setq indent-tabs-mode nil)
