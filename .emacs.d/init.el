@@ -339,6 +339,10 @@
 ;; ;; Press CTRL+RETURN to Compile
 ;; (global-set-key (kbd "C-<return>") 'compile)
 
+;; The opposite of `fill-paragraph` (M-q), joining all lines in the
+;; current paragraph into a single line.
+(global-set-key (kbd "M-Q") 'davidc-unfill-paragraph)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customize Dired.
 (require 'dired)

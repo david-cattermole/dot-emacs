@@ -265,6 +265,26 @@ Returns to the original point after completing (or erroring)."
 ;;       (when currentFile
 ;;         (delete-file currentFile)))))
 
+(defun davidc-unfill-paragraph (&optional region)
+  "Reverse the effect of `fill-paragraph' by joining all lines in the current paragraph into a single line.
+If REGION is non-nil, operate on the active region instead."
+  (interactive (list (use-region-p)))
+  (let ((fill-column most-positive-fixnum)) ; Set fill-column to a very large value
+    (if region
+        (fill-region (region-beginning) (region-end))
+      (fill-paragraph nil))))
+
+(defun davidc-unfill-region (start end)
+  "Unfill all paragraphs in the region from START to END."
+  (interactive "r")  ; "r" means to use the region as arguments
+  (let ((fill-column most-positive-fixnum))
+    (fill-region start end)))
+
+(defun davidc-unfill-buffer ()
+  "Unfill all paragraphs in the current buffer, converting them into single lines."
+  (interactive)
+  (let ((fill-column most-positive-fixnum))
+    (fill-region (point-min) (point-max))))
 
 ;; Highlighting Lines
 ;;
