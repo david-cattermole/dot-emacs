@@ -302,7 +302,7 @@
 (if (version< emacs-version "24.4")
     nil
   (progn
-    (global-set-key (kbd "<f2>") 'dired-hide-details-mode)))
+    (global-set-key (kbd "<f8>") 'dired-hide-details-mode)))
 
 ;; Go to previous/next buffer.
 (global-set-key (kbd "<f3>") 'previous-buffer)
@@ -331,6 +331,10 @@
 ;; 'Shift + Tab' (or 'C-x Tab') key will setup an interactive mode to
 ;; indent selected code.
 (global-set-key (kbd "<backtab>") 'indent-rigidly)
+
+;; Rename the symbol under the cursor in the current buffer,
+;; interactively.
+(global-set-key (kbd "<f2>") 'davidc-rename-symbol-at-point)
 
 ;; ;; Press CTRL+RETURN to Compile
 ;; (global-set-key (kbd "C-<return>") 'compile)

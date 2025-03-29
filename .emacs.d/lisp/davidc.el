@@ -25,6 +25,47 @@
   (find-file *custom-vars-file*))
 
 
+(defun davidc-rename-symbol-at-point (whole-symbol-only)
+  "Rename occurrences of the symbol at point, with confirmation.
+When called with a prefix argument (C-u), only matches whole symbols.
+
+This function identifies the symbol under the cursor and performs an
+interactive query-replace, allowing you to confirm or reject each replacement.
+After the operation completes, it returns to the original cursor position.
+
+When you invoke this function:
+1. It identifies the symbol at the current cursor position
+2. Prompts you for a replacement string
+3. Starts a query-replace from the beginning of the buffer
+4. For each occurrence, you can press:
+   - 'y' to replace this occurrence
+   - 'n' to skip this occurrence
+   - '!' to replace all remaining occurrences without asking
+   - 'q' to exit the query-replace
+
+Returns to the original point after completing (or erroring)."
+  (interactive "P")
+  (let* ((bounds (bounds-of-thing-at-point 'symbol))
+         (symbol (if bounds
+                    (buffer-substring-no-properties (car bounds) (cdr bounds))
+                  (error "No symbol at point")))
+         (search-pattern (if whole-symbol-only
+                             (concat "\\_<" (regexp-quote symbol) "\\_>")
+                           (regexp-quote symbol)))
+         (replacement (read-string (format "Replace '%s' with: " symbol)))
+         (original-point (point)))
+
+    ;; Go to the beginning of the buffer to ensure we find all occurrences
+    (goto-char (point-min))
+
+    ;; Perform the query-replace operation
+    (unwind-protect
+        (query-replace-regexp search-pattern replacement nil (point-min) (point-max))
+      ;; This will be executed when query-replace-regexp exits (even if by error)
+      (goto-char original-point)
+      (message "Rename completed and returned to original position"))))
+
+
 ;; ;; Insert Text
 ;; ;;
 ;; ;; This code shows how to insert a string, and also position cursor
