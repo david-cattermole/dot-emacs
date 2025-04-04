@@ -31,17 +31,18 @@ When called with a prefix argument (C-u), only matches whole symbols.
 
 This function identifies the symbol under the cursor and performs an
 interactive query-replace, allowing you to confirm or reject each replacement.
+The prompt is pre-filled with the current symbol for easy editing.
 After the operation completes, it returns to the original cursor position.
 
 When you invoke this function:
-1. It identifies the symbol at the current cursor position
-2. Prompts you for a replacement string
-3. Starts a query-replace from the beginning of the buffer
+1. It identifies the symbol at the current cursor position.
+2. Prompts you for a replacement string, pre-filled with the current symbol.
+3. Starts a query-replace from the beginning of the buffer.
 4. For each occurrence, you can press:
-   - 'y' to replace this occurrence
-   - 'n' to skip this occurrence
-   - '!' to replace all remaining occurrences without asking
-   - 'q' to exit the query-replace
+   - 'y' to replace this occurrence.
+   - 'n' to skip this occurrence.
+   - '!' to replace all remaining occurrences without asking.
+   - 'q' to exit the query-replace.
 
 Returns to the original point after completing (or erroring)."
   (interactive "P")
@@ -52,18 +53,23 @@ Returns to the original point after completing (or erroring)."
          (search-pattern (if whole-symbol-only
                              (concat "\\_<" (regexp-quote symbol) "\\_>")
                            (regexp-quote symbol)))
-         (replacement (read-string (format "Replace '%s' with: " symbol)))
+         ;; Pre-populate the prompt with the current symbol for editing
+         (replacement (read-string (format "Replace '%s' with: " symbol) symbol))
          (original-point (point)))
 
-    ;; Go to the beginning of the buffer to ensure we find all occurrences
-    (goto-char (point-min))
+    ;; Only proceed if the replacement is different from the original symbol
+    (if (string-equal symbol replacement)
+        (message "No changes made to symbol '%s'" symbol)
 
-    ;; Perform the query-replace operation
-    (unwind-protect
-        (query-replace-regexp search-pattern replacement nil (point-min) (point-max))
-      ;; This will be executed when query-replace-regexp exits (even if by error)
-      (goto-char original-point)
-      (message "Rename completed and returned to original position"))))
+      ;; Go to the beginning of the buffer to ensure we find all occurrences
+      (goto-char (point-min))
+
+      ;; Perform the query-replace operation
+      (unwind-protect
+          (query-replace-regexp search-pattern replacement nil (point-min) (point-max))
+        ;; This will be executed when query-replace-regexp exits (even if by error)
+        (goto-char original-point)
+        (message "Rename completed and returned to original position")))))
 
 
 ;; ;; Insert Text
