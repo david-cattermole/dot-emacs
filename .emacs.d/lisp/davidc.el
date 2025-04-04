@@ -26,17 +26,21 @@
 
 
 (defun davidc-rename-symbol-at-point (whole-symbol-only)
-  "Rename occurrences of the symbol at point, with confirmation.
-When called with a prefix argument (C-u), only matches whole symbols.
+  "Rename occurrences of the selected text or symbol at point, with confirmation.
+When called with a prefix argument (C-u), only matches whole symbols
+(only applies when no region is selected).
 
-This function identifies the symbol under the cursor and performs an
-interactive query-replace, allowing you to confirm or reject each replacement.
-The prompt is pre-filled with the current symbol for easy editing.
-After the operation completes, it returns to the original cursor position.
+If a region is selected, replaces all occurrences of the selected text.
+If no region is selected, identifies the symbol under the cursor.
+
+Then performs an interactive query-replace, allowing you to confirm or
+reject each replacement. The prompt is pre-filled with the current text
+for easy editing. After the operation completes, it returns to the
+original cursor position.
 
 When you invoke this function:
-1. It identifies the symbol at the current cursor position.
-2. Prompts you for a replacement string, pre-filled with the current symbol.
+1. It identifies the text to replace (from selection or symbol at point).
+2. Prompts you for a replacement string, pre-filled with the current text.
 3. Starts a query-replace from the beginning of the buffer.
 4. For each occurrence, you can press:
    - 'y' to replace this occurrence.
@@ -46,29 +50,44 @@ When you invoke this function:
 
 Returns to the original point after completing (or erroring)."
   (interactive "P")
-  (let* ((bounds (bounds-of-thing-at-point 'symbol))
-         (symbol (if bounds
-                    (buffer-substring-no-properties (car bounds) (cdr bounds))
-                  (error "No symbol at point")))
-         (search-pattern (if whole-symbol-only
-                             (concat "\\_<" (regexp-quote symbol) "\\_>")
-                           (regexp-quote symbol)))
-         ;; Pre-populate the prompt with the current symbol for editing
-         (replacement (read-string (format "Replace '%s' with: " symbol) symbol))
-         (original-point (point)))
+  (let* ((original-point (point))
+         (text-to-replace
+          (if (use-region-p)
+              ;; If region is active, use the selected text.
+              (buffer-substring-no-properties (region-beginning) (region-end))
+            ;; Otherwise use the symbol at point.
+            (let ((bounds (bounds-of-thing-at-point 'symbol)))
+              (if bounds
+                  (buffer-substring-no-properties (car bounds) (cdr bounds))
+                (error "davidc-rename-symbol-at-point: No symbol at point and no region selected.")))))
+         ;; Only apply whole-symbol-only if we're using symbol-at-point (not region).
+         (search-pattern (if (and whole-symbol-only (not (use-region-p)))
+                             (concat "\\_<" (regexp-quote text-to-replace) "\\_>")
+                           (regexp-quote text-to-replace)))
+         ;; Pre-populate the prompt with the current text for editing.
+         (replacement (read-string (format "Replace '%s' with: " text-to-replace) text-to-replace))
+         ;; Save selection bounds to potentially restore later.
+         (had-region (use-region-p))
+         (region-beginning (when had-region (region-beginning)))
+         (region-end (when had-region (region-end))))
 
-    ;; Only proceed if the replacement is different from the original symbol
-    (if (string-equal symbol replacement)
-        (message "No changes made to symbol '%s'" symbol)
+    ;; Only proceed if the replacement is different from the original text.
+    (if (string-equal text-to-replace replacement)
+        (message "No changes made to '%s'" text-to-replace)
 
-      ;; Go to the beginning of the buffer to ensure we find all occurrences
+      ;; Deactivate the mark to avoid confusion during replacement.
+      (when had-region
+        (deactivate-mark))
+
+      ;; Go to the beginning of the buffer to ensure we find all occurrences.
       (goto-char (point-min))
 
-      ;; Perform the query-replace operation
+      ;; Perform the query-replace operation.
       (unwind-protect
           (query-replace-regexp search-pattern replacement nil (point-min) (point-max))
-        ;; This will be executed when query-replace-regexp exits (even if by error)
+        ;; This will be executed when query-replace-regexp exits (even if by error).
         (goto-char original-point)
+
         (message "Rename completed and returned to original position")))))
 
 
