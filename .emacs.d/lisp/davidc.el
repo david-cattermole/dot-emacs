@@ -543,10 +543,8 @@ REPORT-FN is the callback function for reporting diagnostics."
          (source-file (buffer-file-name)))
 
     (when source-file
-      ;; Save buffer before running clang-tidy to ensure all changes are analyzed
+      ;; Save buffer before running clang-tidy to ensure all changes are analyzed.
       (when (buffer-modified-p)
-        ;; (message "Flymake mode clang-tidy; saving buffer before analysis...")
-        ;; (save-buffer)
         (error "Flymake mode clang-tidy; buffer is not saved, cannot check it."))
 
       ;; (message "[DEBUG] Flymake mode clang-tidy; Source File: \"%s\"." source-file)
