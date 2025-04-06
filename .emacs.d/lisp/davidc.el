@@ -25,10 +25,10 @@
   (find-file *custom-vars-file*))
 
 
-(defun davidc-rename-symbol-at-point (whole-symbol-only)
+(defun davidc-rename-symbol-at-point (&optional no-whole-symbol-only)
   "Rename occurrences of the selected text or symbol at point, with confirmation.
-When called with a prefix argument (C-u), only matches whole symbols
-(only applies when no region is selected).
+By default, only matches whole symbols. With a prefix argument (C-u),
+matches fragments inside larger symbols as well.
 
 If a region is selected, replaces all occurrences of the selected text.
 If no region is selected, identifies the symbol under the cursor.
@@ -60,10 +60,10 @@ Returns to the original point after completing (or erroring)."
               (if bounds
                   (buffer-substring-no-properties (car bounds) (cdr bounds))
                 (error "davidc-rename-symbol-at-point: No symbol at point and no region selected.")))))
-         ;; Only apply whole-symbol-only if we're using symbol-at-point (not region).
-         (search-pattern (if (and whole-symbol-only (not (use-region-p)))
-                             (concat "\\_<" (regexp-quote text-to-replace) "\\_>")
-                           (regexp-quote text-to-replace)))
+         ;; By default, only match whole symbols. With prefix arg, match fragments too.
+         (search-pattern (if no-whole-symbol-only
+                             (regexp-quote text-to-replace)
+                           (concat "\\_<" (regexp-quote text-to-replace) "\\_>")))
          ;; Pre-populate the prompt with the current text for editing.
          (replacement (read-string (format "Replace '%s' with: " text-to-replace) text-to-replace))
          ;; Save selection bounds to potentially restore later.
