@@ -25,7 +25,7 @@
   (find-file *custom-vars-file*))
 
 
-(defun davidc-rename-symbol-at-point (&optional no-whole-symbol-only)
+(defun davidc-rename-symbol-in-buffer (&optional no-whole-symbol-only)
   "Rename occurrences of the selected text or symbol at point, with confirmation.
 By default, only matches whole symbols. With a prefix argument (C-u),
 matches fragments inside larger symbols as well.
@@ -59,7 +59,7 @@ Returns to the original point after completing (or erroring)."
             (let ((bounds (bounds-of-thing-at-point 'symbol)))
               (if bounds
                   (buffer-substring-no-properties (car bounds) (cdr bounds))
-                (error "davidc-rename-symbol-at-point: No symbol at point and no region selected.")))))
+                (error "davidc-rename-symbol-in-buffer: No symbol at point and no region selected.")))))
          ;; By default, only match whole symbols. With prefix arg, match fragments too.
          (search-pattern (if no-whole-symbol-only
                              (regexp-quote text-to-replace)
@@ -89,6 +89,78 @@ Returns to the original point after completing (or erroring)."
         (goto-char original-point)
 
         (message "Rename completed and returned to original position")))))
+
+(defun davidc-rename-symbol-in-region (start end &optional no-whole-symbol-only)
+  "Rename occurrences of a symbol, but only within the specified region.
+Useful for renaming a variable within a single function or block.
+
+START and END define the region to operate on.
+With a prefix argument, matches fragments inside larger symbols as well.
+
+The function will:
+1. Identify the symbol at point or prompt for a symbol if none is found
+2. Prompt for a replacement string, pre-filled with the original text
+3. Perform interactive query-replace only within the selected region
+4. Return to the original cursor position after completion
+
+For each occurrence, you can press:
+   - 'y' to replace this occurrence
+   - 'n' to skip this occurrence
+   - '!' to replace all remaining occurrences without asking
+   - 'q' to exit the query-replace"
+  (interactive "r\nP")
+  (let* ((original-point (point))
+         ;; Get symbol at point, or prompt for one if none is found
+         (symbol-at-point (thing-at-point 'symbol t))
+         (text-to-replace
+          (if symbol-at-point
+              symbol-at-point
+            (read-string "Symbol to replace: ")))
+         ;; By default, only match whole symbols
+         (search-pattern (if no-whole-symbol-only
+                             (regexp-quote text-to-replace)
+                           (concat "\\_<" (regexp-quote text-to-replace) "\\_>")))
+         ;; Pre-populate the prompt with the current text for editing
+         (replacement (read-string (format "Replace '%s' with: " text-to-replace) text-to-replace)))
+
+    ;; Only proceed if the replacement is different from the original text
+    (if (string-equal text-to-replace replacement)
+        (message "No changes made to '%s'" text-to-replace)
+
+      ;; Deactivate the mark to avoid confusion during replacement
+      (deactivate-mark)
+
+      ;; Perform the query-replace operation within the specified region
+      (unwind-protect
+          (progn
+            ;; Move to the beginning of the region
+            (goto-char start)
+            ;; Perform the replacement only within the region
+            (query-replace-regexp search-pattern replacement nil start end))
+        ;; This will be executed when query-replace-regexp exits (even if by error)
+        (goto-char original-point)
+
+        (message "Rename completed within region and returned to original position")))))
+
+(defun davidc-rename-symbol-in-function (&optional no-whole-symbol-only)
+  "Rename occurrences of a symbol, but only within the current function/defun.
+With a prefix argument, matches fragments inside larger symbols as well.
+
+The function identifies the current defun boundaries and then calls
+`davidc-rename-symbol-in-region` to perform the actual renaming operation."
+  (interactive "P")
+  (let* ((bounds (bounds-of-thing-at-point 'defun))
+         (defun-start (if bounds (car bounds) (point-min)))
+         (defun-end (if bounds (cdr bounds) (point-max))))
+
+    (if bounds
+        (progn
+          (message "Renaming within current function/defun...")
+          (davidc-rename-symbol-in-region defun-start defun-end no-whole-symbol-only))
+      (message "Could not identify current function/defun boundaries. Using current region or selecting symbol at point.")
+      (if (use-region-p)
+          (davidc-rename-symbol-in-region (region-beginning) (region-end) no-whole-symbol-only)
+        (call-interactively 'davidc-rename-symbol-in-buffer)))))
 
 (defun davidc-unfill-paragraph (&optional region)
   "Reverse the effect of `fill-paragraph' by joining all lines in the current paragraph into a single line.

@@ -334,7 +334,11 @@
 
 ;; Rename the symbol under the cursor in the current buffer,
 ;; interactively.
-(global-set-key (kbd "<f2>") 'davidc-rename-symbol-at-point)
+(global-set-key (kbd "<f2>") 'davidc-rename-symbol-in-buffer)
+
+;; Rename the symbol under the cursor in the current function,
+;; interactively.
+;; (global-set-key (kbd "S-<f2>") 'davidc-rename-symbol-in-function)
 
 ;; ;; Press CTRL+RETURN to Compile
 ;; (global-set-key (kbd "C-<return>") 'compile)
