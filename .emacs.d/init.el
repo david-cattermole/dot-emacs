@@ -340,6 +340,12 @@
 ;; interactively.
 ;; (global-set-key (kbd "S-<f2>") 'davidc-rename-symbol-in-function)
 
+;; Grow the selection.
+(global-set-key (kbd "M-]") 'davidc-region-grow)
+
+;; Shrink the selection.
+(global-set-key (kbd "M-[") 'davidc-region-shrink)
+
 ;; ;; Press CTRL+RETURN to Compile
 ;; (global-set-key (kbd "C-<return>") 'compile)
 
