@@ -25,6 +25,32 @@
   (find-file *custom-vars-file*))
 
 
+(defun davidc--read-string-with-selection (prompt initial-input)
+  "Read a string from the minibuffer, with initial input selected."
+  (minibuffer-with-setup-hook
+      (lambda ()
+        ;; If you enable Delete Selection (minor) mode, then inserting
+        ;; text while the mark is active causes the selected text to
+        ;; be deleted first. This also deactivates the mark. Many
+        ;; graphical applications follow this convention, but Emacs
+        ;; does not.
+        (delete-selection-mode 1)
+
+        ;; Move to beginning of text (after prompt).
+        (goto-char (minibuffer-prompt-end))
+
+        ;; Set mark at the end of text.
+        (end-of-line)
+        (push-mark (point) t t)
+
+        ;; Move back to beginning of text.
+        (goto-char (minibuffer-prompt-end))
+
+        ;; Activate the region.
+        (setq deactivate-mark nil))
+
+    (read-string prompt initial-input)))
+
 (defun davidc-rename-symbol-in-buffer (&optional no-whole-symbol-only)
   "Rename occurrences of the selected text or symbol at point, with confirmation.
 By default, only matches whole symbols. With a prefix argument (C-u),
@@ -65,7 +91,9 @@ Returns to the original point after completing (or erroring)."
                              (regexp-quote text-to-replace)
                            (concat "\\_<" (regexp-quote text-to-replace) "\\_>")))
          ;; Pre-populate the prompt with the current text for editing.
-         (replacement (read-string (format "Replace '%s' with: " text-to-replace) text-to-replace))
+         (replacement (davidc--read-string-with-selection
+              (format "Replace '%s' with: " text-to-replace)
+              text-to-replace))
          ;; Save selection bounds to potentially restore later.
          (had-region (use-region-p))
          (region-beginning (when had-region (region-beginning)))
@@ -121,7 +149,9 @@ For each occurrence, you can press:
                              (regexp-quote text-to-replace)
                            (concat "\\_<" (regexp-quote text-to-replace) "\\_>")))
          ;; Pre-populate the prompt with the current text for editing
-         (replacement (read-string (format "Replace '%s' with: " text-to-replace) text-to-replace)))
+         (replacement (davidc--read-string-with-selection
+              (format "Replace '%s' with: " text-to-replace)
+              text-to-replace))
 
     ;; Only proceed if the replacement is different from the original text
     (if (string-equal text-to-replace replacement)
@@ -698,6 +728,7 @@ Supported major modes are C++ (c++-mode), Python (python-mode) and Rust (rust-mo
 
     ;; Exit this Emacs process.
     (kill-emacs)))
+
 
 ;; Define default settings if not already defined in custom-vars.el
 (defvar davidc-python-flymake-ruff-path
