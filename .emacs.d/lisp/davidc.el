@@ -51,6 +51,49 @@
 
     (read-string prompt initial-input)))
 
+(defun davidc--rename-symbol-core (text-to-replace start end &optional no-whole-symbol-only)
+  "Core function for renaming symbols with shared logic.
+TEXT-TO-REPLACE is the text to find and replace.
+START and END define the region to operate in (nil means whole buffer).
+NO-WHOLE-SYMBOL-ONLY, if non-nil, matches fragments inside larger symbols.
+
+This function handles the common logic for all symbol renaming operations:
+1. Constructs the appropriate search pattern based on whether to match whole symbols.
+2. Prompts for a replacement string with the original text pre-selected.
+3. Performs interactive query-replace within the specified region.
+4. Returns to the original cursor position after completion."
+  (let* ((original-point (point))
+         ;; By default, only match whole symbols. With prefix arg, match fragments too.
+         (search-pattern (if no-whole-symbol-only
+                             (regexp-quote text-to-replace)
+                           (concat "\\_<" (regexp-quote text-to-replace) "\\_>")))
+         ;; Pre-populate the prompt with the current text for editing.
+         (replacement (davidc--read-string-with-selection
+                      (format "Replace '%s' with: " text-to-replace)
+                      text-to-replace))
+         ;; If region boundaries are nil, use buffer boundaries.
+         (region-start (or start (point-min)))
+         (region-end (or end (point-max))))
+
+    ;; Only proceed if the replacement is different from the original text.
+    (if (string-equal text-to-replace replacement)
+        (message "No changes made to '%s'" text-to-replace)
+
+      ;; Deactivate the mark to avoid confusion during replacement.
+      (when (use-region-p)
+        (deactivate-mark))
+
+      ;; Go to the beginning of the region to search from.
+      (goto-char region-start)
+
+      ;; Perform the query-replace operation.
+      (unwind-protect
+          (query-replace-regexp search-pattern replacement nil region-start region-end)
+        ;; This will be executed when query-replace-regexp exits (even if by error).
+        (goto-char original-point)
+
+        (message "Rename completed and returned to original position")))))
+
 (defun davidc-rename-symbol-in-buffer (&optional no-whole-symbol-only)
   "Rename occurrences of the selected text or symbol at point, with confirmation.
 By default, only matches whole symbols. With a prefix argument (C-u),
@@ -76,49 +119,19 @@ When you invoke this function:
 
 Returns to the original point after completing (or erroring)."
   (interactive "P")
-  (let* ((original-point (point))
-         (text-to-replace
-          (if (use-region-p)
-              ;; If region is active, use the selected text.
-              (buffer-substring-no-properties (region-beginning) (region-end))
-            ;; Otherwise use the symbol at point.
-            (let ((bounds (bounds-of-thing-at-point 'symbol)))
-              (if bounds
-                  (buffer-substring-no-properties (car bounds) (cdr bounds))
-                (error "davidc-rename-symbol-in-buffer: No symbol at point and no region selected.")))))
-         ;; By default, only match whole symbols. With prefix arg, match fragments too.
-         (search-pattern (if no-whole-symbol-only
-                             (regexp-quote text-to-replace)
-                           (concat "\\_<" (regexp-quote text-to-replace) "\\_>")))
-         ;; Pre-populate the prompt with the current text for editing.
-         (replacement (davidc--read-string-with-selection
-              (format "Replace '%s' with: " text-to-replace)
-              text-to-replace))
-         ;; Save selection bounds to potentially restore later.
-         (had-region (use-region-p))
-         (region-beginning (when had-region (region-beginning)))
-         (region-end (when had-region (region-end))))
+  (let ((text-to-replace
+         (if (use-region-p)
+             ;; If region is active, use the selected text.
+             (buffer-substring-no-properties (region-beginning) (region-end))
+           ;; Otherwise use the symbol at point.
+           (let ((bounds (bounds-of-thing-at-point 'symbol)))
+             (if bounds
+                 (buffer-substring-no-properties (car bounds) (cdr bounds))
+               (error "davidc-rename-symbol-in-buffer: No symbol at point and no region selected."))))))
+    ;; Call the core function with no region boundaries (nil means use whole buffer).
+    (davidc--rename-symbol-core text-to-replace nil nil no-whole-symbol-only)))
 
-    ;; Only proceed if the replacement is different from the original text.
-    (if (string-equal text-to-replace replacement)
-        (message "No changes made to '%s'" text-to-replace)
-
-      ;; Deactivate the mark to avoid confusion during replacement.
-      (when had-region
-        (deactivate-mark))
-
-      ;; Go to the beginning of the buffer to ensure we find all occurrences.
-      (goto-char (point-min))
-
-      ;; Perform the query-replace operation.
-      (unwind-protect
-          (query-replace-regexp search-pattern replacement nil (point-min) (point-max))
-        ;; This will be executed when query-replace-regexp exits (even if by error).
-        (goto-char original-point)
-
-        (message "Rename completed and returned to original position")))))
-
-(defun davidc-rename-symbol-in-region (start end &optional no-whole-symbol-only)
+(defun davidc--rename-symbol-in-region (start end &optional no-whole-symbol-only)
   "Rename occurrences of a symbol, but only within the specified region.
 Useful for renaming a variable within a single function or block.
 
@@ -137,47 +150,31 @@ For each occurrence, you can press:
    - '!' to replace all remaining occurrences without asking
    - 'q' to exit the query-replace"
   (interactive "r\nP")
-  (let* ((original-point (point))
-         ;; Get symbol at point, or prompt for one if none is found
+  (let* (;; Get symbol at point, or prompt for one if none is found.
          (symbol-at-point (thing-at-point 'symbol t))
          (text-to-replace
           (if symbol-at-point
               symbol-at-point
-            (read-string "Symbol to replace: ")))
-         ;; By default, only match whole symbols
-         (search-pattern (if no-whole-symbol-only
-                             (regexp-quote text-to-replace)
-                           (concat "\\_<" (regexp-quote text-to-replace) "\\_>")))
-         ;; Pre-populate the prompt with the current text for editing
-         (replacement (davidc--read-string-with-selection
-              (format "Replace '%s' with: " text-to-replace)
-              text-to-replace))
-
-    ;; Only proceed if the replacement is different from the original text
-    (if (string-equal text-to-replace replacement)
-        (message "No changes made to '%s'" text-to-replace)
-
-      ;; Deactivate the mark to avoid confusion during replacement
-      (deactivate-mark)
-
-      ;; Perform the query-replace operation within the specified region
-      (unwind-protect
-          (progn
-            ;; Move to the beginning of the region
-            (goto-char start)
-            ;; Perform the replacement only within the region
-            (query-replace-regexp search-pattern replacement nil start end))
-        ;; This will be executed when query-replace-regexp exits (even if by error)
-        (goto-char original-point)
-
-        (message "Rename completed within region and returned to original position")))))
+            (read-string "Symbol to replace: "))))
+    ;; Call the core function with the specified region boundaries.
+    (davidc--rename-symbol-core text-to-replace start end no-whole-symbol-only)))
 
 (defun davidc-rename-symbol-in-function (&optional no-whole-symbol-only)
   "Rename occurrences of a symbol, but only within the current function/defun.
 With a prefix argument, matches fragments inside larger symbols as well.
 
 The function identifies the current defun boundaries and then calls
-`davidc-rename-symbol-in-region` to perform the actual renaming operation."
+`davidc--rename-symbol-in-region` to perform the actual renaming operation.
+
+If no function boundaries can be identified, falls back to either:
+1. The current active region, if one exists.
+2. The entire buffer with symbol at point, if no region is selected.
+
+For each occurrence, you can press:
+   - 'y' to replace this occurrence
+   - 'n' to skip this occurrence
+   - '!' to replace all remaining occurrences without asking
+   - 'q' to exit the query-replace"
   (interactive "P")
   (let* ((bounds (bounds-of-thing-at-point 'defun))
          (defun-start (if bounds (car bounds) (point-min)))
@@ -186,10 +183,10 @@ The function identifies the current defun boundaries and then calls
     (if bounds
         (progn
           (message "Renaming within current function/defun...")
-          (davidc-rename-symbol-in-region defun-start defun-end no-whole-symbol-only))
+          (davidc--rename-symbol-in-region defun-start defun-end no-whole-symbol-only))
       (message "Could not identify current function/defun boundaries. Using current region or selecting symbol at point.")
       (if (use-region-p)
-          (davidc-rename-symbol-in-region (region-beginning) (region-end) no-whole-symbol-only)
+          (davidc--rename-symbol-in-region (region-beginning) (region-end) no-whole-symbol-only)
         (call-interactively 'davidc-rename-symbol-in-buffer)))))
 
 
