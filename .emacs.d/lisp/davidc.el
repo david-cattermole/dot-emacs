@@ -25,8 +25,8 @@
   (find-file *custom-vars-file*))
 
 
-(defun davidc--read-string-with-selection (prompt initial-input)
-  "Read a string from the minibuffer, with initial input selected."
+(defun davidc--read-string (prompt initial-input)
+  "Read a string from the minibuffer, with delete-selection-mode enabled."
   (minibuffer-with-setup-hook
       (lambda ()
         ;; If you enable Delete Selection (minor) mode, then inserting
@@ -34,20 +34,7 @@
         ;; be deleted first. This also deactivates the mark. Many
         ;; graphical applications follow this convention, but Emacs
         ;; does not.
-        (delete-selection-mode 1)
-
-        ;; Move to beginning of text (after prompt).
-        (goto-char (minibuffer-prompt-end))
-
-        ;; Set mark at the end of text.
-        (end-of-line)
-        (push-mark (point) t t)
-
-        ;; Move back to beginning of text.
-        (goto-char (minibuffer-prompt-end))
-
-        ;; Activate the region.
-        (setq deactivate-mark nil))
+        (delete-selection-mode 1))
 
     (read-string prompt initial-input)))
 
@@ -68,7 +55,7 @@ This function handles the common logic for all symbol renaming operations:
                              (regexp-quote text-to-replace)
                            (concat "\\_<" (regexp-quote text-to-replace) "\\_>")))
          ;; Pre-populate the prompt with the current text for editing.
-         (replacement (davidc--read-string-with-selection
+         (replacement (davidc--read-string
                       (format "Replace '%s' with: " text-to-replace)
                       text-to-replace))
          ;; If region boundaries are nil, use buffer boundaries.
@@ -155,7 +142,7 @@ For each occurrence, you can press:
          (text-to-replace
           (if symbol-at-point
               symbol-at-point
-            (read-string "Symbol to replace: "))))
+            (davidc--read-string "Symbol to replace: "))))
     ;; Call the core function with the specified region boundaries.
     (davidc--rename-symbol-core text-to-replace start end no-whole-symbol-only)))
 
