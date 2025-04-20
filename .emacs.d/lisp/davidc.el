@@ -806,7 +806,10 @@ REPORT-FN is the callback function for reporting diagnostics."
                :noquery t
                :connection-type 'pipe
                :buffer (generate-new-buffer " *flymake-clang-tidy*")
-               :default-directory (file-name-directory source-file)
+               ;; ':file-handler' will ensure the current working
+               ;; directory is set to the current buffer's value of
+               ;; 'default-directory', or '~' as a fallback.
+               :file-handler t
                :command (list davidc-flymake-clang-tidy-path
                               "-quiet"
                               (file-name-nondirectory source-file)
@@ -981,7 +984,10 @@ REPORT-FN is the callback function for reporting diagnostics."
                  :noquery t
                  :connection-type 'pipe
                  :buffer (generate-new-buffer " *flymake-rust-cargo-clippy*")
-                 :default-directory (or proj-dir source-dir)
+                 ;; ':file-handler' will ensure the current working
+                 ;; directory is set to the current buffer's value of
+                 ;; 'default-directory', or '~' as a fallback.
+                 :file-handler t
                  :command (append (list davidc-flymake-rust-cargo-path
                                         "clippy"
                                         "--message-format=short"
