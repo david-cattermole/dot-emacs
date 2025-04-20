@@ -385,8 +385,13 @@ If REGION is non-nil, operate on the active region instead."
 (defun davidc-fullscreen (&optional f)
   "Toggle Fullscreen mode."
   (interactive)
-  (set-frame-parameter f 'fullscreen
-                       (if (frame-parameter f 'fullscreen) nil 'fullboth)))
+  (if (version< emacs-version "25.0")
+      (progn
+        (set-frame-parameter f 'fullscreen
+                             (if (frame-parameter f 'fullscreen) nil 'fullboth)))
+    (progn
+      ;; 'toggle-frame-fullscreen' was added in Emacs 24.4.
+      (toggle-frame-fullscreen))))
 
 
 ;; Hide Dired details by default.
