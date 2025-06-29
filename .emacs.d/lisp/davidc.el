@@ -463,7 +463,6 @@ For now we use 'python black'."
   (interactive)
   (call-interactively 'python-black-region))
 
-
 (defun davidc-format-buffer-python ()
   "Formats a Python buffer.
 For now we use 'python black'."
@@ -700,7 +699,7 @@ Supported major modes are C++ (c++-mode), Python (python-mode) and Rust (rust-mo
 ;; This is intended for debugging the emacs configuration. It can be
 ;; run to restart Emacs in a fresh state, but with all buffers
 ;; re-opened.
-(defun davidc-debug-restart-emacs ()
+(defun davidc-restart-emacs ()
   "Restart Emacs completely for debugging purposes while preserving open buffers."
   (interactive)
   (let ((init-file user-init-file)
