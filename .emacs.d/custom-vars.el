@@ -8,6 +8,12 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(baud-rate 19200)
+ '(c-default-style
+   '((c-mode . "mmsolver")
+     (c++-mode . "mmsolver")
+     (java-mode . "java")
+     (awk-mode . "awk")
+     (other . "gnu")))
  '(custom-enabled-themes '(tsdh-dark))
  '(eol-mnemonic-dos "(DOS)")
  '(eol-mnemonic-mac "(Mac)")
