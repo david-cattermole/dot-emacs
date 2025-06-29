@@ -669,25 +669,9 @@ Supported major modes are C++ (c++-mode), Python (python-mode) and Rust (rust-mo
                                    (overlay-end ov)))))
 
 ;; This is intended for debugging the emacs configuration. It can be
-;; run to restart Emacs in a fresh state.
+;; run to restart Emacs in a fresh state, but with all buffers
+;; re-opened.
 (defun davidc-debug-restart-emacs ()
-  "Restart Emacs completely for debugging purposes."
-  (interactive)
-  (let ((init-file user-init-file)
-        (restart-args command-line-args))
-
-    ;; Start a new Emacs process
-    (call-process (concat invocation-directory invocation-name)
-                  nil 0 nil
-                  "--eval" "(message \"Restarted Emacs for debugging.\")"
-                  "--file" init-file)
-
-    ;; Exit this Emacs process
-    (kill-emacs)))
-
-;; This is intended for debugging the emacs configuration. It can be
-;; run to restart Emacs in a fresh state.
-(defun davidc-debug-restart-emacs-preserve-buffers ()
   "Restart Emacs completely for debugging purposes while preserving open buffers."
   (interactive)
   (let ((init-file user-init-file)
