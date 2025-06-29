@@ -58,7 +58,9 @@
    )
  '(python-forward-sexp-function 'python-nav-forward-sexp)
  '(davidc-python-flymake-ruff-path
-   "C:/Program Files/ruff/ruff-x86_64-pc-windows-msvc-v0.0.256/ruff.exe" t)
+   "C:/Program Files/ruff/ruff-x86_64-pc-windows-msvc-v0.12.1/ruff.exe" t)
+ '(python-black-command "C:/Program Files/ruff/ruff-x86_64-pc-windows-msvc-v0.12.1/ruff.exe")
+ '(python-black-extra-args '("format"))
  '(davidc-config-add-gnuwin32-binaries nil)
  '(davidc-config-override-ispell-binary t)
  '(davidc-config-override-rg-binary nil)
