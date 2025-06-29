@@ -340,6 +340,10 @@
 ;; interactively.
 (global-set-key (kbd "S-<f2>") 'davidc-rename-symbol-in-function)
 
+;; Rename the symbol under the cursor in the current line,
+;; interactively.
+(global-set-key (kbd "C-<f2>") 'davidc-rename-symbol-in-line)
+
 ;; Grow the selection.
 (global-set-key (kbd "M-]") 'davidc-region-grow)
 

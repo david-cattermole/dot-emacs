@@ -176,6 +176,35 @@ For each occurrence, you can press:
           (davidc--rename-symbol-in-region (region-beginning) (region-end) no-whole-symbol-only)
         (call-interactively 'davidc-rename-symbol-in-buffer)))))
 
+(defun davidc-rename-symbol-in-line (&optional no-whole-symbol-only)
+  "Rename occurrences of a symbol, but only within the current line.
+With a prefix argument, matches fragments inside larger symbols as well.
+
+The function identifies the current line boundaries and then performs
+symbol renaming only within that line. This is useful for quick renames
+of variables that appear multiple times on the same line.
+
+If no symbol is found at point, prompts for a symbol to replace.
+
+For each occurrence, you can press:
+   - 'y' to replace this occurrence
+   - 'n' to skip this occurrence
+   - '!' to replace all remaining occurrences without asking
+   - 'q' to exit the query-replace"
+  (interactive "P")
+  (let* ((line-start (line-beginning-position))
+         (line-end (line-end-position))
+         ;; Get symbol at point, or prompt for one if none is found.
+         (symbol-at-point (thing-at-point 'symbol t))
+         (text-to-replace
+          (if symbol-at-point
+              symbol-at-point
+            (davidc--read-string "Symbol to replace: " ""))))
+
+    (message "Renaming within current line...")
+    ;; Call the core function with the current line boundaries.
+    (davidc--rename-symbol-core text-to-replace line-start line-end no-whole-symbol-only)))
+
 
 (defvar davidc--expand-region-history nil
   "History of region expansions for grow/shrink region functions.")
