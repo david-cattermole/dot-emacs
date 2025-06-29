@@ -1206,3 +1206,189 @@ The search will wrap around the buffer if needed."
 The search will wrap around the buffer if needed."
   (interactive)
   (davidc-flymake-goto-diagnostic 'prev :note))
+
+
+;; Symbol Highlighting
+(defgroup davidc-symbol-highlight nil
+  "Highlight symbols under cursor."
+  :group 'davidc-config)
+
+(defface davidc-symbol-highlight-face
+  '((t (:background "DarkSlateGray4" :foreground "white" :weight bold)))
+  "Face for highlighting symbols under cursor."
+  :group 'davidc-symbol-highlight)
+
+(defface davidc-symbol-highlight-locked-face
+  '((t (:background "DarkSlateGray4" :foreground "white" :weight bold)))
+  "Face for locked symbol highlighting."
+  :group 'davidc-symbol-highlight)
+
+(defcustom davidc-symbol-highlight-delay 0.3
+  "Delay in seconds before highlighting symbols after cursor movement."
+  :type 'number
+  :group 'davidc-symbol-highlight)
+
+(defcustom davidc-symbol-highlight-minimum-length 2
+  "Minimum length of symbol to highlight."
+  :type 'integer
+  :group 'davidc-symbol-highlight)
+
+;; Buffer-local variables
+(defvar-local davidc--symbol-highlight-overlays nil
+  "List of overlays for current symbol highlighting.")
+
+(defvar-local davidc--symbol-highlight-locked nil
+  "When non-nil, contains the locked symbol string.")
+
+(defvar-local davidc--symbol-highlight-timer nil
+  "Timer for delayed symbol highlighting.")
+
+(defun davidc--symbol-highlight-cleanup ()
+  "Remove all symbol highlight overlays."
+  (when davidc--symbol-highlight-overlays
+    (mapc #'delete-overlay davidc--symbol-highlight-overlays)
+    (setq davidc--symbol-highlight-overlays nil)))
+
+(defun davidc--symbol-highlight-get-symbol ()
+  "Get the symbol at point, or nil if invalid."
+  (when-let* ((bounds (bounds-of-thing-at-point 'symbol))
+              (symbol (buffer-substring-no-properties (car bounds) (cdr bounds))))
+    (when (and (>= (length symbol) davidc-symbol-highlight-minimum-length)
+               (not (string-match-p "^[0-9]+$" symbol)))
+      symbol)))
+
+(defun davidc--symbol-highlight-create-overlays (symbol face)
+  "Create overlays for all occurrences of SYMBOL using FACE."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((overlays '())
+          (case-fold-search nil)
+          (regex (concat "\\_<" (regexp-quote symbol) "\\_>")))
+      (while (re-search-forward regex nil t)
+        (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
+          (overlay-put ov 'face face)
+          (overlay-put ov 'davidc-symbol-highlight t)
+          (push ov overlays)))
+      overlays)))
+
+(defun davidc--symbol-highlight-update ()
+  "Update symbol highlighting based on current context."
+  ;; Cancel any pending timer
+  (when davidc--symbol-highlight-timer
+    (cancel-timer davidc--symbol-highlight-timer)
+    (setq davidc--symbol-highlight-timer nil))
+
+  ;; Clean up existing overlays
+  (davidc--symbol-highlight-cleanup)
+
+  ;; If we have a locked symbol, highlight it
+  (if davidc--symbol-highlight-locked
+      (progn
+        (setq davidc--symbol-highlight-overlays
+              (davidc--symbol-highlight-create-overlays
+               davidc--symbol-highlight-locked
+               'davidc-symbol-highlight-locked-face))
+        (when (> (length davidc--symbol-highlight-overlays) 0)
+          (message "Symbol '%s': %d occurrences"
+                   davidc--symbol-highlight-locked
+                   (length davidc--symbol-highlight-overlays))))
+    ;; Otherwise, highlight symbol at point
+    (when-let ((symbol (davidc--symbol-highlight-get-symbol)))
+      (setq davidc--symbol-highlight-overlays
+            (davidc--symbol-highlight-create-overlays
+             symbol
+             'davidc-symbol-highlight-face)))))
+
+(defun davidc--symbol-highlight-post-command ()
+  "Post-command hook for symbol highlighting."
+  (when (and davidc-symbol-highlight-mode
+             (not davidc--symbol-highlight-locked)  ; Don't update if locked
+             (not (minibufferp))
+             (not (region-active-p)))
+    ;; Schedule update with delay
+    (when davidc--symbol-highlight-timer
+      (cancel-timer davidc--symbol-highlight-timer))
+    (setq davidc--symbol-highlight-timer
+          (run-with-timer davidc-symbol-highlight-delay nil
+                          #'davidc--symbol-highlight-update))))
+
+(defun davidc-symbol-highlight-toggle-symbol-lock ()
+  "Toggle symbol locking.
+If unlocked: lock the symbol at point.
+If locked: unlock and return to auto-highlighting."
+  (interactive)
+  (unless davidc-symbol-highlight-mode
+    (user-error "Symbol highlighting is not enabled"))
+
+  (if davidc--symbol-highlight-locked
+      ;; Currently locked - unlock it
+      (progn
+        (setq davidc--symbol-highlight-locked nil)
+        (davidc--symbol-highlight-update)
+        (message "Symbol highlighting unlocked - auto-highlighting enabled"))
+    ;; Currently unlocked - lock current symbol
+    (if-let ((symbol (davidc--symbol-highlight-get-symbol)))
+        (progn
+          (setq davidc--symbol-highlight-locked symbol)
+          (davidc--symbol-highlight-update)
+          (message "Locked symbol '%s'" symbol))
+      (message "No symbol at point to lock"))))
+
+;;;###autoload
+(define-minor-mode davidc-symbol-highlight-mode
+  "Minor mode for highlighting symbols under cursor.
+When enabled, automatically highlights all occurrences of the symbol
+at point. Use `davidc-symbol-highlight-toggle-symbol-lock' to lock/unlock
+highlighting to a specific symbol."
+  :init-value nil
+  :lighter (:eval (if davidc--symbol-highlight-locked " SymH[L]" " SymH"))
+  (if davidc-symbol-highlight-mode
+      (progn
+        (add-hook 'post-command-hook #'davidc--symbol-highlight-post-command nil t)
+        (davidc--symbol-highlight-update))
+    ;; Cleanup when disabling
+    (remove-hook 'post-command-hook #'davidc--symbol-highlight-post-command t)
+    (when davidc--symbol-highlight-timer
+      (cancel-timer davidc--symbol-highlight-timer)
+      (setq davidc--symbol-highlight-timer nil))
+    (setq davidc--symbol-highlight-locked nil)
+    (davidc--symbol-highlight-cleanup)))
+
+;;;###autoload
+(define-globalized-minor-mode davidc-global-symbol-highlight-mode
+  davidc-symbol-highlight-mode
+  (lambda ()
+    (when (and (not (minibufferp))
+               (derived-mode-p 'prog-mode 'text-mode))
+      (davidc-symbol-highlight-mode 1))))
+
+;; Cleanup hook for buffer/mode changes
+(add-hook 'change-major-mode-hook
+          (lambda ()
+            (when (bound-and-true-p davidc-symbol-highlight-mode)
+              (davidc-symbol-highlight-mode -1))))
+
+
+(defun davidc-symbol-highlight-or-dired-details-toggle ()
+  "Smart toggle function for symbol-highlight or dired-details.
+
+In dired buffers: toggle dired-hide-details-mode.
+In other buffers: toggle symbol highlight lock."
+  (interactive)
+  (cond
+   ;; In dired mode, toggle details.
+   ((derived-mode-p 'dired-mode)
+    (if (fboundp 'dired-hide-details-mode)
+        ;; Toggle `ls -1` (dash one) and `ls -l` (dash lower case L)
+        ;; output in Dried.
+        (dired-hide-details-mode 'toggle)
+      (message "dired-hide-details-mode not available")))
+
+   ;; In other buffers, toggle symbol highlight lock.
+   (t
+    (if (bound-and-true-p davidc-symbol-highlight-mode)
+        (davidc-symbol-highlight-toggle-symbol-lock)
+      ;; If symbol highlight mode is not active, enable it first.
+      (progn
+        (davidc-symbol-highlight-mode 1)
+        (message "Enabled symbol highlighting mode"))))))

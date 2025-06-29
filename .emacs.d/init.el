@@ -130,6 +130,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-symbol-highlight nil
+  "Enable automatic symbol highlighting under cursor."
+  :type 'boolean
+  :group 'davidc-config)
+
 ;; Move customization variables to a separate file and load it
 (setq *custom-vars-file* (locate-user-emacs-file "custom-vars.el"))
 (load *custom-vars-file* 'noerror 'nomessage)
@@ -297,12 +302,8 @@
 (global-set-key (kbd "M-<down>") 'davidc-move-line-or-region-down)
 (global-set-key (kbd "M-<up>") 'davidc-move-line-or-region-up)
 
-;; Toggle `ls -1` (dash one) and `ls -l` (dash lower case L) output in
-;; Dried.
-(if (version< emacs-version "24.4")
-    nil
-  (progn
-    (global-set-key (kbd "<f8>") 'dired-hide-details-mode)))
+;; Toggle symbol-highlight locking or dired-details.
+(global-set-key (kbd "<f8>") 'davidc-symbol-highlight-or-dired-details-toggle)
 
 ;; Go to previous/next buffer.
 (global-set-key (kbd "<f3>") 'previous-buffer)
@@ -907,3 +908,9 @@
        ;; This will setup the default key bindings in a non lazy way.
        (rg-enable-default-bindings)))
    )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Symbol Highlighting Setup
+(when davidc-config-use-symbol-highlight
+  (davidc-global-symbol-highlight-mode 1)
+  )
