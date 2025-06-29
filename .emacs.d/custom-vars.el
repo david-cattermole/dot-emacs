@@ -31,6 +31,7 @@
  '(mouse-wheel-mode t)
  '(native-comp-async-report-warnings-errors nil)
  '(native-comp-warning-on-missing-source nil)
+ '(reb-re-syntax 'rx)  ;; https://www.masteringemacs.org/article/re-builder-interactive-regexp-builder
  '(nxml-attribute-indent 4)
  '(nxml-child-indent 4)
  '(package-selected-packages '(yaml-mode markdown-mode csv cmake-mode csv-mode))
