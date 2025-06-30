@@ -304,6 +304,8 @@
 
 ;; Toggle symbol-highlight locking or dired-details.
 (global-set-key (kbd "<f8>") 'davidc-symbol-highlight-or-dired-details-toggle)
+(global-set-key (kbd "M-n") 'davidc-symbol-highlight-next-occurrence)
+(global-set-key (kbd "M-p") 'davidc-symbol-highlight-prev-occurrence)
 
 ;; Go to previous/next buffer.
 (global-set-key (kbd "<f3>") 'previous-buffer)

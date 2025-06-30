@@ -1273,15 +1273,15 @@ The search will wrap around the buffer if needed."
 
 (defun davidc--symbol-highlight-update ()
   "Update symbol highlighting based on current context."
-  ;; Cancel any pending timer
+  ;; Cancel any pending timer.
   (when davidc--symbol-highlight-timer
     (cancel-timer davidc--symbol-highlight-timer)
     (setq davidc--symbol-highlight-timer nil))
 
-  ;; Clean up existing overlays
+  ;; Clean up existing overlays.
   (davidc--symbol-highlight-cleanup)
 
-  ;; If we have a locked symbol, highlight it
+  ;; If we have a locked symbol, highlight it.
   (if davidc--symbol-highlight-locked
       (progn
         (setq davidc--symbol-highlight-overlays
@@ -1289,23 +1289,29 @@ The search will wrap around the buffer if needed."
                davidc--symbol-highlight-locked
                'davidc-symbol-highlight-locked-face))
         (when (> (length davidc--symbol-highlight-overlays) 0)
-          (message "Symbol '%s': %d occurrences"
+          (message "[LOCKED] Symbol '%s': %d occurrences"
                    davidc--symbol-highlight-locked
                    (length davidc--symbol-highlight-overlays))))
-    ;; Otherwise, highlight symbol at point
+    ;; Otherwise, highlight symbol at point.
     (when-let ((symbol (davidc--symbol-highlight-get-symbol)))
       (setq davidc--symbol-highlight-overlays
             (davidc--symbol-highlight-create-overlays
              symbol
-             'davidc-symbol-highlight-face)))))
+             'davidc-symbol-highlight-face))
+      ;; Show count for auto-highlighting only if there are multiple
+      ;; occurrences.
+      (when (> (length davidc--symbol-highlight-overlays) 1)
+        (message "Symbol '%s': %d occurrences"
+                 symbol
+                 (length davidc--symbol-highlight-overlays))))))
 
 (defun davidc--symbol-highlight-post-command ()
   "Post-command hook for symbol highlighting."
   (when (and davidc-symbol-highlight-mode
-             (not davidc--symbol-highlight-locked)  ; Don't update if locked
+             (not davidc--symbol-highlight-locked)  ; Don't update if locked.
              (not (minibufferp))
              (not (region-active-p)))
-    ;; Schedule update with delay
+    ;; Schedule update with delay.
     (when davidc--symbol-highlight-timer
       (cancel-timer davidc--symbol-highlight-timer))
     (setq davidc--symbol-highlight-timer
@@ -1321,12 +1327,12 @@ If locked: unlock and return to auto-highlighting."
     (user-error "Symbol highlighting is not enabled"))
 
   (if davidc--symbol-highlight-locked
-      ;; Currently locked - unlock it
+      ;; Currently locked - unlock it.
       (progn
         (setq davidc--symbol-highlight-locked nil)
         (davidc--symbol-highlight-update)
         (message "Symbol highlighting unlocked - auto-highlighting enabled"))
-    ;; Currently unlocked - lock current symbol
+    ;; Currently unlocked - lock current symbol.
     (if-let ((symbol (davidc--symbol-highlight-get-symbol)))
         (progn
           (setq davidc--symbol-highlight-locked symbol)
@@ -1346,7 +1352,7 @@ highlighting to a specific symbol."
       (progn
         (add-hook 'post-command-hook #'davidc--symbol-highlight-post-command nil t)
         (davidc--symbol-highlight-update))
-    ;; Cleanup when disabling
+    ;; Cleanup when disabling.
     (remove-hook 'post-command-hook #'davidc--symbol-highlight-post-command t)
     (when davidc--symbol-highlight-timer
       (cancel-timer davidc--symbol-highlight-timer)
@@ -1362,7 +1368,7 @@ highlighting to a specific symbol."
                (derived-mode-p 'prog-mode 'text-mode))
       (davidc-symbol-highlight-mode 1))))
 
-;; Cleanup hook for buffer/mode changes
+;; Cleanup hook for buffer/mode changes.
 (add-hook 'change-major-mode-hook
           (lambda ()
             (when (bound-and-true-p davidc-symbol-highlight-mode)
@@ -1392,3 +1398,84 @@ In other buffers: toggle symbol highlight lock."
       (progn
         (davidc-symbol-highlight-mode 1)
         (message "Enabled symbol highlighting mode"))))))
+
+(defun davidc-symbol-highlight-next-occurrence ()
+  "Jump to the next occurrence of the highlighted symbol.
+Wraps around to the beginning of the buffer if no occurrence is found after point."
+  (interactive)
+  (unless (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
+    (user-error "No highlighted symbol"))
+
+  (let* ((current-pos (point))
+         (overlays (sort (copy-sequence davidc--symbol-highlight-overlays)
+                        (lambda (a b) (< (overlay-start a) (overlay-start b)))))
+         (next-overlay nil)
+         (wrapped nil))
+
+    ;; Find the first overlay that starts after current position.
+    (dolist (ov overlays)
+      (when (and (not next-overlay) (> (overlay-start ov) current-pos))
+        (setq next-overlay ov)))
+
+    ;; If no overlay found after current position, wrap to first.
+    (unless next-overlay
+      (setq next-overlay (car overlays))
+      (setq wrapped t))
+
+    (when next-overlay
+      (goto-char (overlay-start next-overlay))
+      (let ((symbol-name (or davidc--symbol-highlight-locked
+                            (davidc--symbol-highlight-get-symbol)
+                            "symbol")))
+        (message "%s'%s': %d occurrences%s"
+                 (if davidc--symbol-highlight-locked "[LOCKED] " "")
+                 symbol-name
+                 (length overlays)
+                 (if wrapped " (wrapped to beginning)" ""))))))
+
+(defun davidc-symbol-highlight-prev-occurrence ()
+  "Jump to the previous occurrence of the highlighted symbol.
+Wraps around to the end of the buffer if no occurrence is found before point."
+  (interactive)
+  (unless (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
+    (user-error "No highlighted symbol"))
+
+  (let* ((current-pos (point))
+         (overlays (sort (copy-sequence davidc--symbol-highlight-overlays)
+                        (lambda (a b) (> (overlay-start a) (overlay-start b)))))
+         (prev-overlay nil)
+         (wrapped nil))
+
+    ;; Find the first overlay that starts before current position.
+    (dolist (ov overlays)
+      (when (and (not prev-overlay) (< (overlay-start ov) current-pos))
+        (setq prev-overlay ov)))
+
+    ;; If no overlay found before current position, wrap to last.
+    (unless prev-overlay
+      (setq prev-overlay (car overlays))
+      (setq wrapped t))
+
+    (when prev-overlay
+      (goto-char (overlay-start prev-overlay))
+      (let ((symbol-name (or davidc--symbol-highlight-locked
+                            (davidc--symbol-highlight-get-symbol)
+                            "symbol")))
+        (message "%s'%s': %d occurrences%s"
+                 (if davidc--symbol-highlight-locked "[LOCKED] " "")
+                 symbol-name
+                 (length overlays)
+                 (if wrapped " (wrapped to end)" ""))))))
+
+(defun davidc-symbol-highlight-show-count ()
+  "Display the count of highlighted symbol occurrences."
+  (interactive)
+  (if (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
+      (let ((symbol-name (or davidc--symbol-highlight-locked
+                            (davidc--symbol-highlight-get-symbol)
+                            "symbol")))
+        (message "%s'%s': %d occurrences"
+                 (if davidc--symbol-highlight-locked "[LOCKED] " "")
+                 symbol-name
+                 (length davidc--symbol-highlight-overlays)))
+    (message "No highlighted symbol")))
