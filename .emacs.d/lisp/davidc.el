@@ -1244,7 +1244,12 @@ The search will wrap around the buffer if needed."
   :type 'integer
   :group 'davidc-symbol-highlight)
 
-;; Buffer-local variables
+(defcustom davidc-symbol-highlight-include-numbers t
+  "When non-nil, highlight numeric symbols like '42'."
+  :type 'boolean
+  :group 'davidc-symbol-highlight)
+
+;; Buffer-local variables.
 (defvar-local davidc--symbol-highlight-overlays nil
   "List of overlays for current symbol highlighting.")
 
@@ -1269,7 +1274,9 @@ The search will wrap around the buffer if needed."
   (when-let* ((bounds (bounds-of-thing-at-point 'symbol))
               (symbol (buffer-substring-no-properties (car bounds) (cdr bounds))))
     (when (and (>= (length symbol) davidc-symbol-highlight-minimum-length)
-               (not (string-match-p "^[0-9]+$" symbol)))
+                   ;; Optionally exclude pure numbers.
+                   (or davidc-symbol-highlight-include-numbers
+                       (not (string-match-p "^[0-9]+$" symbol))))
       symbol)))
 
 (defun davidc--symbol-highlight-create-overlays (symbol face)
