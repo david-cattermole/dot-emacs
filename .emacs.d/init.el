@@ -838,6 +838,7 @@
 (when davidc-config-use-project
    (require 'project)
    (add-hook 'project-find-functions 'davidc-git-project-finder)
+   (add-hook 'project-find-functions 'davidc-perforce-project-finder)
    )
 
 

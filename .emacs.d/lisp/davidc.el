@@ -591,6 +591,17 @@ Supported major modes are C++ (c++-mode), Python (python-mode) and Rust (rust-mo
          (cons 'transient (file-name-directory dotgit)))))
 
 
+;; Find Perforce projects.
+;;
+;; Similar to the 'davidc-git-project-finder', but for Perforce (p4).
+(defun davidc-perforce-project-finder (dir)
+  "Integrate .p4rc project roots."
+  (let ((dotgit (and (setq dir (locate-dominating-file dir ".p4rc"))
+                     (expand-file-name dir))))
+    (and dotgit
+         (cons 'transient (file-name-directory dotgit)))))
+
+
 (defun davidc-string-inflection-toggle-function (str)
   "Not so much the case that in all caps when using normal foo_bar <--> fooBar"
   (cond
