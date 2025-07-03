@@ -813,6 +813,16 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Automatically regenerate 'TAG' files when saving buffers.
+;;
+;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Create-Tags-Table.html
+;;
+;; etags-regen-mode is available in Emacs 30.1+.
+(if (fboundp 'etags-regen-mode)
+    (etags-regen-mode t))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; project.el Setup - used to find and manage projects
 ;;
 ;; https://www.youtube.com/watch?v=vBQh2BeGhio
