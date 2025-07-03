@@ -1269,16 +1269,21 @@ The search will wrap around the buffer if needed."
       symbol)))
 
 (defun davidc--symbol-highlight-create-overlays (symbol face)
-  "Create overlays for all occurrences of SYMBOL using FACE."
+  "Create overlays for all occurrences of SYMBOL using FACE.
+This includes occurrences in invisible/hidden text."
   (save-excursion
     (goto-char (point-min))
     (let ((overlays '())
           (case-fold-search nil)
-          (regex (concat "\\_<" (regexp-quote symbol) "\\_>")))
+          (regex (concat "\\_<" (regexp-quote symbol) "\\_>"))
+          ;; Ensure we search invisible text.
+          (search-invisible t))
       (while (re-search-forward regex nil t)
         (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
           (overlay-put ov 'face face)
           (overlay-put ov 'davidc-symbol-highlight t)
+          ;; Make overlay visible even in hidden text.
+          (overlay-put ov 'priority 1000)
           (push ov overlays)))
       overlays)))
 
@@ -1385,7 +1390,6 @@ highlighting to a specific symbol."
             (when (bound-and-true-p davidc-symbol-highlight-mode)
               (davidc-symbol-highlight-mode -1))))
 
-
 (defun davidc-symbol-highlight-or-dired-details-toggle ()
   "Smart toggle function for symbol-highlight or dired-details.
 
@@ -1410,9 +1414,64 @@ In other buffers: toggle symbol highlight lock."
         (davidc-symbol-highlight-mode 1)
         (message "Enabled symbol highlighting mode"))))))
 
+;; Add this helper function to handle revealing hidden text
+(defun davidc--symbol-highlight-reveal-at-point ()
+  "Reveal hidden text at point and ensure point is visible.
+Handles various hiding mechanisms including org-mode, hideshow, and outline-mode.
+Returns t if something was revealed, nil otherwise."
+  (let ((revealed nil))
+    (cond
+     ;; Handle org-mode folded sections.
+     ((and (derived-mode-p 'org-mode)
+           (org-invisible-p))
+      (org-show-context 'link-search)
+      (setq revealed t))
+
+     ;; Handle hideshow hidden blocks.
+     ((and (bound-and-true-p hs-minor-mode)
+           (hs-already-hidden-p))
+      (hs-show-block)
+      (setq revealed t))
+
+     ;; Handle outline-mode and outline-minor-mode.
+     ((and (or (derived-mode-p 'outline-mode)
+               (bound-and-true-p outline-minor-mode))
+           (outline-invisible-p))
+      (outline-show-entry)
+      (setq revealed t))
+
+     ;; Handle general invisible text property.
+     ((get-text-property (point) 'invisible)
+      ;; Try to find the beginning of the invisible region and make it
+      ;; visible.
+      (let ((start (point))
+            (end (point)))
+        ;; Find start of invisible region.
+        (while (and (> start (point-min))
+                    (get-text-property (1- start) 'invisible))
+          (setq start (1- start)))
+        ;; Find end of invisible region.
+        (while (and (< end (point-max))
+                    (get-text-property end 'invisible))
+          (setq end (1+ end)))
+        ;; Remove invisible property from the region.
+        (remove-text-properties start end '(invisible nil))
+        (setq revealed t))))
+
+    ;; Ensure the point is visible in the window.
+    (when revealed
+      ;; Force redisplay to update the buffer.
+      (redisplay t)
+      ;; Recenter if necessary to make sure the point is visible.
+      (unless (pos-visible-in-window-p)
+        (recenter)))
+
+    revealed))
+
 (defun davidc-symbol-highlight-next-occurrence ()
   "Jump to the next occurrence of the highlighted symbol.
-Wraps around to the beginning of the buffer if no occurrence is found after point."
+Wraps around to the beginning of the buffer if no occurrence is found after point.
+Reveals the occurrence if it's hidden."
   (interactive)
   (unless (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
     (user-error "No highlighted symbol"))
@@ -1434,19 +1493,34 @@ Wraps around to the beginning of the buffer if no occurrence is found after poin
       (setq wrapped t))
 
     (when next-overlay
-      (goto-char (overlay-start next-overlay))
-      (let ((symbol-name (or davidc--symbol-highlight-locked
-                            (davidc--symbol-highlight-get-symbol)
-                            "symbol")))
-        (message "%s'%s': %d occurrences%s"
-                 (if davidc--symbol-highlight-locked "[LOCKED] " "")
-                 symbol-name
-                 (length overlays)
-                 (if wrapped " (wrapped to beginning)" ""))))))
+      (let ((target-pos (overlay-start next-overlay)))
+        ;; Move to the target position.
+        (goto-char target-pos)
+
+        ;; Reveal hidden text at the new position.
+        (davidc--symbol-highlight-reveal-at-point)
+
+        ;; Ensure we're still at the right position after revealing
+        ;; (revealing might have changed buffer positions).
+        (goto-char target-pos)
+
+        ;; Make sure the position is visible in the window.
+        (unless (pos-visible-in-window-p)
+          (recenter))
+
+        (let ((symbol-name (or davidc--symbol-highlight-locked
+                              (davidc--symbol-highlight-get-symbol)
+                              "symbol")))
+          (message "%s'%s': %d occurrences%s"
+                   (if davidc--symbol-highlight-locked "[LOCKED] " "")
+                   symbol-name
+                   (length overlays)
+                   (if wrapped " (wrapped to beginning)" "")))))))
 
 (defun davidc-symbol-highlight-prev-occurrence ()
   "Jump to the previous occurrence of the highlighted symbol.
-Wraps around to the end of the buffer if no occurrence is found before point."
+Wraps around to the end of the buffer if no occurrence is found before point.
+Reveals the occurrence if it's hidden."
   (interactive)
   (unless (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
     (user-error "No highlighted symbol"))
@@ -1468,15 +1542,30 @@ Wraps around to the end of the buffer if no occurrence is found before point."
       (setq wrapped t))
 
     (when prev-overlay
-      (goto-char (overlay-start prev-overlay))
-      (let ((symbol-name (or davidc--symbol-highlight-locked
-                            (davidc--symbol-highlight-get-symbol)
-                            "symbol")))
-        (message "%s'%s': %d occurrences%s"
-                 (if davidc--symbol-highlight-locked "[LOCKED] " "")
-                 symbol-name
-                 (length overlays)
-                 (if wrapped " (wrapped to end)" ""))))))
+      (let ((target-pos (overlay-start prev-overlay)))
+        ;; Move to the target position.
+        (goto-char target-pos)
+
+        ;; Reveal hidden text at the new position.
+        (davidc--symbol-highlight-reveal-at-point)
+
+        ;; Ensure we're still at the right position after revealing
+        ;; (revealing might have changed buffer positions).
+        (goto-char target-pos)
+
+        ;; Make sure the position is visible in the window.
+        (unless (pos-visible-in-window-p)
+          (recenter))
+
+        (let ((symbol-name (or davidc--symbol-highlight-locked
+                              (davidc--symbol-highlight-get-symbol)
+                              "symbol")))
+          (message "%s'%s': %d occurrences%s"
+                   (if davidc--symbol-highlight-locked "[LOCKED] " "")
+                   symbol-name
+                   (length overlays)
+                   (if wrapped " (wrapped to end)" "")))))))
+
 
 (defun davidc-symbol-highlight-show-count ()
   "Display the count of highlighted symbol occurrences."
