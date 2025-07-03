@@ -1225,7 +1225,7 @@ The search will wrap around the buffer if needed."
   :group 'davidc-config)
 
 (defface davidc-symbol-highlight-face
-  '((t (:background "DarkSlateGray4" :foreground "white" :weight bold)))
+  '((t (:background "DarkSlateGray4" :foreground "white")))
   "Face for highlighting symbols under cursor."
   :group 'davidc-symbol-highlight)
 
@@ -1239,7 +1239,7 @@ The search will wrap around the buffer if needed."
   :type 'number
   :group 'davidc-symbol-highlight)
 
-(defcustom davidc-symbol-highlight-minimum-length 2
+(defcustom davidc-symbol-highlight-minimum-length 1
   "Minimum length of symbol to highlight."
   :type 'integer
   :group 'davidc-symbol-highlight)
