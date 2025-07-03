@@ -822,6 +822,18 @@
     (etags-regen-mode t))
 
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;; Display completion previews as you type.
+;; ;;
+;; ;; Press TAB key to accept the completion.
+;; ;;
+;; ;; https://eshelyaron.com/posts/2023-11-17-completion-preview-in-emacs.html
+;; ;;
+;; ;; completion-preview-mode is available in Emacs 30.1+.
+;; (if (fboundp 'completion-preview-mode)
+;;     (completion-preview-mode t))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; project.el Setup - used to find and manage projects
 ;;
