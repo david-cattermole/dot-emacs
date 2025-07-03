@@ -472,6 +472,13 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Auxilary modes for various file formats.
+(add-to-list 'auto-mode-alist '("\\.json\\'" . js-json-mode))
+(add-to-list 'auto-mode-alist '("\\.yaml\\'" . conf-mode))
+(add-to-list 'auto-mode-alist '("\\.yml\\'" . conf-mode))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Python Hook
 (setq python-forward-sexp-function #'python-nav-forward-sexp)
 
