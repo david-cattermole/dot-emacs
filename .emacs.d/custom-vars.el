@@ -80,6 +80,7 @@
  '(davidc-config-use-flymake-clang-tidy t)
  '(davidc-config-use-flymake-rust-cargo-clippy t)
  '(davidc-config-use-rename-symbol t)
+ '(davidc-config-use-region t)
  '(davidc-config-use-hideshow t)
  '(davidc-config-use-dynamic-abbreviations t)
  '(davidc-config-use-string-inflection t)

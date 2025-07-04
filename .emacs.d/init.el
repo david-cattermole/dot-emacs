@@ -105,6 +105,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-region nil
+  "Use region grow/shrink tool."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-hideshow nil
   "Use hideshow for code folding."
   :type 'boolean
@@ -348,12 +353,6 @@
 ;; 'Shift + Tab' (or 'C-x Tab') key will setup an interactive mode to
 ;; indent selected code.
 (global-set-key (kbd "<backtab>") 'indent-rigidly)
-
-;; Grow the selection.
-(global-set-key (kbd "M-]") 'davidc-region-grow)
-
-;; Shrink the selection.
-(global-set-key (kbd "M-[") 'davidc-region-shrink)
 
 ;; ;; Press CTRL+RETURN to Compile
 ;; (global-set-key (kbd "C-<return>") 'compile)
@@ -792,6 +791,19 @@
    ;; Rename the symbol under the cursor in the current line,
    ;; interactively.
    (global-set-key (kbd "C-<f2>") 'davidc-rename-symbol-in-line)
+)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Region Grow/Shrink
+(when davidc-config-use-region
+   (require 'davidc-region)
+
+   ;; Grow the selection.
+   (global-set-key (kbd "M-]") 'davidc-region-grow)
+
+   ;; Shrink the selection.
+   (global-set-key (kbd "M-[") 'davidc-region-shrink)
 )
 
 
