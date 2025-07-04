@@ -415,3 +415,6 @@ In other buffers: toggle symbol highlight lock."
       (progn
         (davidc-symbol-highlight-mode 1)
         (message "Enabled symbol highlighting mode"))))))
+
+
+(provide 'davidc)

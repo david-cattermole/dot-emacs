@@ -271,9 +271,13 @@
 ;; Common library used by many scripts.
 (require 's)
 
-;; My custom functions, loads them from source code (not byte-compiled
-;; on Emacs 29.x+).
-(load-library '"davidc")
+;; My custom functions.
+(if (version< emacs-version "30.0")
+    ;; Loads from source code (not byte-compiled on Emacs 29.x),
+    ;; because of byte-compile errors.
+    (load-library '"davidc")
+  (progn
+    (require 'davidc)))
 
 ;; Automatic highlighting of lines.
 (add-hook 'find-file-hook 'davidc-highlight-it)
