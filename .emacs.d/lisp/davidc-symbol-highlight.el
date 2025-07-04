@@ -18,13 +18,13 @@
 ;;
 ;; You may optionally "lock" the symbol under the cursor with:
 ;;    M-x davidc-symbol-highlight-toggle-symbol-lock
-;; Or:
-;;    M-x davidc-symbol-highlight-or-dired-details-toggle
 ;;
 ;; To view the number of symbol highlights, you can run:
 ;;    M-x davidc-symbol-highlight-show-count
+;;
 ;; Or you can look at the Emacs mode-line 'SymH[#]' is
 ;; the number of occurances.
+;;
 
 (defgroup davidc-symbol-highlight nil
   "Highlight symbols under cursor."
@@ -219,30 +219,6 @@ highlighting to a specific symbol."
           (lambda ()
             (when (bound-and-true-p davidc-symbol-highlight-mode)
               (davidc-symbol-highlight-mode -1))))
-
-(defun davidc-symbol-highlight-or-dired-details-toggle ()
-  "Smart toggle function for symbol-highlight or dired-details.
-
-In dired buffers: toggle dired-hide-details-mode.
-In other buffers: toggle symbol highlight lock."
-  (interactive)
-  (cond
-   ;; In dired mode, toggle details.
-   ((derived-mode-p 'dired-mode)
-    (if (fboundp 'dired-hide-details-mode)
-        ;; Toggle `ls -1` (dash one) and `ls -l` (dash lower case L)
-        ;; output in Dried.
-        (dired-hide-details-mode 'toggle)
-      (message "dired-hide-details-mode not available")))
-
-   ;; In other buffers, toggle symbol highlight lock.
-   (t
-    (if (bound-and-true-p davidc-symbol-highlight-mode)
-        (davidc-symbol-highlight-toggle-symbol-lock)
-      ;; If symbol highlight mode is not active, enable it first.
-      (progn
-        (davidc-symbol-highlight-mode 1)
-        (message "Enabled symbol highlighting mode"))))))
 
 (defun davidc--symbol-highlight-reveal-at-point ()
   "Reveal hidden text at point and ensure point is visible.

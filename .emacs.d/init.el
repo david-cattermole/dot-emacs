@@ -264,7 +264,6 @@
 ;; My custom functions, loads them from source code (not byte-compiled
 ;; on Emacs 29.x+).
 (load-library '"davidc")
-(load-library '"davidc-symbol-highlight")
 
 ;; Automatic highlighting of lines.
 (add-hook 'find-file-hook 'davidc-highlight-it)
@@ -316,8 +315,6 @@
 
 ;; Toggle symbol-highlight locking or dired-details.
 (global-set-key (kbd "<f8>") 'davidc-symbol-highlight-or-dired-details-toggle)
-(global-set-key (kbd "M-n") 'davidc-symbol-highlight-next-occurrence)
-(global-set-key (kbd "M-p") 'davidc-symbol-highlight-prev-occurrence)
 
 ;; Go to previous/next buffer.
 (global-set-key (kbd "<f3>") 'previous-buffer)
@@ -996,7 +993,16 @@
    )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Symbol Highlighting Setup
+;; Symbol Highlighting
+;;
+;; M-n - Go to next occurance of highlighted symbol.
+;; M-p - Go to previous occurance of highlighted symbol.
+;; F8  - Toggle currently highlighted symbol as "locked".
+;;
 (when davidc-config-use-symbol-highlight
+  (load-library '"davidc-symbol-highlight")
   (davidc-global-symbol-highlight-mode 1)
+
+  (global-set-key (kbd "M-n") 'davidc-symbol-highlight-next-occurrence)
+  (global-set-key (kbd "M-p") 'davidc-symbol-highlight-prev-occurrence)
   )
