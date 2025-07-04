@@ -140,6 +140,12 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-icomplete nil
+  "Enable the use of 'icomplete-mode'."
+  :type 'boolean
+  :group 'davidc-config)
+
+
 ;; Move customization variables to a separate file and load it
 (setq *custom-vars-file* (locate-user-emacs-file "custom-vars.el"))
 (load *custom-vars-file* 'noerror 'nomessage)
@@ -417,6 +423,25 @@
   ;; Make ibuffer the default.
   (defalias 'list-buffers 'ibuffer)
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Use 'icomplete-mode'
+;;
+;; Tab - Complete what you typed.
+;; Space - Complete up to a word.
+;; Enter - Use what you typed so far.
+;; C-j - Use first choice and exit. ('icomplete-force-complete-and-exit')
+;; C-, - Complete backward. ('icomplete-backward-completions')
+;; C-. - Complete forward. ('icomplete-forward-completions')
+;; M-p - 'previous-history-element'
+;; M-n - 'next-history-element'
+;;
+(when davidc-config-use-icomplete
+  (if (fboundp 'icomplete-mode)
+      (icomplete-mode t)
+  )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows Commands Scripts (.bat) - Edit Windows DOS scripts.
