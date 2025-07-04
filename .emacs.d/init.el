@@ -439,7 +439,7 @@
 ;;
 (when davidc-config-use-icomplete
   (if (fboundp 'icomplete-mode)
-      (icomplete-mode t)
+      (icomplete-mode t))
   )
 
 
