@@ -548,6 +548,7 @@
 
 ;; Use Ruff with flymake.
 (when davidc-config-use-python-flymake-ruff
+  (require 'davidc-flymake)
   (add-hook 'python-mode-hook 'davidc-python-flymake-ruff-setup)
    )
 
@@ -734,6 +735,7 @@
 
 ;; Flymake integration with clang-tidy
 (when davidc-config-use-flymake-clang-tidy
+  (require 'davidc-flymake)
   (add-hook 'c-mode-common-hook
             (lambda ()
               (setq-local flymake-no-changes-timeout nil)
@@ -771,6 +773,7 @@
 
 ;; Flymake integration with clippy.
 (when davidc-config-use-flymake-rust-cargo-clippy
+  (require 'davidc-flymake)
   (add-hook 'rust-mode-hook
             (lambda ()
               (setq-local flymake-no-changes-timeout nil)
