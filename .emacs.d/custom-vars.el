@@ -86,6 +86,7 @@
  '(davidc-config-use-dumb-jump t)
  '(davidc-config-use-rg t)
  '(davidc-config-use-symbol-highlight t)
+ '(davidc-config-use-ibuffer t)
  '(project-switch-commands
    '(
      ;; (project-find-file "Find file")

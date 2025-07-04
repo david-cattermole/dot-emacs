@@ -135,6 +135,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-ibuffer nil
+  "Enable the use of 'ibuffer' (rather than 'list-buffers')."
+  :type 'boolean
+  :group 'davidc-config)
+
 ;; Move customization variables to a separate file and load it
 (setq *custom-vars-file* (locate-user-emacs-file "custom-vars.el"))
 (load *custom-vars-file* 'noerror 'nomessage)
@@ -360,6 +365,7 @@
 ;; current paragraph into a single line.
 (global-set-key (kbd "M-Q") 'davidc-unfill-paragraph)
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customize Dired.
 (require 'dired)
@@ -394,6 +400,23 @@
 ;; When files in a directory change, the buffer will update
 ;; automatically.
 (setq global-auto-revert-non-file-buffers t)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Override list-buffers with ibuffer.
+;;
+;; Here's most useful ibuffer commands.
+;;
+;;  m - Mark
+;;  u - Unmark
+;;  * u - Mark unsaved
+;;  S - Save marked buffer
+;;  D - Close marked buffers
+;;
+(when davidc-config-use-ibuffer
+  ;; Make ibuffer the default.
+  (defalias 'list-buffers 'ibuffer)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Windows Commands Scripts (.bat) - Edit Windows DOS scripts.
@@ -869,7 +892,6 @@
    (add-hook 'project-find-functions 'davidc-git-project-finder)
    (add-hook 'project-find-functions 'davidc-perforce-project-finder)
    )
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; String Inflection - https://github.com/akicho8/string-inflection/
