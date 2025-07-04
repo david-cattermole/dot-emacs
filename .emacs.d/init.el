@@ -520,6 +520,12 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Org Mode
+(add-hook 'org-mode-hook
+      (lambda () (electric-indent-local-mode -1)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Auxilary modes for various file formats.
 (add-to-list 'auto-mode-alist '("\\.json\\'" . js-json-mode))
 (add-to-list 'auto-mode-alist '("\\.yaml\\'" . conf-mode))
