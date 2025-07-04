@@ -100,6 +100,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-format nil
+  "Use format tool."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-rename-symbol nil
   "Enable rename symbol tool for rapid variable/function renaming."
   :type 'boolean
@@ -294,10 +299,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hotkeys
 
-;; Easily reformat the current region of text, using different methods
-;; for different major-modes.
-(global-set-key [C-tab] 'davidc-format)
-
 ;; Navigation improvements using the arrow keys.
 ;;
 ;; This allows moving to the matching parentheses using "C-M-<up>" and
@@ -437,6 +438,17 @@
   (if (fboundp 'icomplete-mode)
       (icomplete-mode t))
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Format tools
+(when davidc-config-use-format
+   (require 'davidc-format)
+
+   ;; Easily reformat the current region of text, using different methods
+   ;; for different major-modes.
+   (global-set-key [C-tab] 'davidc-format)
+   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
