@@ -100,6 +100,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-rename-symbol nil
+  "Enable rename symbol tool for rapid variable/function renaming."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-hideshow nil
   "Use hideshow for code folding."
   :type 'boolean
@@ -343,18 +348,6 @@
 ;; 'Shift + Tab' (or 'C-x Tab') key will setup an interactive mode to
 ;; indent selected code.
 (global-set-key (kbd "<backtab>") 'indent-rigidly)
-
-;; Rename the symbol under the cursor in the current buffer,
-;; interactively.
-(global-set-key (kbd "<f2>") 'davidc-rename-symbol-in-buffer)
-
-;; Rename the symbol under the cursor in the current function,
-;; interactively.
-(global-set-key (kbd "S-<f2>") 'davidc-rename-symbol-in-function)
-
-;; Rename the symbol under the cursor in the current line,
-;; interactively.
-(global-set-key (kbd "C-<f2>") 'davidc-rename-symbol-in-line)
 
 ;; Grow the selection.
 (global-set-key (kbd "M-]") 'davidc-region-grow)
@@ -781,6 +774,25 @@
               (davidc-flymake-rust-cargo-clippy-setup))
             )
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Rename Symbol
+(when davidc-config-use-rename-symbol
+   (require 'davidc-rename-symbol)
+
+   ;; Rename the symbol under the cursor in the current buffer,
+   ;; interactively.
+   (global-set-key (kbd "<f2>") 'davidc-rename-symbol-in-buffer)
+
+   ;; Rename the symbol under the cursor in the current function,
+   ;; interactively.
+   (global-set-key (kbd "S-<f2>") 'davidc-rename-symbol-in-function)
+
+   ;; Rename the symbol under the cursor in the current line,
+   ;; interactively.
+   (global-set-key (kbd "C-<f2>") 'davidc-rename-symbol-in-line)
+)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
