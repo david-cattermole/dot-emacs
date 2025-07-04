@@ -787,6 +787,7 @@
 ;; Code Folding - Hide/Show (hs-minor-mode)
 (when davidc-config-use-hideshow
    (require 'hideshow)
+   (require 'davidc-hideshow)
 
    ;; Workaround hideshow interation problems with vc-diff and Ediff,
    ;; as suggested in the hideshow.el source code documentation.
