@@ -151,12 +151,12 @@
   :group 'davidc-config)
 
 (defcustom davidc-config-use-ibuffer nil
-  "Enable the use of 'ibuffer' (rather than 'list-buffers')."
+  "Enable the use of ibuffer (rather than list-buffers)."
   :type 'boolean
   :group 'davidc-config)
 
 (defcustom davidc-config-use-icomplete nil
-  "Enable the use of 'icomplete-mode'."
+  "Enable the use of icomplete-mode."
   :type 'boolean
   :group 'davidc-config)
 
