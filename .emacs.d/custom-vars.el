@@ -87,7 +87,7 @@
  '(davidc-config-use-rg t)
  '(davidc-config-use-symbol-highlight t)
  '(davidc-config-use-ibuffer t)
- '(davidc-config-use-icomplete t)
+ '(davidc-config-use-icomplete nil)
  '(project-switch-commands
    '(
      ;; (project-find-file "Find file")
