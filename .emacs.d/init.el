@@ -277,7 +277,9 @@
     ;; because of byte-compile errors.
     (load-library '"davidc")
   (progn
-    (require 'davidc)))
+    (require 'davidc)
+    (require 'davidc-restart)
+    ))
 
 ;; Automatic highlighting of lines.
 (add-hook 'find-file-hook 'davidc-highlight-it)
