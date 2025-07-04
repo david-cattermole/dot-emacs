@@ -278,11 +278,13 @@
 ;; Common library used by many scripts.
 (require 's)
 
-;; My custom functions.
+;; Load my custom functions.
 (if (version< emacs-version "30.0")
     ;; Loads from source code (not byte-compiled on Emacs 29.x),
     ;; because of byte-compile errors.
-    (load-library '"davidc")
+    (progn
+      (load-library '"davidc")
+      (load-library '"davidc-restat"))
   (progn
     (require 'davidc)
     (require 'davidc-restart)
