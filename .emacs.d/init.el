@@ -209,9 +209,11 @@
 ;; Display line numbers for programming language buffers.
 (if (version< emacs-version "26.0")
     (progn
-      (add-hook 'prog-mode-hook #'linum-mode))
+      (if (fboundp 'linum-mode)
+          (add-hook 'prog-mode-hook #'linum-mode)))
   (progn
-    (add-hook 'prog-mode-hook #'display-line-numbers-mode)))
+    (if (fboundp 'display-line-numbers-mode)
+        (add-hook 'prog-mode-hook #'display-line-numbers-mode))))
 
 ;; Display one tab character as N number of spaces - what is the tab
 ;; width? 4.
