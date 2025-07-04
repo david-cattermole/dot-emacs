@@ -264,6 +264,7 @@
 ;; My custom functions, loads them from source code (not byte-compiled
 ;; on Emacs 29.x+).
 (load-library '"davidc")
+(load-library '"davidc-symbol-highlight")
 
 ;; Automatic highlighting of lines.
 (add-hook 'find-file-hook 'davidc-highlight-it)
