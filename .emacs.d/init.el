@@ -1003,7 +1003,7 @@
 ;; F8  - Toggle currently highlighted symbol as "locked".
 ;;
 (when davidc-config-use-symbol-highlight
-  (load-library '"davidc-symbol-highlight")
+  (require 'davidc-symbol-highlight)
   (davidc-global-symbol-highlight-mode 1)
 
   (global-set-key (kbd "M-n") 'davidc-symbol-highlight-next-occurrence)

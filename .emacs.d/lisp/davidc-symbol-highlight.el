@@ -391,3 +391,5 @@ Reveals the occurrence if it's hidden."
                  symbol-name
                  (length davidc--symbol-highlight-overlays)))
     (message "No highlighted symbol")))
+
+(provide 'davidc-symbol-highlight)
