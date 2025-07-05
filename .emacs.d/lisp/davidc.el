@@ -29,6 +29,8 @@
   "Reverse the effect of `fill-paragraph' by joining all lines in the current paragraph into a single line.
 If REGION is non-nil, operate on the active region instead."
   (interactive (list (use-region-p)))
+  (when buffer-read-only
+    (error "Cannot unfill paragraph. Buffer is read-only."))
   (let ((fill-column most-positive-fixnum)) ; Set fill-column to a very large value
     (if region
         (fill-region (region-beginning) (region-end))
@@ -37,12 +39,16 @@ If REGION is non-nil, operate on the active region instead."
 (defun davidc-unfill-region (start end)
   "Unfill all paragraphs in the region from START to END."
   (interactive "r")  ; "r" means to use the region as arguments
+  (when buffer-read-only
+    (error "Cannot unfill region. Buffer is read-only."))
   (let ((fill-column most-positive-fixnum))
     (fill-region start end)))
 
 (defun davidc-unfill-buffer ()
   "Unfill all paragraphs in the current buffer, converting them into single lines."
   (interactive)
+  (when buffer-read-only
+    (error "Cannot unfill buffer. Buffer is read-only."))
   (let ((fill-column most-positive-fixnum))
     (fill-region (point-min) (point-max))))
 
@@ -96,6 +102,9 @@ If REGION is non-nil, operate on the active region instead."
 ;; This function assumes the user has a region active (ie. that both
 ;; mark-active and transient-mark-mode are non-nil).
 (defun davidc-move-region-internal (line-offset-number)
+  (when buffer-read-only
+    (error "Cannot move region in read-only buffer."))
+
    ;; Makes the point (cursor location) go to the top of the active
    ;; (selection) region.
    (if (> (point) (mark))
@@ -133,6 +142,8 @@ If REGION is non-nil, operate on the active region instead."
 (defun davidc-move-line-up ()
   "Move up the current line."
   (interactive)
+  (when buffer-read-only
+    (error "Cannot move line in read-only buffer."))
   (transpose-lines 1)
   (forward-line -2))
 
@@ -140,6 +151,8 @@ If REGION is non-nil, operate on the active region instead."
 (defun davidc-move-line-down ()
   "Move down the current line."
   (interactive)
+  (when buffer-read-only
+    (error "Cannot move line in read-only buffer."))
   (forward-line 1)
   (transpose-lines 1)
   (forward-line -1))
@@ -198,12 +211,16 @@ If REGION is non-nil, operate on the active region instead."
 (defun davidc-string-inflection-toggle ()
   "Toggle foo_bar <=> fooBar"
   (interactive)
+  (when buffer-read-only
+    (error "Cannot modify text in read-only buffer."))
   (string-inflection-insert
    (davidc-string-inflection-toggle-function (string-inflection-get-current-word))))
 
 (defun davidc-string-inflection-cycle-auto ()
   "Switching case cylcing by major-mode"
   (interactive)
+  (when buffer-read-only
+    (error "Cannot modify text in read-only buffer."))
   (cond
    ;; for emacs-lisp-mode
    ((eq major-mode 'emacs-lisp-mode)
