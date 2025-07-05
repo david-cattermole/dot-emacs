@@ -83,9 +83,11 @@ REPORT-FN is the callback function for reporting diagnostics."
          (source-file (buffer-file-name)))
 
     (when source-file
-      ;; Save buffer before running clang-tidy to ensure all changes are analyzed.
+      ;; When this runs from 'after-save-hook', the buffer is already
+      ;; saved. If we need to ensure the file is saved, we should save
+      ;; it ourselves rather than erroring out.
       (when (buffer-modified-p)
-        (error "Flymake mode clang-tidy; buffer is not saved, cannot check it."))
+        (save-buffer))
 
       ;; (message "[DEBUG] Flymake mode clang-tidy; Source File: \"%s\"." source-file)
       (save-restriction
@@ -253,9 +255,11 @@ REPORT-FN is the callback function for reporting diagnostics."
          (source-file (buffer-file-name)))
 
     (when source-file
-      ;; Ensure buffer is saved
+      ;; When this runs from 'after-save-hook', the buffer is already
+      ;; saved. If we need to ensure the file is saved, we should save
+      ;; it ourselves rather than erroring out.
       (when (buffer-modified-p)
-        (error "Flymake mode rust-cargo-clippy; buffer is not saved, cannot check it."))
+        (save-buffer))
 
       ;; (message "[DEBUG] Flymake mode rust-cargo-clippy; Source File: \"%s\"." source-file)
       (save-restriction
