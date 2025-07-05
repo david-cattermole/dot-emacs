@@ -123,7 +123,7 @@ For each occurrence, you can press:
          (text-to-replace
           (if symbol-at-point
               symbol-at-point
-            (davidc--read-string "Symbol to replace: "))))
+            (davidc--read-string "Symbol to replace: " ""))))
     ;; Call the core function with the specified region boundaries.
     (davidc--rename-symbol-core text-to-replace start end no-whole-symbol-only)))
 
