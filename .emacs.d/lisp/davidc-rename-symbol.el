@@ -8,16 +8,22 @@
 
 (defun davidc--read-string (prompt initial-input)
   "Read a string from the minibuffer, with delete-selection-mode enabled."
-  (minibuffer-with-setup-hook
-      (lambda ()
-        ;; If you enable Delete Selection (minor) mode, then inserting
-        ;; text while the mark is active causes the selected text to
-        ;; be deleted first. This also deactivates the mark. Many
-        ;; graphical applications follow this convention, but Emacs
-        ;; does not.
-        (delete-selection-mode 1))
-
-    (read-string prompt initial-input)))
+  ;; Save and restore delete-selection-mode state to avoid side effects.
+  (let ((old-delete-selection-mode delete-selection-mode)
+        (result nil))
+    (minibuffer-with-setup-hook
+        (lambda ()
+          ;; If you enable Delete Selection (minor) mode, then inserting
+          ;; text while the mark is active causes the selected text to
+          ;; be deleted first. This also deactivates the mark. Many
+          ;; graphical applications follow this convention, but Emacs
+          ;; does not.
+          (delete-selection-mode 1))
+      (unwind-protect
+          (setq result (read-string prompt initial-input))
+        ;; Restore the original state of delete-selection-mode.
+        (delete-selection-mode (if old-delete-selection-mode 1 -1))))
+    result))
 
 (defun davidc--rename-symbol-core (text-to-replace start end &optional no-whole-symbol-only)
   "Core function for renaming symbols with shared logic.
