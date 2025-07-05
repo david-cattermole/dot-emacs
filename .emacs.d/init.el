@@ -753,7 +753,7 @@
   (add-hook 'c-mode-common-hook
             (lambda ()
               (setq-local flymake-no-changes-timeout nil)
-              (add-hook 'after-save-hook 'davidc-flymake-clang-tidy-on-save nil t)
+              (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
               (davidc-flymake-clang-tidy-setup))
             )
   )
@@ -791,7 +791,7 @@
   (add-hook 'rust-mode-hook
             (lambda ()
               (setq-local flymake-no-changes-timeout nil)
-              (add-hook 'after-save-hook 'davidc-flymake-rust-cargo-clippy-on-save nil t)
+              (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
               (davidc-flymake-rust-cargo-clippy-setup))
             )
   )
