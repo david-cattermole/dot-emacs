@@ -49,7 +49,7 @@ If REGION is non-nil, operate on the active region instead."
 ;; Highlighting Lines
 ;;
 ;; This example shows you how to make lines containing the words
-;; “ERROR:” or “NOTE:” highlighted, whenever a file ending in “log” is
+;; "ERROR:" or "NOTE:" highlighted, whenever a file ending in "log" is
 ;; opened.
 (defun davidc-highlight-it ()
   "Highlight certain lines."
