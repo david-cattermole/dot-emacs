@@ -31,12 +31,12 @@
   :group 'davidc-config)
 
 (defface davidc-symbol-highlight-face
-  '((t (:background "DarkSlateGray4" :foreground "white")))
+  '((t (:inverse-video t)))
   "Face for highlighting symbols under cursor."
   :group 'davidc-symbol-highlight)
 
 (defface davidc-symbol-highlight-locked-face
-  '((t (:background "DarkSlateGray4" :foreground "white" :weight bold)))
+  '((t (:weight bold :slant italic :inverse-video t)))
   "Face for locked symbol highlighting."
   :group 'davidc-symbol-highlight)
 
