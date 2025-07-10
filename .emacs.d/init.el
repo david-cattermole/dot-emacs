@@ -553,7 +553,7 @@
             (lambda ()
               (setq-local flymake-no-changes-timeout nil)
               (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
-              (davidc-jsonc-flymake-setup))
+              (davidc-flymake-jsonc-setup))
             )
   )
 
