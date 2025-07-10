@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t -*-
 ;;
-;; Enhanced Flymake integration for Python, Rust, and C++.
+;; Enhanced Flymake integration for Python, Rust, C++, and JSON with comments.
 ;;
 ;; This package provides streamlined Flymake backends for multiple
 ;; programming languages, offering real-time syntax checking and
@@ -10,12 +10,14 @@
 ;; * Python - Uses "ruff" for fast Python linting.
 ;; * Rust   - Uses "cargo clippy" for comprehensive Rust analysis.
 ;; * C++    - Uses "clang-tidy" for static analysis.
+;; * JSON   - Uses custom Python script for JSON with comments.
 ;;
 ;; PREREQUISITES:
 ;; Make sure the following tools are installed and available in your PATH:
 ;; * For Python: ruff (install via: pip install ruff)
 ;; * For Rust: cargo with clippy component (rustup component add clippy)
 ;; * For C++: clang-tidy (part of LLVM/Clang toolchain)
+;; * For JSON: Python 3 and the jsonc_lint.py script
 ;;
 ;; BASIC SETUP:
 ;; 1. Load this file in your Emacs configuration
@@ -29,6 +31,9 @@
 ;;
 ;;    ;; Rust setup
 ;;    (add-hook 'rust-mode-hook #'davidc-flymake-rust-cargo-clippy-setup)
+;;
+;;    ;; JSON setup
+;;    (add-hook 'js-json-mode-hook #'davidc-flymake-jsonc-setup)
 ;;
 ;; NAVIGATION COMMANDS:
 ;; This package provides convenient functions to navigate between diagnostics:
@@ -48,6 +53,7 @@
 ;;   (setq davidc-python-flymake-ruff-path "/usr/local/bin/ruff")
 ;;   (setq davidc-flymake-clang-tidy-path "/opt/llvm/bin/clang-tidy")
 ;;   (setq davidc-flymake-rust-cargo-path "/home/user/.cargo/bin/cargo")
+;;   (setq davidc-flymake-jsonc-lint-path "/path/to/jsonc_lint.py")
 ;;
 ;;   ;; Custom Rust clippy arguments
 ;;   (setq davidc-flymake-rust-cargo-clippy-args
@@ -62,6 +68,7 @@
 ;; * If tools aren't found, check they're installed and in your PATH
 ;; * For Rust projects, make sure you're in a Cargo project directory.
 ;; * For C++, clang-tidy works best with "compile_commands.json".
+;; * For JSON, make sure Python 3 and jsonc_lint.py are available.
 ;; * Use M-x flymake-log to see detailed diagnostic information.
 ;;
 
@@ -89,6 +96,19 @@ Set this variable before loading this package to use a custom path.")
 (defvar davidc-flymake-rust-cargo-path
   (davidc-flymake--get-executable-path "cargo")
   "Path to the Rust cargo executable.
+Set this variable before loading this package to use a custom path.")
+
+(defvar davidc-flymake-jsonc-lint-path
+  (expand-file-name "bin/jsonc_lint.py" user-emacs-directory)
+  "Path to the JSONC linter script.
+This should be a Python script that can lint JSON files with comments.
+Defaults to ~/.emacs.d/bin/jsonc_lint.py.
+Set this variable before loading this package to use a custom path.")
+
+(defvar davidc-flymake-python-path
+  (davidc-flymake--get-executable-path "python3")
+  "Path to the Python 3 executable.
+Used for running Python-based linters like the JSONC linter.
 Set this variable before loading this package to use a custom path.")
 
 (defvar davidc-flymake-rust-cargo-clippy-args
@@ -166,7 +186,7 @@ SOURCE-FILE is the path of the file being checked."
           ;;          type-str file-path line col message-text)
 
           (when (and (funcall current-file-matcher file-path source-file)
-                     (not (eq level :note))) ; Skip notes
+                     (not (eq level :note))) ; Skip notes for most tools
             (let ((beg-end (flymake-diag-region source line col)))
               (when beg-end
                 ;; (message "[DEBUG] Adding diagnostic: %s at %d:%d"
@@ -247,12 +267,28 @@ FILE-MATCHER is a function to determine if a diagnostic applies to current file.
                         (when (process-buffer proc)
                           (kill-buffer (process-buffer proc))))))))))))))
 
-;; Local variable to keep track of processes.
+;; Local variables to keep track of processes.
 (defvar-local davidc--flymake-clang-tidy-proc nil
   "Current clang-tidy flymake process.")
 
 (defvar-local davidc--flymake-rust-cargo-clippy-proc nil
   "Current cargo clippy flymake process.")
+
+(defvar-local davidc--flymake-jsonc-proc nil
+  "Current JSONC lint flymake process.")
+
+;; File matcher functions.
+(defun davidc-flymake--exact-file-matcher (file-path source-file)
+  "Match FILE-PATH against SOURCE-FILE exactly or by basename."
+  (let* ((normalized-source (expand-file-name source-file))
+         (normalized-file (expand-file-name (directory-file-name file-path))))
+    (or (string= normalized-file normalized-source)
+        (string-suffix-p (file-name-nondirectory source-file) file-path))))
+
+(defun davidc-flymake--basename-file-matcher (file-path source-file)
+  "Match FILE-PATH against SOURCE-FILE by basename only."
+  (string= (file-name-nondirectory file-path)
+           (file-name-nondirectory source-file)))
 
 ;; Create the actual backend functions.
 (defalias 'davidc-flymake-clang-tidy
@@ -264,11 +300,7 @@ FILE-MATCHER is a function to determine if a diagnostic applies to current file.
            "-quiet"
            (file-name-nondirectory source-file)))
    "\\(.*\\):\\([0-9]+\\):\\([0-9]+\\): \\(warning\\|error\\|note\\): \\(.*\\)$"
-   (lambda (file-path source-file)
-     (let* ((normalized-source (expand-file-name source-file))
-            (normalized-file (expand-file-name (directory-file-name file-path))))
-       (or (string= normalized-file normalized-source)
-           (string-suffix-p (file-name-nondirectory source-file) file-path)))))
+   #'davidc-flymake--exact-file-matcher)
   "Flymake backend for clang-tidy.
 REPORT-FN is the callback function for reporting diagnostics.")
 
@@ -283,10 +315,19 @@ REPORT-FN is the callback function for reporting diagnostics.")
                    "--")
              davidc-flymake-rust-cargo-clippy-args))
    "\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\): \\(warning\\|error\\(?:\\[E[0-9]+\\]\\)?\\): \\(.*\\)$"
-   (lambda (file-path source-file)
-     (string= (file-name-nondirectory file-path)
-              (file-name-nondirectory source-file))))
+   #'davidc-flymake--basename-file-matcher)
   "Flymake backend for Rust's clippy.
+REPORT-FN is the callback function for reporting diagnostics.")
+
+(defalias 'davidc-flymake-jsonc
+  (davidc-flymake--make-backend
+   "jsonc"
+   davidc-flymake-python-path
+   (lambda (source-file)
+     (list davidc-flymake-python-path davidc-flymake-jsonc-lint-path source-file))
+   "^\\(.+\\):\\([0-9]+\\):\\([0-9]+\\): \\(error\\|warning\\|note\\): \\(.+\\)$"
+   #'davidc-flymake--basename-file-matcher)
+  "Flymake backend for JSONC (JSON with comments).
 REPORT-FN is the callback function for reporting diagnostics.")
 
 ;; Setup functions.
@@ -304,6 +345,14 @@ Call this function in rust-mode-hook to enable automatic Rust linting."
   (interactive)
   (message "Setting up Rust clippy for flymake.")
   (add-hook 'flymake-diagnostic-functions #'davidc-flymake-rust-cargo-clippy nil t)
+  (flymake-mode 1))
+
+(defun davidc-flymake-jsonc-setup ()
+  "Set up flymake for JSONC files with comment support.
+Call this function in js-json-mode-hook to enable automatic JSON linting."
+  (interactive)
+  (message "Setting up JSONC linter for flymake.")
+  (add-hook 'flymake-diagnostic-functions #'davidc-flymake-jsonc nil t)
   (flymake-mode 1))
 
 ;; Simplified diagnostic navigation.

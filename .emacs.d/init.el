@@ -100,6 +100,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-flymake-jsonc nil
+  "Use jsonc_lint.py with flymake for JSONC linting."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-format nil
   "Use format tool."
   :type 'boolean
@@ -538,8 +543,23 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Auxilary modes for various file formats.
+;; JSON mode
 (add-to-list 'auto-mode-alist '("\\.json\\'" . js-json-mode))
+
+;; Flymake integration
+(when davidc-config-use-flymake-jsonc
+  (require 'davidc-flymake)
+  (add-hook 'js-json-mode-hook
+            (lambda ()
+              (setq-local flymake-no-changes-timeout nil)
+              (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
+              (davidc-jsonc-flymake-setup))
+            )
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Auxilary modes for various file formats.
 (add-to-list 'auto-mode-alist '("\\.yaml\\'" . conf-mode))
 (add-to-list 'auto-mode-alist '("\\.yml\\'" . conf-mode))
 
