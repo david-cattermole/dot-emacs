@@ -443,6 +443,7 @@
 ;; Use 'emacsclient' to connect to this Emacs instance from external applications.
 ;;
 (when davidc-config-use-server
+  (require 'server)
   (unless (server-running-p)
     (server-start)
     (message "Emacs server started - you can now use 'emacsclient' to connect.")))
