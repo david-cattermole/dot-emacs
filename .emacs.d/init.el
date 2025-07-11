@@ -155,6 +155,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-server nil
+  "Start Emacs server at startup for client connections."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-ibuffer nil
   "Enable the use of ibuffer (rather than list-buffers)."
   :type 'boolean
@@ -429,6 +434,18 @@
   ;; Make ibuffer the default.
   (defalias 'list-buffers 'ibuffer)
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Emacs Server
+;;
+;; Start the Emacs server to allow client connections.
+;; Use 'emacsclient' to connect to this Emacs instance from external applications.
+;;
+(when davidc-config-use-server
+  (unless (server-running-p)
+    (server-start)
+    (message "Emacs server started - you can now use 'emacsclient' to connect.")))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
