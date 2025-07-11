@@ -846,6 +846,32 @@
 
    ;; Shrink the selection.
    (global-set-key (kbd "M-[") 'davidc-region-shrink)
+
+   ;; Vim-like keybindings for selecting the inner/around region.
+   ;;
+   ;; Keyboard prefixes:
+   ;;   C-' for "around"
+   ;;   C-; for "inner"
+   (global-set-key (kbd "C-; w") 'davidc-region-inner-word)
+   (global-set-key (kbd "C-' w") 'davidc-region-around-word)
+   (global-set-key (kbd "C-; s") 'davidc-region-inner-string)
+   (global-set-key (kbd "C-' s") 'davidc-region-around-string)
+   (global-set-key (kbd "C-; p") 'davidc-region-inner-paragraph)
+   (global-set-key (kbd "C-' p") 'davidc-region-around-paragraph)
+   (global-set-key (kbd "C-; d") 'davidc-region-inner-delimiter)
+   (global-set-key (kbd "C-' d") 'davidc-region-around-delimiter)
+   (global-set-key (kbd "C-; (") 'davidc-region-inner-paren)
+   (global-set-key (kbd "C-; )") 'davidc-region-inner-paren)
+   (global-set-key (kbd "C-' (") 'davidc-region-around-paren)
+   (global-set-key (kbd "C-' )") 'davidc-region-around-paren)
+   (global-set-key (kbd "C-; [") 'davidc-region-inner-bracket)
+   (global-set-key (kbd "C-; ]") 'davidc-region-inner-bracket)
+   (global-set-key (kbd "C-' [") 'davidc-region-around-bracket)
+   (global-set-key (kbd "C-' ]") 'davidc-region-around-bracket)
+   (global-set-key (kbd "C-; {") 'davidc-region-inner-brace)
+   (global-set-key (kbd "C-; }") 'davidc-region-inner-brace)
+   (global-set-key (kbd "C-' {") 'davidc-region-around-brace)
+   (global-set-key (kbd "C-; }") 'davidc-region-around-brace)
 )
 
 
