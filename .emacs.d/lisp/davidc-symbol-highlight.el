@@ -55,6 +55,35 @@
   :type 'boolean
   :group 'davidc-symbol-highlight)
 
+(defcustom davidc-symbol-highlight-case-sensitive t
+  "When non-nil, symbol highlighting is case sensitive.
+When nil, symbols are highlighted regardless of case.
+This is the default setting that applies unless overridden by
+`davidc-symbol-highlight-case-sensitive-modes'."
+  :type 'boolean
+  :group 'davidc-symbol-highlight)
+
+(defcustom davidc-symbol-highlight-case-sensitive-modes
+  '((emacs-lisp-mode . t)
+     (c-mode . t)
+     (c++-mode . t)
+     (python-mode . t)
+     (rust-mode . t)
+     (js-mode . t)
+     (js-json-mode . t)
+     (sh-mode . t)
+     (conf-mode . t)
+     (sql-mode . nil)
+     (bat-mode . nil)
+     (fortran-mode . nil))
+  "Alist of major modes and their case sensitivity settings.
+Each element is (MODE . CASE-SENSITIVE-P) where MODE is a major mode
+symbol and CASE-SENSITIVE-P is t for case sensitive or nil for case
+insensitive. If a mode is not in this list, the value of
+`davidc-symbol-highlight-case-sensitive' is used."
+  :type '(alist :key-type symbol :value-type boolean)
+  :group 'davidc-symbol-highlight)
+
 ;; Buffer-local variables.
 (defvar-local davidc--symbol-highlight-overlays nil
   "List of overlays for current symbol highlighting.")
@@ -67,6 +96,15 @@
 
 (defvar-local davidc--symbol-highlight-count nil
   "Number of occurrences of the highlighted symbol.")
+
+(defun davidc--symbol-highlight-case-sensitive-p ()
+  "Return whether symbol highlighting should be case sensitive in current buffer.
+Checks `davidc-symbol-highlight-case-sensitive-modes' first, then falls
+back to `davidc-symbol-highlight-case-sensitive'."
+  (let ((mode-setting (assoc major-mode davidc-symbol-highlight-case-sensitive-modes)))
+    (if mode-setting
+        (cdr mode-setting)
+      davidc-symbol-highlight-case-sensitive)))
 
 (defun davidc--symbol-highlight-cleanup ()
   "Remove all symbol highlight overlays."
@@ -87,11 +125,12 @@
 
 (defun davidc--symbol-highlight-create-overlays (symbol face)
   "Create overlays for all occurrences of SYMBOL using FACE.
-This includes occurrences in invisible/hidden text."
+This includes occurrences in invisible/hidden text.
+Respects the case sensitivity setting for the current mode."
   (save-excursion
     (goto-char (point-min))
     (let ((overlays '())
-          (case-fold-search nil)
+          (case-fold-search (not (davidc--symbol-highlight-case-sensitive-p)))
           (regex (concat "\\_<" (regexp-quote symbol) "\\_>"))
           ;; Ensure we search invisible text.
           (search-invisible t))
