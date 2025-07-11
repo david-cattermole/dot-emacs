@@ -289,7 +289,7 @@
     ;; because of byte-compile errors.
     (progn
       (load-library '"davidc")
-      (load-library '"davidc-restat"))
+      (load-library '"davidc-restart"))
   (progn
     (require 'davidc)
     (require 'davidc-restart)
