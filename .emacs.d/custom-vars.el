@@ -34,7 +34,6 @@
  '(reb-re-syntax 'rx)  ;; https://www.masteringemacs.org/article/re-builder-interactive-regexp-builder
  '(nxml-attribute-indent 4)
  '(nxml-child-indent 4)
- '(package-selected-packages '(yaml-mode markdown-mode csv cmake-mode csv-mode))
  '(python-shell-prompt-detect-failure-warning nil)
  '(require-final-newline 'query)
  '(show-paren-mode t)
