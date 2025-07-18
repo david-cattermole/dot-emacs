@@ -80,6 +80,7 @@
  '(davidc-config-use-flymake-clang-tidy t)
  '(davidc-config-use-flymake-rust-cargo-clippy t)
  '(davidc-config-use-flymake-jsonc t)
+ '(davidc-config-use-flymake-yaml t)
  '(davidc-config-use-format t)
  '(davidc-config-use-rename-symbol t)
  '(davidc-config-use-region t)

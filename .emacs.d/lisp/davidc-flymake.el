@@ -1,6 +1,7 @@
 ;;; -*- lexical-binding: t -*-
 ;;
-;; Enhanced Flymake integration for Python, Rust, C++, and JSON with comments.
+;; Enhanced Flymake integration for Python, Rust, C++, JSON with
+;; comments, and YAML.
 ;;
 ;; This package provides streamlined Flymake backends for multiple
 ;; programming languages, offering real-time syntax checking and
@@ -11,6 +12,7 @@
 ;; * Rust   - Uses "cargo clippy" for comprehensive Rust analysis.
 ;; * C++    - Uses "clang-tidy" for static analysis.
 ;; * JSON   - Uses custom Python script for JSON with comments.
+;; * YAML   - Uses custom Python script for YAML.
 ;;
 ;; PREREQUISITES:
 ;; Make sure the following tools are installed and available in your PATH:
@@ -18,6 +20,7 @@
 ;; * For Rust: cargo with clippy component (rustup component add clippy)
 ;; * For C++: clang-tidy (part of LLVM/Clang toolchain)
 ;; * For JSON: Python 3 and the jsonc_lint.py script
+;; * For YAML: Python 3 and the yaml_lint.py script
 ;;
 ;; BASIC SETUP:
 ;; 1. Load this file in your Emacs configuration
@@ -34,6 +37,9 @@
 ;;
 ;;    ;; JSON setup
 ;;    (add-hook 'js-json-mode-hook #'davidc-flymake-jsonc-setup)
+;;
+;;    ;; YAML setup
+;;    (add-hook 'davidc-yaml-mode-hook #'davidc-flymake-yaml-setup)
 ;;
 ;; NAVIGATION COMMANDS:
 ;; This package provides convenient functions to navigate between diagnostics:
@@ -54,6 +60,7 @@
 ;;   (setq davidc-flymake-clang-tidy-path "/opt/llvm/bin/clang-tidy")
 ;;   (setq davidc-flymake-rust-cargo-path "/home/user/.cargo/bin/cargo")
 ;;   (setq davidc-flymake-jsonc-lint-path "/path/to/jsonc_lint.py")
+;;   (setq davidc-flymake-yaml-lint-path "/path/to/yaml_lint.py")
 ;;
 ;;   ;; Custom Rust clippy arguments
 ;;   (setq davidc-flymake-rust-cargo-clippy-args
@@ -69,6 +76,7 @@
 ;; * For Rust projects, make sure you're in a Cargo project directory.
 ;; * For C++, clang-tidy works best with "compile_commands.json".
 ;; * For JSON, make sure Python 3 and jsonc_lint.py are available.
+;; * For YAML, make sure Python 3 and yaml_lint.py are available.
 ;; * Use M-x flymake-log to see detailed diagnostic information.
 ;;
 
@@ -104,6 +112,10 @@ Set this variable before loading this package to use a custom path.")
 This should be a Python script that can lint JSON files with comments.
 Defaults to ~/.emacs.d/bin/jsonc_lint.py.
 Set this variable before loading this package to use a custom path.")
+
+(defvar davidc-flymake-yaml-lint-path
+  (expand-file-name "bin/yaml_lint.py" user-emacs-directory)
+  "Path to the YAML linter script.")
 
 (defvar davidc-flymake-python-path
   (davidc-flymake--get-executable-path "python3")
@@ -199,6 +211,7 @@ SOURCE-FILE is the path of the file being checked."
                       diags)))))))
     diags))
 
+
 ;; Generic flymake backend factory.
 (defun davidc-flymake--make-backend (tool-name executable-path command-builder regex-pattern file-matcher)
   "Create a flymake backend function.
@@ -277,6 +290,9 @@ FILE-MATCHER is a function to determine if a diagnostic applies to current file.
 (defvar-local davidc--flymake-jsonc-proc nil
   "Current JSONC lint flymake process.")
 
+(defvar-local davidc--flymake-yaml-proc nil
+  "Current YAML lint flymake process.")
+
 ;; File matcher functions.
 (defun davidc-flymake--exact-file-matcher (file-path source-file)
   "Match FILE-PATH against SOURCE-FILE exactly or by basename."
@@ -330,6 +346,16 @@ REPORT-FN is the callback function for reporting diagnostics.")
   "Flymake backend for JSONC (JSON with comments).
 REPORT-FN is the callback function for reporting diagnostics.")
 
+(defalias 'davidc-flymake-yaml
+  (davidc-flymake--make-backend
+   "yaml"
+   davidc-flymake-python-path
+   (lambda (source-file)
+     (list davidc-flymake-python-path davidc-flymake-yaml-lint-path source-file))
+   "^\\(.+\\):\\([0-9]+\\):\\([0-9]+\\): \\(error\\|warning\\|note\\): \\(.+\\)$"
+   #'davidc-flymake--basename-file-matcher)
+  "Flymake backend for YAML files.")
+
 ;; Setup functions.
 (defun davidc-flymake-clang-tidy-setup ()
   "Set up flymake for clang-tidy.
@@ -354,6 +380,14 @@ Call this function in js-json-mode-hook to enable automatic JSON linting."
   (message "Setting up JSONC linter for flymake.")
   (add-hook 'flymake-diagnostic-functions #'davidc-flymake-jsonc nil t)
   (flymake-mode 1))
+
+(defun davidc-flymake-yaml-setup ()
+  "Set up flymake for YAML files."
+  (interactive)
+  (message "Setting up YAML linter for flymake.")
+  (add-hook 'flymake-diagnostic-functions #'davidc-flymake-yaml nil t)
+  (flymake-mode 1))
+
 
 ;; Simplified diagnostic navigation.
 (defun davidc-flymake-get-sorted-diagnostics (reverse)

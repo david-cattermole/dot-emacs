@@ -110,6 +110,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-flymake-yaml nil
+  "Use yaml_lint.py with flymake for YAML linting."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-format nil
   "Use format tool."
   :type 'boolean
