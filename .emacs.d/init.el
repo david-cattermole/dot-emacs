@@ -75,6 +75,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-davidc-yaml-mode nil
+  "Use davidc-yaml-mode for YAML files."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-python-black nil
   "Use python-black for Python formatting."
   :type 'boolean
@@ -577,9 +582,27 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; YAML mode
+(when davidc-config-use-davidc-yaml-mode
+  (require 'davidc-yaml-mode)
+
+  ;; Flymake integration
+  (when davidc-config-use-flymake-yaml
+    (require 'davidc-flymake)
+    (add-hook 'davidc-yaml-mode-hook
+              (lambda ()
+                (setq-local flymake-no-changes-timeout nil)
+                (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
+                (davidc-flymake-yaml-setup))
+              )
+    )
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Auxilary modes for various file formats.
-(add-to-list 'auto-mode-alist '("\\.yaml\\'" . conf-mode))
-(add-to-list 'auto-mode-alist '("\\.yml\\'" . conf-mode))
+;; (add-to-list 'auto-mode-alist '("\\.yaml\\'" . conf-mode))
+;; (add-to-list 'auto-mode-alist '("\\.yml\\'" . conf-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
