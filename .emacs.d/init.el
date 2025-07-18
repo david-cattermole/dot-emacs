@@ -605,6 +605,11 @@
    )
 
 
+;; Add your python shebang detection here:
+(add-to-list 'magic-mode-alist '("\\`#!/usr/bin/env python.*" . python-mode))
+(add-to-list 'magic-mode-alist '("\\`#! /usr/bin/env python.*" . python-mode))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; C and C++ Hooks
 
