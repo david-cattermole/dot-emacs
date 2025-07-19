@@ -923,6 +923,8 @@
    (global-set-key (kbd "C-; }") 'davidc-region-inner-brace)
    (global-set-key (kbd "C-' {") 'davidc-region-around-brace)
    (global-set-key (kbd "C-; }") 'davidc-region-around-brace)
+   (global-set-key (kbd "C-' f") 'davidc-region-around-defun)
+   (global-set-key (kbd "C-; f") 'davidc-region-around-defun)
 )
 
 

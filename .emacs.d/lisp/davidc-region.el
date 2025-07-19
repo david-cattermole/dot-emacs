@@ -27,6 +27,8 @@
 ;;    - `davidc-region-around-paragraph' - Select contents with paragraphs
 ;;    - `davidc-region-inner-delimiter' - Select (prompt for delimiter) contents
 ;;    - `davidc-region-around-delimiter' - Select contents with (prompt for delimiter)
+;;    - `davidc-region-inner-defun' - Select defuns contents
+;;    - `davidc-region-around-defun' - Select contents with defuns
 ;;
 ;; 2. Incremental selection:
 ;;    - `davidc-region-grow' - Expand selection to next larger unit
@@ -448,6 +450,7 @@ OBJECT should be a symbol like 'word, 'string, etc."
              (goto-char (cdr bounds))
              (activate-mark)))))))
 
+
 ;; Define all selection commands.
 (davidc-region--define-inner-around-commands word)
 (davidc-region--define-inner-around-commands string)
@@ -456,6 +459,7 @@ OBJECT should be a symbol like 'word, 'string, etc."
 (davidc-region--define-inner-around-commands brace)
 (davidc-region--define-inner-around-commands paragraph)
 (davidc-region--define-inner-around-commands delimiter)
+(davidc-region--define-inner-around-commands defun)
 
 
 ;;; Grow/shrink implementation.
