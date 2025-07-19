@@ -19,16 +19,16 @@
 ;;    - `davidc-region-around-string' - Select string with quotes
 ;;    - `davidc-region-inner-paren' - Select paren contents
 ;;    - `davidc-region-around-paren' - Select contents with parens
-;;    - `davidc-region-inner-bracket' - Select brackets contents
+;;    - `davidc-region-inner-bracket' - Select bracket contents
 ;;    - `davidc-region-around-bracket' - Select contents with brackets
-;;    - `davidc-region-inner-brace' - Select braces contents
+;;    - `davidc-region-inner-brace' - Select brace contents
 ;;    - `davidc-region-around-brace' - Select contents with braces
-;;    - `davidc-region-inner-paragraph' - Select paragraphs contents
-;;    - `davidc-region-around-paragraph' - Select contents with paragraphs
-;;    - `davidc-region-inner-delimiter' - Select (prompt for delimiter) contents
-;;    - `davidc-region-around-delimiter' - Select contents with (prompt for delimiter)
-;;    - `davidc-region-inner-defun' - Select defuns contents
-;;    - `davidc-region-around-defun' - Select contents with defuns
+;;    - `davidc-region-inner-paragraph' - Select paragraph contents
+;;    - `davidc-region-around-paragraph' - Select paragraph with blank lines
+;;    - `davidc-region-inner-delimiter' - Select any delimiter contents
+;;    - `davidc-region-around-delimiter' - Select contents with any delimiter
+;;    - `davidc-region-inner-defun' - Select function/defun contents
+;;    - `davidc-region-around-defun' - Select entire function/defun
 ;;
 ;; 2. Incremental selection:
 ;;    - `davidc-region-grow' - Expand selection to next larger unit
@@ -37,10 +37,18 @@
 ;; SUGGESTED KEY BINDINGS:
 ;;
 ;;   ;; Vim-like bindings
-;;   (global-set-key (kbd "M-v i w") 'davidc-region-inner-word)
-;;   (global-set-key (kbd "M-v a w") 'davidc-region-around-word)
-;;   (global-set-key (kbd "M-v i s") 'davidc-region-inner-string)
-;;   (global-set-key (kbd "M-v a s") 'davidc-region-around-string)
+;;   (global-set-key (kbd "C-; w") 'davidc-region-inner-word)
+;;   (global-set-key (kbd "C-' w") 'davidc-region-around-word)
+;;   (global-set-key (kbd "C-; s") 'davidc-region-inner-string)
+;;   (global-set-key (kbd "C-' s") 'davidc-region-around-string)
+;;   (global-set-key (kbd "C-; p") 'davidc-region-inner-paragraph)
+;;   (global-set-key (kbd "C-' p") 'davidc-region-around-paragraph)
+;;   (global-set-key (kbd "C-; d") 'davidc-region-inner-delimiter)
+;;   (global-set-key (kbd "C-' d") 'davidc-region-around-delimiter)
+;;   (global-set-key (kbd "C-; (") 'davidc-region-inner-paren)
+;;   (global-set-key (kbd "C-; )") 'davidc-region-inner-paren)
+;;   (global-set-key (kbd "C-' (") 'davidc-region-around-paren)
+;;   (global-set-key (kbd "C-' )") 'davidc-region-around-paren)
 ;;   ;; etc...
 ;;
 ;;   ;; Grow/shrink bindings
@@ -63,6 +71,10 @@
 ;;       (?\[ . ?\])
 ;;       (?$ . ?$)))  ; Math delimiters
 ;;
+;;   ;; Define custom expansion sequence for a mode
+;;   (davidc-region-set-mode-sequence 'latex-mode
+;;     '((word . nil) (word . t) (math . nil) (math . t) (defun . nil)))
+;;
 ;; IMPLEMENTATION NOTES:
 ;;
 ;; The grow/shrink functionality maintains a history of selections, allowing
@@ -74,7 +86,41 @@
 
 (require 'cl-lib)
 
+
 ;;; Customization variables.
+(defgroup davidc-region nil
+  "Enhanced region selection with text objects."
+  :group 'editing
+  :prefix "davidc-region-")
+
+(defcustom davidc-region-delimiter-search-limit 50000
+  "Maximum distance to search for delimiters.
+This prevents excessive searching in very large buffers.
+The search will look at most this many characters backward
+from point when searching for opening delimiters."
+  :type 'integer
+  :group 'davidc-region)
+
+(defcustom davidc-region-default-delimiters
+  '((?\( . ?\))
+    (?\[ . ?\])
+    (?\{ . ?\})
+    (?\" . ?\")
+    (?\' . ?\')
+    (?\` . ?\`)
+    (?< . ?>))
+  "Default delimiter pairs for text object matching.
+Each element is a cons cell (OPEN-CHAR . CLOSE-CHAR) where both
+elements are characters. These are used when searching for
+matching delimiters in `davidc-region--any-delimiter-bounds'.
+
+You can customize this list to add more delimiter types, or
+define mode-specific delimiters using `davidc-region-define-delimiters'."
+  :type '(alist :key-type character :value-type character)
+  :group 'davidc-region)
+
+
+;;; Mode-specific definitions
 (defvar davidc-region-mode-definitions nil
   "Alist of mode-specific text object definitions.
 
@@ -95,19 +141,179 @@ Example:
                    (delimiters . ((?\{ . ?\})
                                  (?\[ . ?\]))))))")
 
-(defvar davidc-region-default-delimiters
-  '((?\( . ?\))
-    (?\[ . ?\])
-    (?\{ . ?\})
-    (?\" . ?\")
-    (?\' . ?\')
-    (?\` . ?\`)
-    (?< . ?>))
-  "Default list of delimiter pairs for smart matching.
+;; Mode-specific expansion sequences for different major modes.
+;;
+;; Each sequence defines the order in which text objects are tried
+;; when expanding the region with `davidc-region-grow'.
+(defvar davidc-region-mode-expansion-sequences
+  '((emacs-lisp-mode . ((symbol . nil)
+                        (symbol . t)
+                        (string . nil)
+                        (string . t)
+                        (sexp . nil)
+                        (sexp . t)
+                        (defun . nil)))
 
-Each entry is a cons cell (OPEN-CHAR . CLOSE-CHAR) where both
-elements are characters. These are used when searching for
-matching delimiters in `davidc-region--any-delimiter-bounds'.")
+    (python-mode . ((word . nil)
+                    (word . t)
+                    (string . nil)
+                    (string . t)
+                    (paren . nil)
+                    (paren . t)
+                    (bracket . nil)
+                    (bracket . t)
+                    (defun . nil)))
+
+    (c-mode . ((word . nil)
+               (word . t)
+               (string . nil)
+               (string . t)
+               (paren . nil)
+               (paren . t)
+               (brace . nil)
+               (brace . t)
+               (defun . nil)))
+
+    (c++-mode . ((word . nil)
+                 (word . t)
+                 (string . nil)
+                 (string . t)
+                 (paren . nil)
+                 (paren . t)
+                 (brace . nil)
+                 (brace . t)
+                 (defun . nil)))
+
+    ;; Rust - similar to C++ but with emphasis on different brackets.
+    (rust-mode . ((word . nil)
+                  (word . t)
+                  (string . nil)
+                  (string . t)
+                  (paren . nil)
+                  (paren . t)
+                  (bracket . nil)
+                  (bracket . t)
+                  (brace . nil)
+                  (brace . t)
+                  (defun . nil)))
+
+    ;; JSON - focus on structural elements.
+    (js-json-mode . ((word . nil)
+                     (word . t)
+                     (string . nil)
+                     (string . t)
+                     (bracket . nil)
+                     (bracket . t)
+                     (brace . nil)
+                     (brace . t)
+                     (defun . nil)))
+
+    ;; Org mode - text-focused with some structure.
+    (org-mode . ((word . nil)
+                 (word . t)
+                 (string . nil)
+                 (string . t)
+                 (paren . nil)
+                 (paren . t)
+                 (bracket . nil)
+                 (bracket . t)
+                 (paragraph . nil)
+                 (paragraph . t)
+                 (defun . nil)))
+
+    ;; Plain text - minimal structure.
+    (text-mode . ((word . nil)
+                  (word . t)
+                  (string . nil)
+                  (string . t)
+                  (paren . nil)
+                  (paren . t)
+                  (bracket . nil)
+                  (bracket . t)
+                  (paragraph . nil)
+                  (paragraph . t)
+                  (defun . nil)))
+
+    ;; Configuration files - key-value focused.
+    (conf-mode . ((word . nil)
+                  (word . t)
+                  (string . nil)
+                  (string . t)
+                  (bracket . nil)
+                  (bracket . t)
+                  (paragraph . nil)
+                  (paragraph . t)
+                  (defun . nil)))
+
+    ;; CMake - function-call oriented.
+    (cmake-mode . ((word . nil)
+                   (word . t)
+                   (string . nil)
+                   (string . t)
+                   (paren . nil)
+                   (paren . t)
+                   (bracket . nil)
+                   (bracket . t)
+                   (brace . nil)
+                   (brace . t)
+                   (defun . nil)))
+
+    ;; Windows batch files.
+    (bat-mode . ((word . nil)
+                 (word . t)
+                 (string . nil)
+                 (string . t)
+                 (paren . nil)
+                 (paren . t)
+                 (paragraph . nil)
+                 (paragraph . t)
+                 (defun . nil)))
+
+    ;; Shell scripts - rich in different delimiters.
+    (sh-mode . ((word . nil)
+                (word . t)
+                (string . nil)
+                (string . t)
+                (paren . nil)
+                (paren . t)
+                (bracket . nil)
+                (bracket . t)
+                (brace . nil)
+                (brace . t)
+                (defun . nil))))
+
+  "Alist of mode-specific expansion sequences.
+Each sequence is a list of (OBJECT-TYPE . AROUND) pairs that define
+the order in which text objects are tried when expanding the region.
+AROUND is t for 'around' variants (including delimiters/whitespace),
+nil for 'inner' variants (content only).
+
+If a mode is not listed here, `davidc-region-default-expansion-sequence'
+is used.")
+
+;; Default expansion sequence used for modes without specific
+;; configuration.
+(defvar davidc-region-default-expansion-sequence
+  '((word . nil)
+    (word . t)
+    (string . nil)
+    (string . t)
+    (paren . nil)
+    (paren . t)
+    (bracket . nil)
+    (bracket . t)
+    (brace . nil)
+    (brace . t)
+    (sexp . nil)
+    (paragraph . nil)
+    (paragraph . t)
+    (defun . nil))
+  "Default sequence of text objects to try when growing region.
+Each element is (OBJECT-TYPE . AROUND) where AROUND is t for 'around'
+variants. This is used for modes not explicitly configured in
+`davidc-region-mode-expansion-sequences'.")
+
+;;; Buffer-local variables.
 (defvar-local davidc--expand-region-history nil
   "Buffer-local history of region expansions.
 
@@ -115,61 +321,30 @@ This is a list of cons cells (START . END) representing previous
 selections, with the most recent first. Used by `davidc-region-grow'
 and `davidc-region-shrink' to step through selection history.")
 
-;; Performance optimisation variables.
-(defcustom davidc-region-large-region-threshold 10000
-  "Skip small object searches in regions larger than this."
-  :type 'integer
-  :group 'davidc-region)
-
-(defcustom davidc-region-delimiter-search-limit 50000
-  "Maximum distance to search for delimiters."
-  :type 'integer
-  :group 'davidc-region)
-
-;; Cache variables for performance.
-(defvar-local davidc-region--bounds-cache nil
-  "Cache for computed bounds to avoid recalculation.")
-
-(defvar-local davidc-region--cache-tick nil
-  "Buffer modification tick when cache was last updated.")
+(defvar-local davidc--expand-region-last-point nil
+  "Buffer-local record of last cursor position when expansion started.
+Used to detect when the user has moved the cursor and the history
+should be reset.")
 
 
-;;; Cache management
-(defun davidc-region--cache-valid-p ()
-  "Check if the bounds cache is still valid."
-  (and davidc-region--bounds-cache
-       davidc-region--cache-tick
-       (= davidc-region--cache-tick (buffer-modified-tick))))
-
-(defun davidc-region--get-cached-bounds (key)
-  "Get cached bounds for KEY if cache is valid."
-  (when (davidc-region--cache-valid-p)
-    (alist-get key davidc-region--bounds-cache)))
-
-(defun davidc-region--set-cached-bounds (key bounds)
-  "Set cached BOUNDS for KEY."
-  (unless (davidc-region--cache-valid-p)
-    (setq davidc-region--bounds-cache nil
-          davidc-region--cache-tick (buffer-modified-tick)))
-  (setf (alist-get key davidc-region--bounds-cache) bounds))
-
-
-;;; Mode-specific customization.
-(defun davidc-region-define-text-object (mode text-object definition)
+;;; Mode configuration functions.
+(defun davidc-region-define-text-object (mode text-object bounds-function)
   "Define a text object for a specific mode.
 
 MODE is the major mode symbol (e.g., 'python-mode).
 TEXT-OBJECT is a symbol identifying the object type (e.g., 'string).
-DEFINITION is either:
-  - A function taking optional AROUND argument and returning (START . END)
-  - For 'delimiters text object, a list of (OPEN . CLOSE) pairs
+BOUNDS-FUNCTION is a function taking optional AROUND argument and
+returning (START . END) representing the bounds of the text object,
+or nil if no valid object is found at point.
 
 Example:
   (davidc-region-define-text-object 'python-mode 'string
-    (lambda (around) ...))"
+    (lambda (around)
+      ;; Custom implementation for Python strings
+      ...))"
   (let ((mode-defs (alist-get mode davidc-region-mode-definitions)))
     (setf (alist-get mode davidc-region-mode-definitions)
-          (cons (cons text-object definition)
+          (cons (cons text-object bounds-function)
                 (assq-delete-all text-object mode-defs)))))
 
 (defun davidc-region-define-delimiters (mode delimiter-pairs)
@@ -186,21 +361,18 @@ Example:
     '((?\{ . ?\}) (?\[ . ?\]) (?$ . ?$)))"
   (davidc-region-define-text-object mode 'delimiters delimiter-pairs))
 
-(defun davidc-region--get-mode-definition (text-object)
-  "Get the definition for TEXT-OBJECT in current mode.
+(defun davidc-region-set-mode-sequence (mode sequence)
+  "Set the expansion sequence for MODE.
 
-Returns the mode-specific definition if one exists, otherwise nil.
-Looks up the definition in `davidc-region-mode-definitions' based
-on the current `major-mode'."
-  (alist-get text-object (alist-get major-mode davidc-region-mode-definitions)))
+MODE is the major mode symbol.
+SEQUENCE should be a list of (OBJECT-TYPE . AROUND) pairs
+defining the order in which text objects are tried when
+expanding the region.
 
-(defun davidc-region--get-delimiters ()
-  "Get delimiter pairs for current mode.
-
-Returns the mode-specific delimiter list if defined, otherwise
-returns `davidc-region-default-delimiters'."
-  (or (davidc-region--get-mode-definition 'delimiters)
-      davidc-region-default-delimiters))
+Example:
+  (davidc-region-set-mode-sequence 'latex-mode
+    '((word . nil) (word . t) (math . nil) (math . t) (defun . nil)))"
+  (setf (alist-get mode davidc-region-mode-expansion-sequences) sequence))
 
 
 ;;; Core bounds finding functions.
@@ -211,18 +383,39 @@ If AROUND is non-nil, include surrounding whitespace.
 
 Returns a cons cell (START . END) or nil if no word at point.
 Uses Emacs's `bounds-of-thing-at-point' for word detection."
-  (let ((bounds (bounds-of-thing-at-point 'word)))
-    (when bounds
-      (if (not around)
-          bounds
-        (save-excursion
-          (goto-char (car bounds))
-          (skip-chars-backward " \t")
-          (cons (point)
-                (progn
-                  (goto-char (cdr bounds))
-                  (skip-chars-forward " \t")
-                  (point))))))))
+  (when-let ((bounds (bounds-of-thing-at-point 'word)))
+    (if (not around)
+        bounds
+      ;; Expand to include surrounding whitespace.
+      (save-excursion
+        (cons (progn (goto-char (car bounds))
+                     (skip-chars-backward " \t")
+                     (point))
+              (progn (goto-char (cdr bounds))
+                     (skip-chars-forward " \t")
+                     (point)))))))
+
+(defun davidc-region--symbol-bounds (&optional around)
+  "Get bounds of symbol at point.
+
+If AROUND is non-nil, include surrounding whitespace.
+
+Returns a cons cell (START . END) or nil if no symbol at point.
+Falls back to word bounds if symbol detection fails, which can
+happen in modes that don't properly define symbol syntax."
+  (or (when-let ((bounds (bounds-of-thing-at-point 'symbol)))
+        (if (not around)
+            bounds
+          ;; Expand to include surrounding whitespace.
+          (save-excursion
+            (cons (progn (goto-char (car bounds))
+                         (skip-chars-backward " \t")
+                         (point))
+                  (progn (goto-char (cdr bounds))
+                         (skip-chars-forward " \t")
+                         (point))))))
+      ;; Fallback to word bounds if symbol fails.
+      (davidc-region--word-bounds around)))
 
 (defun davidc-region--string-bounds (&optional around)
   "Get bounds of string at point.
@@ -232,18 +425,18 @@ If AROUND is non-nil, include the delimiting quotes.
 Returns a cons cell (START . END) or nil if not in a string.
 Uses syntax parsing to detect string boundaries accurately."
   (let ((ppss (syntax-ppss)))
-    (when (nth 3 ppss)  ; Inside string
-      (let ((start (nth 8 ppss)))
+    (when (nth 3 ppss)  ; Inside string.
+      (let ((start (nth 8 ppss)))  ; Start of string (including quote).
         (save-excursion
           (goto-char start)
           (condition-case nil
               (progn
-                (forward-sexp)
+                (forward-sexp)  ; Jump to end of string.
                 (let ((end (point)))
-                  (when (> end (1+ start))  ; Valid string
+                  (when (> end (1+ start))  ; Valid string.
                     (if around
-                        (cons start end)
-                      (cons (1+ start) (1- end))))))
+                        (cons start end)  ; Include quotes.
+                      (cons (1+ start) (1- end))))))  ; Exclude quotes.
             (error nil)))))))
 
 (defun davidc-region--paragraph-bounds (&optional around)
@@ -255,14 +448,18 @@ Returns a cons cell (START . END) or nil if no valid paragraph.
 Uses Emacs's paragraph navigation commands."
   (save-excursion
     (let ((orig (point)))
+      ;; Go to beginning of paragraph.
       (backward-paragraph)
       (let ((start (point)))
+        ;; Go back to original position.
         (goto-char orig)
+        ;; Go to end of paragraph.
         (forward-paragraph)
         (let ((end (point)))
           (when (< start end)
             (if (not around)
                 (cons start end)
+              ;; Include surrounding blank lines.
               (cons (save-excursion
                       (goto-char start)
                       (skip-chars-backward " \t\n")
@@ -285,32 +482,25 @@ This function uses two strategies:
 2. Fall back to manual search with proper nesting depth tracking
 
 The search respects syntax - delimiters in strings or comments are ignored."
-  (let* ((cache-key (list 'delimiter open-char close-char around (point)))
-         (cached (davidc-region--get-cached-bounds cache-key)))
-    (or cached
-        (let ((bounds (davidc-region--find-delimiter-bounds-impl open-char close-char around)))
-          (davidc-region--set-cached-bounds cache-key bounds)
-          bounds))))
-
-(defun davidc-region--find-delimiter-bounds-impl (open-char close-char &optional around)
-  "Implementation of delimiter finding."
   (let ((pos (point))
         (limit (min davidc-region-delimiter-search-limit
-                   (- (point-max) (point-min)))))
+                    (- (point-max) (point-min)))))
     (save-excursion
-      ;; Try fast built-in parsing first.
+
+      ;; Strategy 1: Try fast built-in parsing first.
       (condition-case nil
           (progn
             (backward-up-list)
             (when (and (= (char-after) open-char)
-                      (<= (- pos (point)) limit))
+                       (<= (- pos (point)) limit))
               (let ((start (point)))
                 (forward-sexp)
                 (when (= (char-before) close-char)
                   (if around
                       (cons start (point))
                     (cons (1+ start) (1- (point))))))))
-        ;; Manual search.
+
+        ;; Strategy 2: Manual search when built-in parsing fails.
         (error
          (goto-char pos)
          (let ((search-start (max (point-min) (- pos limit)))
@@ -321,27 +511,32 @@ The search respects syntax - delimiters in strings or comments are ignored."
            (unless (or (nth 3 ppss) (nth 4 ppss))
              ;; Backward search with limit.
              (while (and (not start)
-                        (> (point) search-start))
+                         (> (point) search-start))
                (backward-char)
-               ;; Reuse ppss when possible.
+               ;; Reuse ppss when possible for performance.
                (when (< (point) (nth 0 ppss))
                  (setq ppss (syntax-ppss)))
+               ;; Skip if in string or comment.
                (unless (or (nth 3 ppss) (nth 4 ppss))
                  (let ((char (char-after)))
                    (cond
+                    ;; Found closing delimiter - increase nesting depth.
                     ((= char close-char) (cl-incf depth))
+                    ;; Found opening delimiter.
                     ((= char open-char)
                      (if (> depth 0)
+                         ;; Part of inner nesting - decrease depth.
                          (cl-decf depth)
+                       ;; Found our opening delimiter.
                        (setq start (point))))))))
-             ;; Forward search if we found start.
+             ;; If we found the start, search forward for the end.
              (when start
                (goto-char start)
                (condition-case nil
                    (progn
                      (forward-sexp)
                      (when (and (= (char-before) close-char)
-                               (<= (- (point) start) limit))
+                                (<= (- (point) start) limit))
                        (if around
                            (cons start (point))
                          (cons (1+ start) (1- (point))))))
@@ -357,27 +552,31 @@ If AROUND is non-nil, include the delimiters.
 
 Returns a cons cell (START . END) or nil if no enclosing delimiters."
   (let* ((pos (point))
-         (delimiters (davidc-region--get-delimiters))
+         ;; Get mode-specific delimiters or use defaults.
+         (delimiters (or (alist-get 'delimiters
+                                    (alist-get major-mode davidc-region-mode-definitions))
+                         davidc-region-default-delimiters))
          (limit (min davidc-region-delimiter-search-limit
-                    (- (point-max) (point-min))))
+                     (- (point-max) (point-min))))
          (search-start (max (point-min) (- pos limit)))
          best-bounds best-distance)
 
     ;; Try each delimiter type, keeping the closest.
     (dolist (pair delimiters)
       (let ((bounds (davidc-region--find-delimiter-bounds
-                    (car pair) (cdr pair) around)))
+                     (car pair) (cdr pair) around)))
         (when bounds
+          ;; Calculate distance from point to start of delimiter.
           (let ((distance (- pos (car bounds))))
-            (when (and (>= distance 0)
-                      (or (null best-distance)
-                          (< distance best-distance)))
+            (when (and (>= distance 0)  ; Must enclose point.
+                       (or (null best-distance)
+                           (< distance best-distance)))
               (setq best-bounds bounds
                     best-distance distance))))))
     best-bounds))
 
 
-;;; Text object bounds dispatcher.
+;;; Main bounds dispatcher.
 (defun davidc-region--get-bounds (text-object &optional around)
   "Get bounds for TEXT-OBJECT, dispatching to appropriate function.
 
@@ -390,39 +589,33 @@ This is the main dispatcher that:
 3. Handles Emacs thing-at-point objects
 
 Returns a cons cell (START . END) or nil if no valid object found."
-  (let* ((cache-key (list text-object around (point)))
-         (cached (davidc-region--get-cached-bounds cache-key)))
-    (or cached
-        (let ((bounds
-               (let ((custom-func (davidc-region--get-mode-definition text-object)))
-                 (cond
-                  ;; Mode-specific function.
-                  ((functionp custom-func)
-                   (funcall custom-func around))
-                  ;; Built-in text objects.
-                  ((eq text-object 'word)
-                   (davidc-region--word-bounds around))
-                  ((eq text-object 'string)
-                   (davidc-region--string-bounds around))
-                  ((eq text-object 'paragraph)
-                   (davidc-region--paragraph-bounds around))
-                  ((eq text-object 'paren)
-                   (davidc-region--find-delimiter-bounds ?\( ?\) around))
-                  ((eq text-object 'bracket)
-                   (davidc-region--find-delimiter-bounds ?\[ ?\] around))
-                  ((eq text-object 'brace)
-                   (davidc-region--find-delimiter-bounds ?\{ ?\} around))
-                  ((eq text-object 'delimiter)
-                   (davidc-region--any-delimiter-bounds around))
-                  ;; Emacs things-at-point.
-                  ((memq text-object '(symbol sexp sentence line defun))
-                   (bounds-of-thing-at-point text-object))))))
-          (davidc-region--set-cached-bounds cache-key bounds)
-          bounds))))
+  (let ((custom-func (alist-get text-object
+                                (alist-get major-mode davidc-region-mode-definitions))))
+    (cond
+     ;; Mode-specific custom function.
+     ((functionp custom-func)
+      (funcall custom-func around))
+     ;; Built-in text object handlers.
+     ((eq text-object 'word) (davidc-region--word-bounds around))
+     ((eq text-object 'symbol) (davidc-region--symbol-bounds around))
+     ((eq text-object 'string) (davidc-region--string-bounds around))
+     ((eq text-object 'paragraph) (davidc-region--paragraph-bounds around))
+     ((eq text-object 'paren)
+      (davidc-region--find-delimiter-bounds ?\( ?\) around))
+     ((eq text-object 'bracket)
+      (davidc-region--find-delimiter-bounds ?\[ ?\] around))
+     ((eq text-object 'brace)
+      (davidc-region--find-delimiter-bounds ?\{ ?\} around))
+     ((eq text-object 'delimiter) (davidc-region--any-delimiter-bounds around))
+     ;; Generic Emacs thing-at-point objects.
+     ((memq text-object '(sexp sentence line defun))
+      (bounds-of-thing-at-point text-object))
+     ;; Unknown text object.
+     (t nil))))
 
 
-;;; Selection commands.
-(defmacro davidc-region--define-inner-around-commands (object)
+;;; Interactive selection commands.
+(defmacro davidc-region--define-selection-commands (object)
   "Define inner and around selection commands for OBJECT.
 
 This macro generates two interactive functions:
@@ -431,106 +624,114 @@ This macro generates two interactive functions:
 
 OBJECT should be a symbol like 'word, 'string, etc."
   (let ((inner-name (intern (format "davidc-region-inner-%s" object)))
-        (around-name (intern (format "davidc-region-around-%s" object))))
+        (around-name (intern (format "davidc-region-around-%s" object)))
+        (object-string (symbol-name object)))
     `(progn
        (defun ,inner-name ()
-         ,(format "Select inner %s." object)
+         ,(format "Select inner %s at point.
+This selects the contents of the %s, excluding delimiters or quotes."
+                  object-string object-string)
          (interactive)
-         (let ((bounds (davidc-region--get-bounds ',object)))
-           (when bounds
-             (set-mark (car bounds))
-             (goto-char (cdr bounds))
-             (activate-mark))))
-       (defun ,around-name ()
-         ,(format "Select around %s." object)
-         (interactive)
-         (let ((bounds (davidc-region--get-bounds ',object t)))
-           (when bounds
-             (set-mark (car bounds))
-             (goto-char (cdr bounds))
-             (activate-mark)))))))
+         (if-let ((bounds (davidc-region--get-bounds ',object)))
+             (progn
+               (set-mark (car bounds))
+               (goto-char (cdr bounds))
+               (activate-mark))
+           (user-error "No %s at point" ,object-string)))
 
+       (defun ,around-name ()
+         ,(format "Select around %s at point.
+This selects the %s including its delimiters, quotes, or surrounding whitespace."
+                  object-string object-string)
+         (interactive)
+         (if-let ((bounds (davidc-region--get-bounds ',object t)))
+             (progn
+               (set-mark (car bounds))
+               (goto-char (cdr bounds))
+               (activate-mark))
+           (user-error "No %s at point" ,object-string))))))
 
 ;; Define all selection commands.
-(davidc-region--define-inner-around-commands word)
-(davidc-region--define-inner-around-commands string)
-(davidc-region--define-inner-around-commands paren)
-(davidc-region--define-inner-around-commands bracket)
-(davidc-region--define-inner-around-commands brace)
-(davidc-region--define-inner-around-commands paragraph)
-(davidc-region--define-inner-around-commands delimiter)
-(davidc-region--define-inner-around-commands defun)
+(davidc-region--define-selection-commands word)
+(davidc-region--define-selection-commands string)
+(davidc-region--define-selection-commands paren)
+(davidc-region--define-selection-commands bracket)
+(davidc-region--define-selection-commands brace)
+(davidc-region--define-selection-commands paragraph)
+(davidc-region--define-selection-commands delimiter)
+(davidc-region--define-selection-commands defun)
 
 
-;;; Grow/shrink implementation.
-(defun davidc-region--collect-expansions ()
-  "Collect expansions with smart ordering and early termination."
-  (let* ((pos (point))
-         (current-size (if (region-active-p)
-                          (- (region-end) (region-beginning))
-                        0))
-         (bounds-list '())
-         (checked-types '()))
+;;; Grow/shrink implementation helpers.
+(defun davidc-region--current-bounds ()
+  "Get current region bounds or point.
+Returns (START . END) for active region, or (POINT . POINT) if no region."
+  (if (region-active-p)
+      (cons (region-beginning) (region-end))
+    (cons (point) (point))))
 
-    ;; Clear cache if buffer was modified.
-    (unless (davidc-region--cache-valid-p)
-      (setq davidc-region--bounds-cache nil
-            davidc-region--cache-tick (buffer-modified-tick)))
+(defun davidc-region--bounds-contain-p (outer inner)
+  "Check if OUTER bounds fully contain INNER bounds.
+Both arguments should be cons cells (START . END).
+Returns t if OUTER contains INNER, nil otherwise."
+  (and outer inner
+       (<= (car outer) (car inner))
+       (>= (cdr outer) (cdr inner))))
 
-    ;; Phase 1: Quick things-at-point (usually fastest).
-    (when (< current-size davidc-region-large-region-threshold)
-      (dolist (thing '(word symbol sexp))
-        (let ((bounds (bounds-of-thing-at-point thing)))
+(defun davidc-region--bounds-equal-p (a b)
+  "Check if bounds A and B are equal.
+Both arguments should be cons cells (START . END).
+Returns t if they represent the same region, nil otherwise."
+  (and a b
+       (= (car a) (car b))
+       (= (cdr a) (cdr b))))
+
+(defun davidc-region--get-expansion-sequence ()
+  "Get the expansion sequence for the current mode.
+Returns the mode-specific sequence if defined, otherwise returns
+the default expansion sequence."
+  (or (alist-get major-mode davidc-region-mode-expansion-sequences)
+      davidc-region-default-expansion-sequence))
+
+(defun davidc-region--find-next-expansion (current-bounds)
+  "Find the next valid expansion from CURRENT-BOUNDS.
+
+Tries each text object in the mode's expansion sequence to find
+the next larger selection that contains the current selection.
+
+Returns (SPEC . BOUNDS) where SPEC is (OBJECT-TYPE . AROUND)
+and BOUNDS is (START . END), or nil if no expansion found."
+  (let* ((pos (if (= (car current-bounds) (cdr current-bounds))
+                  (point)  ; No selection, use cursor position
+                (car current-bounds)))  ; Use start of selection
+         (sequence (davidc-region--get-expansion-sequence))
+         result)
+
+    ;; Try each object type in sequence.
+    (catch 'found
+      (dolist (spec sequence)
+        (let* ((object-type (car spec))
+               (around (cdr spec))
+               bounds)
+          ;; Get bounds for this text object.
+          (condition-case nil
+              (save-excursion
+                (goto-char pos)
+                (setq bounds (davidc-region--get-bounds object-type around)))
+            (error nil))
+
+          ;; Check if this is a valid expansion.
           (when (and bounds
-                    (<= (car bounds) pos)
-                    (<= pos (cdr bounds))
-                    (> (- (cdr bounds) (car bounds)) current-size))
-            (push bounds bounds-list)
-            (push thing checked-types)))))
+                     ;; Must contain current selection.
+                     (davidc-region--bounds-contain-p bounds current-bounds)
+                     ;; Must be larger than current selection.
+                     (not (davidc-region--bounds-equal-p bounds current-bounds)))
+            (setq result (cons spec bounds))
+            (throw 'found t)))))
 
-    ;; Phase 2: Larger structures.
-    (dolist (thing '(sentence line paragraph defun))
-      (let ((bounds (bounds-of-thing-at-point thing)))
-        (when (and bounds
-                  (<= (car bounds) pos)
-                  (<= pos (cdr bounds))
-                  (> (- (cdr bounds) (car bounds)) current-size))
-          (push bounds bounds-list)
-          (push thing checked-types))))
+    result))
 
-    ;; Phase 3: Text objects (only if needed and region not too large).
-    (when (< current-size davidc-region-large-region-threshold)
-      ;; Check string first (common and fast).
-      (dolist (around '(nil t))
-        (let ((bounds (davidc-region--get-bounds 'string around)))
-          (when (and bounds
-                    (<= (car bounds) pos)
-                    (<= pos (cdr bounds))
-                    (> (- (cdr bounds) (car bounds)) current-size))
-            (push bounds bounds-list))))
-
-      ;; Then delimiters if still needed.
-      (when (< (length bounds-list) 5)  ; Arbitrary cutoff.
-        (dolist (type '(paren bracket brace))
-          (dolist (around '(nil t))
-            (let ((bounds (davidc-region--get-bounds type around)))
-              (when (and bounds
-                        (<= (car bounds) pos)
-                        (<= pos (cdr bounds))
-                        (> (- (cdr bounds) (car bounds)) current-size))
-                (push bounds bounds-list)))))))
-
-    ;; Always add whole buffer as fallback.
-    (push (cons (point-min) (point-max)) bounds-list)
-
-    ;; Remove duplicates and sort by size.
-    (cl-delete-duplicates
-     (sort bounds-list
-           (lambda (a b)
-             (< (- (cdr a) (car a))
-                (- (cdr b) (car b)))))
-     :test #'equal)))
-
+;;; Main grow/shrink functions.
 (defun davidc-region-grow ()
   "Expand the selected region to the next larger text object.
 
@@ -548,35 +749,37 @@ The exact sequence depends on context and mode-specific definitions.
 
 Maintains a history of expansions for use with `davidc-region-shrink'."
   (interactive)
-  (unless (local-variable-p 'davidc--expand-region-history)
-    (setq-local davidc--expand-region-history nil))
+  (let* ((current-bounds (davidc-region--current-bounds))
+         (current-point (point))
+         (starting-fresh (= (car current-bounds) (cdr current-bounds))))
 
-  (let* ((current (if (region-active-p)
-                     (cons (region-beginning) (region-end))
-                   (cons (point) (point))))
-         (current-size (- (cdr current) (car current)))
-         (candidates (davidc-region--collect-expansions))
-         ;; Find first valid expansion.
-         (next (cl-find-if
-                (lambda (b)
-                  (and (> (- (cdr b) (car b)) current-size)
-                       (<= (car b) (car current))
-                       (>= (cdr b) (cdr current))))
-                candidates)))
+    ;; Reset history if starting fresh or cursor moved.
+    (when (or starting-fresh
+              (not (equal davidc--expand-region-last-point current-point)))
+      (setq davidc--expand-region-history nil
+            davidc--expand-region-last-point current-point))
 
-    (cond
-     (next
-      (when (zerop current-size)
-        (setq davidc--expand-region-history nil))
-      (push next davidc--expand-region-history)
-      (set-mark (car next))
-      (goto-char (cdr next))
-      (activate-mark))
-     ((region-active-p)
-      (deactivate-mark)
-      (message "No further expansion"))
-     (t
-      (message "No expansion found")))))
+    ;; Find next expansion.
+    (let ((expansion (davidc-region--find-next-expansion current-bounds)))
+      (cond
+       (expansion
+        ;; Save current bounds to history (what we're expanding FROM).
+        (push current-bounds davidc--expand-region-history)
+
+        ;; Apply the expansion.
+        (let ((new-bounds (cdr expansion)))
+          (set-mark (car new-bounds))
+          (goto-char (cdr new-bounds))
+          (activate-mark)
+
+          ;; Report what we selected.
+          (let ((type-info (car expansion)))
+            (message "Selected %s %s"
+                     (if (cdr type-info) "around" "inner")
+                     (symbol-name (car type-info))))))
+
+       (t
+        (message "No expansion found"))))))
 
 (defun davidc-region-shrink ()
   "Shrink the selected region to the previous smaller text object.
@@ -589,47 +792,91 @@ Can be called repeatedly to step back through multiple expansions."
   (interactive)
   (cond
    ((not (region-active-p))
-    (message "No active region"))
-   ((and davidc--expand-region-history
-         (cdr davidc--expand-region-history))
-    (pop davidc--expand-region-history)
-    (let ((prev (car davidc--expand-region-history)))
-      (set-mark (car prev))
-      (goto-char (cdr prev))
-      (activate-mark)))
+    (message "No active region to shrink"))
+
+   ;; We have history - restore previous selection.
+   (davidc--expand-region-history
+    (let ((previous-bounds (pop davidc--expand-region-history)))
+      ;; Check if previous bounds was just a point (no selection).
+      (if (= (car previous-bounds) (cdr previous-bounds))
+          ;; It was just a cursor position - deactivate selection.
+          (progn
+            (deactivate-mark)
+            (goto-char (car previous-bounds))
+            (message "Back to cursor"))
+        ;; It was a selection - restore it.
+        (progn
+          (set-mark (car previous-bounds))
+          (goto-char (cdr previous-bounds))
+          (activate-mark)
+          (message "Restored previous selection")))))
+
+   ;; No history - just deactivate.
    (t
     (deactivate-mark)
     (message "No shrink history"))))
 
 
 ;;; Mode-specific customizations.
-(with-eval-after-load 'python
-  ;; Python triple-quoted strings.
-  (defun davidc-region--python-string-bounds (&optional around)
-    "Python-specific string bounds including triple quotes.
+(defun davidc-region--python-string-bounds (&optional around)
+  "Python-specific string bounds including triple quotes.
 
 Handles both regular strings (using default syntax parsing) and
 Python's triple-quoted strings (''' or \"\"\").
 
 If AROUND is non-nil, includes the quote characters."
-    (or (davidc-region--string-bounds around)
-        (let ((pos (point)))
-          (save-excursion
-            (when (or (looking-at "'''\\|\"\"\"")
-                     (re-search-backward "'''\\|\"\"\""
-                                       (max (point-min) (- pos 1000)) t))
-              (let ((start (match-beginning 0))
-                    (delim (match-string 0)))
-                (goto-char (match-end 0))
-                (when (search-forward delim
-                                    (min (point-max) (+ pos 5000)) t)
-                  (when (and (>= pos (+ start 3))
-                           (<= pos (- (point) 3)))
-                    (if around
-                        (cons start (point))
-                      (cons (+ start 3) (- (point) 3)))))))))))
+  (let* ((ppss (syntax-ppss))
+         (string-start-after-quotes (+ (nth 8 ppss) 1)))
+    ;; Only proceed if we're actually inside a string.
+    (when (and (nth 3 ppss) string-start-after-quotes)
+      (save-excursion
+        ;; The syntax parser gives us the position after the opening quotes.
+        ;;
+        ;; We need to look backward to find the actual quotes.
+        (goto-char string-start-after-quotes)
 
+        ;; Look backward for the opening quotes.
+        (let ((outside-start nil)
+              (inside-start nil)
+              (quote-length 1)) ; default to single quote.
+
+          ;; Check for triple quotes before the reported string start.
+          (when (>= (point) 3)
+            (backward-char 3)
+            (when (looking-at "\\('''\\|\"\"\"\\)")
+              (setq inside-start string-start-after-quotes)
+              (setq outside-start (- string-start-after-quotes 4))
+              (setq quote-length 3)))
+
+          ;; If not triple quotes, check for single quotes.
+          (unless outside-start
+            (goto-char string-start-after-quotes)
+            (backward-char 1)
+            (message "test: %s" (looking-at "\\(['\"]\\)"))
+            (when (looking-at "\\(['\"]\\)")
+              (setq inside-start string-start-after-quotes)
+              (setq outside-start (- string-start-after-quotes 2))
+              (setq quote-length 1)))
+
+          ;; Now find the end of the string.
+          (when outside-start
+            (goto-char (- inside-start 1))
+            (condition-case nil
+                (progn
+                  (forward-sexp)
+                  (let ((string-end (point)))
+                    (if around
+                        ;; Include the quotes.
+                        (cons (+ outside-start 1) (+ string-end (- quote-length 1)))
+                      ;; Exclude the quotes.
+                      (cons inside-start
+                            (- string-end 1)))))
+              (error nil))))))))
+
+
+;; Set up Python customization when python-mode is loaded.
+(with-eval-after-load 'python
   (davidc-region-define-text-object 'python-mode 'string
-                                   #'davidc-region--python-string-bounds))
+                                    #'davidc-region--python-string-bounds))
 
 (provide 'davidc-region)
