@@ -160,6 +160,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-davidc-find nil
+  "Use the custom davidc-find tool."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-symbol-highlight nil
   "Enable automatic symbol highlighting under cursor."
   :type 'boolean
@@ -1141,6 +1146,7 @@
        (rg-enable-default-bindings)))
    )
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Symbol Highlighting
 ;;
@@ -1154,4 +1160,28 @@
 
   (global-set-key (kbd "M-n") 'davidc-symbol-highlight-next-occurrence)
   (global-set-key (kbd "M-p") 'davidc-symbol-highlight-prev-occurrence)
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Custom Find Functions
+(when davidc-config-use-davidc-find
+  (require 'davidc-find)
+
+  ;; Rename functions for easier access.
+  (defalias 'rfind-files 'davidc-find-files)
+  (defalias 'rfind-project-files 'davidc-find-project-files)
+  (defalias 'rfind-directories 'davidc-find-directories)
+  (defalias 'rfind-large-files 'davidc-find-large-files)
+  (defalias 'rfind-recent-files 'davidc-find-recent-files)
+  (defalias 'rfind-old-files 'davidc-find-old-files)
+  (defalias 'rfind-executable-files 'davidc-find-executable-files)
+  (defalias 'rfind-empty-files 'davidc-find-empty-files)
+  (defalias 'rfind-empty-directories 'davidc-find-empty-directories)
+  (defalias 'rfind-by-owner 'davidc-find-by-owner)
+
+  ;; Functions to interactively change the config.
+  (defalias 'rfind-set-backend 'davidc-find-set-backend)
+  (defalias 'rfind-check-backend 'davidc-find-check-backend)
+  (defalias 'rfind-set-display-format 'davidc-find-set-display-format)
   )

@@ -90,6 +90,7 @@
  '(davidc-config-use-project t)
  '(davidc-config-use-dumb-jump t)
  '(davidc-config-use-rg t)
+ '(davidc-config-use-davidc-find t)
  '(davidc-config-use-symbol-highlight t)
  '(davidc-config-use-server t)
  '(davidc-config-use-ibuffer t)
