@@ -4,19 +4,18 @@
 ;;
 ;; This package provides a unified interface for file searching using either
 ;; GNU find or the modern fd command.  It offers smart pattern matching,
-;; multiple display formats, and integration with Emacs' compilation mode
-;; for navigating results.
+;; and integration with Emacs' dired mode for navigating results.
 ;;
 ;; FEATURES:
 ;;
 ;; * Dual backend support: Traditional GNU find or modern fd.
 ;; * Smart pattern processing with automatic wildcarding.
-;; * Multiple display formats (absolute/relative paths, ls-style, basename only).
+;; * Dired integration for file management operations.
 ;; * Specialized search functions for common tasks.
 ;; * Case-sensitive/insensitive searching.
-;; * Integration with grep for content searching.
 ;; * Project-aware searching.
 ;; * Full history support for patterns and directories.
+;; * Optional respect for rgrep ignore patterns.
 ;;
 ;; BASIC USAGE:
 ;;
@@ -38,27 +37,18 @@
 ;;
 ;; CONFIGURATION:
 ;;
-;; You can also override the backend ("find" or "fd"):
-;;   M-x davidc-find-set-backend RET find
-;;
-;; Or override the display format ("abspath", "relative", "basename" or "ls"):
-;;   M-x davidc-find-set-display-format RET ls
-;;
 ;; Choose your default backend (find or fd):
 ;;   (setq davidc-find-backend 'fd)  ; Use fd (faster, fewer features)
 ;;   (setq davidc-find-backend 'find) ; Use find (more features, slower)
 ;;
-;; Set display format:
-;;   (setq davidc-find-display-format 'relative) ; or 'abspath, 'ls, 'basename
+;; You can also override the backend ("find" or "fd"):
+;;   M-x davidc-find-set-backend RET find
 ;;
 ;; Set default search directory:
 ;;   (setq davidc-find-default-directory "~/projects")
 ;;
-;; NAVIGATION:
-;;
-;; Results appear in a compilation buffer where you can:
-;; * g to refresh the search.
-;; * q to close the results buffer.
+;; Enable/disable rgrep ignore patterns:
+;;   (setq davidc-find-respect-grep-ignore-patterns t) ; default is t
 ;;
 ;; BACKEND DIFFERENCES:
 ;;
@@ -74,9 +64,9 @@
 ;; * Better Unicode support.
 ;; * Requires separate installation.
 
-
-(require 'compile)
-(require 'grep)
+(require 'dired)
+(require 'find-dired)  ; For dired compatibility.
+(require 'grep)        ; For grep-find-ignored-files/directories.
 (require 'thingatpt)
 
 ;;; Utility functions.
@@ -110,26 +100,6 @@ The backend determines which command-line tool is used:
   - Requires separate installation,"
   :type '(choice (const :tag "GNU find (traditional)" find)
                  (const :tag "fd (modern, faster)" fd))
-  :group 'davidc-find)
-
-(defcustom davidc-find-display-format 'abspath
-  "Display format for search results in the compilation buffer.
-
-`abspath': Show absolute paths (default).
-  Example: /home/user/projects/file.txt
-
-`ls': Show ls -l style output with permissions, size, date.
-  Example: -rw-r--r-- 1 user group 1234 Jan 1 12:00 file.txt
-
-`relative': Show paths relative to search directory.
-  Example: src/main.cpp (when searching in /home/user/projects)
-
-`basename': Show only the filename without directory.
-  Example: file.txt"
-  :type '(choice (const :tag "Absolute paths" abspath)
-                 (const :tag "ls -l format (detailed)" ls)
-                 (const :tag "Relative to search directory" relative)
-                 (const :tag "Filename only" basename))
   :group 'davidc-find)
 
 (defcustom davidc-find-executable
@@ -185,6 +155,15 @@ When non-nil, file name patterns are matched case-insensitively.
 Individual commands may override this setting."
   :type 'boolean
   :group 'davidc-find)
+
+(defcustom davidc-find-respect-grep-ignore-patterns t
+  "Whether to respect `grep-find-ignored-files' and `grep-find-ignored-directories'.
+When non-nil, the find backend will exclude files and directories
+matching the patterns in these variables, similar to how `rgrep' works.
+This only affects the GNU find backend; fd respects .gitignore by default."
+  :type 'boolean
+  :group 'davidc-find)
+
 
 ;;; History variables.
 (defvar davidc-find-history nil
@@ -265,28 +244,63 @@ Examples:
     (format "*%s*" pattern))))
 
 
-;;; Display format handlers.
-(defun davidc-find--get-find-display-args (display-format directory)
-  "Get GNU find arguments for DISPLAY-FORMAT.
-DIRECTORY is used for calculating relative paths.
-Returns appropriate find command arguments as a string."
-  (pcase display-format
-    ('abspath "")  ; Default find behavior shows absolute paths.
-    ('ls "-ls")    ; Detailed listing format.
-    ('relative (format "-printf \"%%P\\n\""))  ; Path relative to start.
-    ('basename "-printf \"%f\\n\"")           ; Filename only.
-    (_ "")))
+;;; Ignored files processing.
+(defun davidc-find--build-find-ignore-args ()
+  "Build find arguments to exclude ignored files and directories.
+Uses `grep-find-ignored-files' and `grep-find-ignored-directories'
+to generate appropriate -name and -path exclusions."
+  (let ((args '()))
+    ;; Process ignored directories.
+    (when grep-find-ignored-directories
+      (dolist (dir grep-find-ignored-directories)
+        ;; Handle directory patterns.
+        (if (string-match-p "[*?]" dir)
+            ;; Pattern with wildcards - use -path.
+            (push (format "-path '*/%s' -prune -o" dir) args)
+          ;; Simple directory name.
+          (push (format "-path '*/%s' -prune -o" dir) args))))
 
-(defun davidc-find--get-fd-display-args (display-format directory)
-  "Get fd arguments for DISPLAY-FORMAT.
-DIRECTORY is used for calculating relative paths.
-Returns appropriate fd command arguments as a string."
-  (pcase display-format
-    ('abspath "-a")         ; Force absolute paths.
-    ('ls "--list-details")  ; Detailed listing (similar to ls -l).
-    ('relative "")          ; fd shows relative paths by default.
-    ('basename "-f")        ; Show only filenames without paths.
-    (_ "")))
+    ;; Process ignored files.
+    (when grep-find-ignored-files
+      (let ((file-conditions '()))
+        (dolist (file grep-find-ignored-files)
+          (cond
+           ;; Handle cons cells (condition . pattern).
+           ((consp file)
+            ;; Skip complex conditions for now.
+            )
+           ;; Simple file patterns.
+           ((stringp file)
+            (push (format "-name '%s'" file) file-conditions))))
+        ;; Combine all file conditions with -o (OR).
+        (when file-conditions
+          (push (format "-not \\( %s \\)"
+                        (mapconcat 'identity file-conditions " -o "))
+                args))))
+
+    ;; Join all arguments.
+    (mapconcat 'identity (nreverse args) " ")))
+
+(defun davidc-find--build-fd-ignore-args ()
+  "Build fd arguments to exclude ignored files and directories.
+Uses `grep-find-ignored-files' and `grep-find-ignored-directories'
+to generate appropriate exclusions."
+  (let ((args '()))
+    ;; Process ignored directories.
+    (when grep-find-ignored-directories
+      (dolist (dir grep-find-ignored-directories)
+        (push (format "--exclude '%s'" dir) args)))
+
+    ;; Process ignored files - fd uses gitignore-style patterns.
+    (when grep-find-ignored-files
+      (dolist (file grep-find-ignored-files)
+        (when (stringp file)
+          ;; Convert glob patterns to fd exclusions.
+          (push (format "--exclude '%s'" file) args))))
+
+    ;; Join all arguments.
+    (mapconcat 'identity (nreverse args) " ")))
+
 
 ;;; Command building functions.
 (defun davidc-find--build-find-command (directory pattern type-filter case-sensitive extra-args)
@@ -310,6 +324,10 @@ Returns a complete find command ready for execution."
                                (mapconcat #'shell-quote-argument
                                           davidc-find-find-default-args " ")
                              ""))
+         ;; Build ignore arguments if enabled.
+         (ignore-args (if davidc-find-respect-grep-ignore-patterns
+                          (davidc-find--build-find-ignore-args)
+                        ""))
          (type-arg (pcase type-filter
                      ('file "-type f")
                      ('directory "-type d")
@@ -322,15 +340,15 @@ Returns a complete find command ready for execution."
                                   (if case-sensitive "-name" "-iname")
                                   processed-pattern)
                         ""))
-         (display-args (davidc-find--get-find-display-args
-                        davidc-find-display-format expanded-directory))
+         ;; Build parts, incorporating ignore args early in the command.
          (parts (list davidc-find-executable
                       (shell-quote-argument expanded-directory)
                       default-args-str
+                      ignore-args  ; Apply ignores before other filters.
                       type-arg
                       pattern-arg
                       (or extra-args "")
-                      display-args)))
+                      "-ls")))     ; Use -ls for dired compatibility.
     ;; Join non-empty parts with spaces.
     (mapconcat #'identity (seq-filter (lambda (s) (not (string-empty-p s))) parts) " ")))
 
@@ -351,17 +369,13 @@ EXTRA-ARGS: Additional fd arguments as a string
 Returns a complete fd command ready for execution."
   (let* ((processed-pattern (davidc-find--process-pattern pattern))
          (expanded-directory (expand-file-name directory))
-         (display-args (davidc-find--get-fd-display-args
-                        davidc-find-display-format expanded-directory))
-         ;; Handle --list-details specially to avoid duplicates.
-         (all-default-args (append davidc-find-fd-default-args
-                                   (when (and (not (member "--list-details" davidc-find-fd-default-args))
-                                              (string-match-p "--list-details" display-args))
-                                     '("--list-details"))))
-         (default-args-str (if (and all-default-args
-                                    (not (string-match-p "--list-details" display-args)))
+         ;; Build ignore arguments if enabled.
+         (ignore-args (if davidc-find-respect-grep-ignore-patterns
+                          (davidc-find--build-fd-ignore-args)
+                        ""))
+         (default-args-str (if davidc-find-fd-default-args
                                (mapconcat #'shell-quote-argument
-                                          all-default-args " ")
+                                          davidc-find-fd-default-args " ")
                              ""))
          (type-arg (pcase type-filter
                      ('file "-t f")
@@ -376,7 +390,8 @@ Returns a complete fd command ready for execution."
                     ;; With pattern: use --glob for wildcard matching.
                     (list davidc-find-fd-executable
                           default-args-str
-                          display-args
+                          "--list-details"  ; For dired compatibility.
+                          ignore-args      ; Apply exclusions.
                           case-arg
                           type-arg
                           (or extra-args "")
@@ -386,7 +401,8 @@ Returns a complete fd command ready for execution."
                   ;; Without pattern: match all files with ".".
                   (list davidc-find-fd-executable
                         default-args-str
-                        display-args
+                        "--list-details"  ; For dired compatibility.
+                        ignore-args      ; Apply exclusions.
                         case-arg
                         type-arg
                         (or extra-args "")
@@ -396,31 +412,90 @@ Returns a complete fd command ready for execution."
     (mapconcat #'identity (seq-filter (lambda (s) (not (string-empty-p s))) parts) " ")))
 
 
+;;; Dired process filter.
+(defun davidc-find--dired-filter (proc string)
+  "Process filter for find/fd output in dired mode.
+PROC is the process and STRING is the output."
+  (let ((buf (process-buffer proc))
+        (inhibit-read-only t))
+    (if (buffer-live-p buf)
+        (with-current-buffer buf
+          (save-excursion
+            ;; Insert at the end of the buffer.
+            (goto-char (point-max))
+            ;; For fd output, we might need to convert the format.
+            (if (and (eq davidc-find-backend 'fd)
+                     (string-match "^[drwx-]+ " string))
+                ;; fd --list-details output is similar to ls -l.
+                (insert string)
+              ;; find -ls output should work directly.
+              (insert string))
+            ;; Update the dired buffer.
+            (when (derived-mode-p 'dired-mode)
+              (dired-insert-set-properties (process-mark proc) (point)))
+            (set-marker (process-mark proc) (point)))))))
+
+
+;;; Dired process sentinel.
+(defun davidc-find--dired-sentinel (proc state)
+  "Sentinel for find/fd process.
+PROC is the process and STATE is its state."
+  (let ((buf (process-buffer proc))
+        (inhibit-read-only t))
+    (if (buffer-live-p buf)
+        (with-current-buffer buf
+          (save-excursion
+            (goto-char (point-max))
+            (insert "\n  "
+                    (propertize (format "Process %s %s"
+                                        (process-name proc)
+                                        (replace-regexp-in-string "\n\\'" "" state))
+                                'face 'dired-header))
+            (forward-char -1)
+            (insert " at " (substring (current-time-string) 0 19))
+            (insert "\n"))
+          (setq mode-line-process nil)
+          (delete-process proc)
+          (force-mode-line-update)
+          (when (eq (process-exit-status proc) 0)
+            (message "Find/fd finished"))))))
+
+
 ;;; Core execution function.
-(defun davidc-find--run-command (command description)
-  "Execute COMMAND and display results in a compilation buffer.
+(defun davidc-find--run-command (command description directory)
+  "Execute COMMAND and display results in a dired buffer.
 DESCRIPTION is used for the buffer name (*Find DESCRIPTION*)
 and user messages.
+DIRECTORY is the base directory for the search.
 
-The results buffer uses `grep-mode' for navigation, allowing:
-- RET or mouse clicks to visit files
-- n/p to move between results
-- Highlighting of matches"
-  (let ((buffer-name (format "*Find %s*" description)))
-    ;; Set up compilation environment.
-    (let ((compilation-buffer-name-function (lambda (_) buffer-name))
-          (compilation-process-setup-function
-           (lambda ()
-             (setq-local compilation-disable-input t))))
-
-      ;; Start the compilation process.
-      (compilation-start command 'grep-mode nil
-                         (lambda (_) buffer-name)))
-
-    ;; Inform user about the search.
-    (message "Running %s search (%s format): %s..."
+The results buffer uses `dired-mode' for navigation, similar to
+`find-dired'."
+  (let* ((buffer-name (format "*Find %s*" description))
+         (buffer (get-buffer-create buffer-name))
+         (proc nil))
+    ;; Set up the dired buffer.
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "  " directory ":\n")
+        (insert "  " command "\n")
+        (dired-mode)
+        ;; Set the directory.
+        (setq dired-directory directory
+              default-directory directory)
+        (setq buffer-read-only t)
+        (setq proc (start-process-shell-command
+                    "find" buffer command))
+        ;; Set up process handlers
+        (set-process-filter proc 'davidc-find--dired-filter)
+        (set-process-sentinel proc 'davidc-find--dired-sentinel)
+        ;; Update mode line.
+        (setq mode-line-process '(":%s"))
+        (force-mode-line-update)))
+    ;; Display the buffer.
+    (display-buffer buffer)
+    (message "Running %s search: %s..."
              (if (eq davidc-find-backend 'fd) "fd" "find")
-             davidc-find-display-format
              description)))
 
 
@@ -456,8 +531,9 @@ DESCRIPTION: Human-readable description for the results buffer"
                  "davidc-find-fd-executable"
                "davidc-find-executable")))
 
-    ;; Run the command.
-    (davidc-find--run-command command description)))
+    ;; Run the command with dired mode.
+    (davidc-find--run-command command description directory)))
+
 
 ;;; Interactive commands.
 
@@ -473,8 +549,8 @@ PATTERN is intelligently processed:
   \"test_*.py\"    → Find Python test files
 
 The search uses the backend specified by `davidc-find-backend'.
-Results are displayed in a compilation buffer where you can
-navigate to files by pressing RET."
+Results are displayed in a dired buffer where you can use all
+standard dired operations."
   (interactive
    (let* ((default-pattern (davidc-find--default-search-string))
           (pattern (davidc-find--read-string-with-default
@@ -692,6 +768,21 @@ that automatically uses the project root as the search directory."
                         default-directory)))
     (davidc-find-files pattern project-root)))
 
+;;;###autoload
+(defun davidc-find-toggle-ignore-patterns ()
+  "Toggle whether to respect grep ignore patterns.
+When enabled, uses `grep-find-ignored-files' and
+`grep-find-ignored-directories' to exclude files,
+the same patterns used by `rgrep'."
+  (interactive)
+  (setq davidc-find-respect-grep-ignore-patterns
+        (not davidc-find-respect-grep-ignore-patterns))
+  (message "Ignore patterns are now %s"
+           (if davidc-find-respect-grep-ignore-patterns
+               "enabled (using rgrep ignore patterns)"
+             "disabled")))
+
+
 ;;; Utility commands.
 
 ;;;###autoload
@@ -702,7 +793,6 @@ Shows:
 - Which backend is active (find or fd)
 - Path to the executable
 - Default arguments
-- Current display format
 - Version information"
   (interactive)
   (let* ((backend-name (if (eq davidc-find-backend 'fd) "fd" "find"))
@@ -716,13 +806,12 @@ Shows:
         (let ((version-output (shell-command-to-string
                                (format "%s --version 2>/dev/null || echo 'Version information not available'"
                                        executable))))
-          (message "Backend: %s\nExecutable: %s\nDefault args: %s\nDisplay format: %s\nVersion:\n%s"
+          (message "Backend: %s\nExecutable: %s\nDefault args: %s\nVersion:\n%s"
                    backend-name
                    executable
                    (if default-args
                        (mapconcat #'identity default-args " ")
                      "None")
-                   davidc-find-display-format
                    (string-trim version-output)))
       (error "Executable not found: %s. Please install %s or customize %s"
              executable
@@ -747,22 +836,4 @@ Use \\='fd for better performance and simpler syntax."
   (setq davidc-find-backend backend)
   (message "Backend set to: %s" backend))
 
-;;;###autoload
-(defun davidc-find-set-display-format (format)
-  "Set display format to FORMAT.
-
-FORMAT can be:
-- \\='abspath: Show absolute paths
-- \\='ls: Show detailed listing (like ls -l)
-- \\='relative: Show paths relative to search directory
-- \\='basename: Show only filenames without paths"
-  (interactive
-   (list (intern (completing-read "Display format: "
-                                  '("abspath" "ls" "relative" "basename")
-                                  nil t nil nil
-                                  (symbol-name davidc-find-display-format)))))
-  (setq davidc-find-display-format format)
-  (message "Display format set to: %s" format))
-
 (provide 'davidc-find)
-
