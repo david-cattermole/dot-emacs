@@ -622,7 +622,7 @@
 ;; Flymake integration
 (when davidc-config-use-flymake-xml
   (require 'davidc-flymake)
-  (add-hook 'xml-mode-hook
+  (add-hook 'nxml-mode-hook
             (lambda ()
               (setq-local flymake-no-changes-timeout nil)
               (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
