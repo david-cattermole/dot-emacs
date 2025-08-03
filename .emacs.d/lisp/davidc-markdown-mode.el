@@ -30,32 +30,41 @@ This controls how much to indent nested structures."
 ;; Font lock keywords for Markdown syntax highlighting.
 ;; Using standard font-lock faces for theme compatibility.
 ;; Order is important - more specific patterns should come first.
-(defvar davidc-markdown-font-lock-keywords
+(defun davidc-markdown--get-font-lock-keywords ()
+  "Generate font-lock keywords dynamically based on configuration."
   `(
-    ;; Fenced code blocks - must come before other patterns
-    ("^```\\(.*\\)$" 0 font-lock-keyword-face)
-    ("^~~~\\(.*\\)$" 0 font-lock-keyword-face)
+    ;; Fenced code blocks - opening/closing delimiters with language spec
+    ("^\\(```\\|~~~\\)\\(.*\\)$"
+     (1 font-lock-keyword-face)
+     (2 font-lock-type-face))
 
     ;; Code blocks (indented by 4+ spaces or 1+ tabs)
     ("^\\(    \\|\t\\)\\(.*\\)$" 2 font-lock-string-face)
 
-    ;; Headers - ATX style (# ## ### etc.)
-    ("^\\(#+\\)\\s-+\\(.*\\)$"
+    ;; Headers - ATX style (# ## ### etc.) with optional trailing #
+    ("^\\(#+\\)\\s-+\\(.*?\\)\\s-*\\(#+\\)?\\s-*$"
      (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face))
+     (2 font-lock-function-name-face)
+     (3 font-lock-keyword-face nil t))
 
-    ;; Headers - Setext style (underlined with = or -)
-    ("^\\(.+\\)\\s-*\n\\(=+\\)\\s-*$"
-     (1 font-lock-function-name-face)
-     (2 font-lock-keyword-face))
-    ("^\\(.+\\)\\s-*\n\\(-+\\)\\s-*$"
-     (1 font-lock-function-name-face)
-     (2 font-lock-keyword-face))
+    ;; Setext-style header underlines (= and - lines)
+    ("^\\s-*\\(=+\\)\\s-*$" 1 font-lock-keyword-face)
+    ("^\\s-*\\(-+\\)\\s-*$" 1 font-lock-keyword-face)
 
     ;; Horizontal rules
     ("^\\s-*\\(\\*\\s-*\\*\\s-*\\*\\|\\*\\s-*\\*\\s-*\\*.*\\)\\s-*$" 1 font-lock-keyword-face)
     ("^\\s-*\\(-\\s-*-\\s-*-\\|-\\s-*-\\s-*-.*\\)\\s-*$" 1 font-lock-keyword-face)
     ("^\\s-*\\(_\\s-*_\\s-*_\\|_\\s-*_\\s-*_.*\\)\\s-*$" 1 font-lock-keyword-face)
+
+    ;; Bold+Italic text - ***text*** and ___text___ (must come first)
+    ("\\(\\*\\*\\*\\)\\([^*\n]+\\)\\(\\*\\*\\*\\)"
+     (1 font-lock-warning-face)
+     (2 font-lock-warning-face)
+     (3 font-lock-warning-face))
+    ("\\(___\\)\\([^_\n]+\\)\\(___\\)"
+     (1 font-lock-warning-face)
+     (2 font-lock-warning-face)
+     (3 font-lock-warning-face))
 
     ;; Bold text - **text** and __text__
     ("\\(\\*\\*\\)\\([^*\n]+\\)\\(\\*\\*\\)"
@@ -67,12 +76,12 @@ This controls how much to indent nested structures."
      (2 font-lock-builtin-face)
      (3 font-lock-builtin-face))
 
-    ;; Italic text - *text* and _text_ (but not within words)
-    ("\\(?:^\\|\\s-\\)\\(\\*\\)\\([^*\n]+\\)\\(\\*\\)\\(?:$\\|\\s-\\)"
+    ;; Italic text - *text* and _text_ (simplified boundary detection)
+    ("\\(\\*\\)\\([^*\n]+\\)\\(\\*\\)"
      (1 font-lock-variable-name-face)
      (2 font-lock-variable-name-face)
      (3 font-lock-variable-name-face))
-    ("\\(?:^\\|\\s-\\)\\(_\\)\\([^_\n]+\\)\\(_\\)\\(?:$\\|\\s-\\)"
+    ("\\(_\\)\\([^_\n]+\\)\\(_\\)"
      (1 font-lock-variable-name-face)
      (2 font-lock-variable-name-face)
      (3 font-lock-variable-name-face))
@@ -123,8 +132,8 @@ This controls how much to indent nested structures."
      (1 font-lock-comment-face)
      (2 font-lock-comment-face))
 
-    ;; HTML comments
-    ("\\(<!--\\)\\([^>]*\\|[^>]*>[^-]*\\|[^>]*>[^-]*-[^-]*\\)*\\(-->\\)"
+    ;; HTML comments (simplified for reliability)
+    ("\\(<!--\\)\\(.*?\\)\\(-->\\)"
      (1 font-lock-comment-delimiter-face)
      (2 font-lock-comment-face)
      (3 font-lock-comment-delimiter-face))
@@ -135,21 +144,17 @@ This controls how much to indent nested structures."
      (2 font-lock-keyword-face)
      (3 font-lock-keyword-face)
      (4 font-lock-keyword-face))
-    )
-  "Font lock keywords for Markdown mode using standard font-lock faces for theme compatibility.")
-
-;; Add math highlighting if enabled
-(when davidc-markdown-enable-math
-  (add-to-list 'davidc-markdown-font-lock-keywords
-               '("\\(\\$\\$\\)\\([^$]+\\)\\(\\$\\$\\)"
-                 (1 font-lock-constant-face)
-                 (2 font-lock-constant-face)
-                 (3 font-lock-constant-face)) t)
-  (add-to-list 'davidc-markdown-font-lock-keywords
-               '("\\(\\$\\)\\([^$\n]+\\)\\(\\$\\)"
-                 (1 font-lock-constant-face)
-                 (2 font-lock-constant-face)
-                 (3 font-lock-constant-face)) t))
+    ;; Math highlighting (if enabled)
+    ,@(when davidc-markdown-enable-math
+        '(("\\(\\$\\$\\)\\([^$]+\\)\\(\\$\\$\\)"
+           (1 font-lock-constant-face)
+           (2 font-lock-constant-face)
+           (3 font-lock-constant-face))
+          ("\\(\\$\\)\\([^$\n]+\\)\\(\\$\\)"
+           (1 font-lock-constant-face)
+           (2 font-lock-constant-face)
+           (3 font-lock-constant-face))))
+    ))
 
 ;; Syntax table for Markdown
 (defvar davidc-markdown-mode-syntax-table
@@ -266,7 +271,7 @@ Customization:
 
   ;; Set up syntax highlighting
   (setq font-lock-defaults
-        '(davidc-markdown-font-lock-keywords
+        `((davidc-markdown--get-font-lock-keywords)
           nil                           ; KEYWORDS-ONLY
           nil                           ; CASE-FOLD
           nil                           ; SYNTAX-ALIST
