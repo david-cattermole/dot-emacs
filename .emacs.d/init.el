@@ -80,6 +80,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-davidc-markdown-mode nil
+  "Use davidc-markdown-mode for Markdown files."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-python-black nil
   "Use python-black for Python formatting."
   :type 'boolean
@@ -614,6 +619,12 @@
               )
     )
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Markdown mode
+(when davidc-config-use-davidc-markdown-mode
+  (require 'davidc-markdown-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

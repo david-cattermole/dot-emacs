@@ -74,6 +74,7 @@
  '(davidc-config-use-cmake-mode t)
  '(davidc-config-use-rust-mode t)
  '(davidc-config-use-davidc-yaml-mode t)
+ '(davidc-config-use-davidc-markdown-mode t)
  '(davidc-config-use-python-black t)
  '(davidc-config-use-python-flymake-ruff t)
  '(davidc-config-use-clang-format t)
