@@ -1,7 +1,7 @@
 ;;; -*- lexical-binding: t -*-
 ;;
 ;; Enhanced Flymake integration for Python, Rust, C++, JSON with
-;; comments, and YAML.
+;; comments, YAML, and XML.
 ;;
 ;; This package provides streamlined Flymake backends for multiple
 ;; programming languages, offering real-time syntax checking and
@@ -13,6 +13,7 @@
 ;; * C++    - Uses "clang-tidy" for static analysis.
 ;; * JSON   - Uses custom Python script for JSON with comments.
 ;; * YAML   - Uses custom Python script for YAML.
+;; * XML    - Uses custom Python script for XML validation.
 ;;
 ;; PREREQUISITES:
 ;; Make sure the following tools are installed and available in your PATH:
@@ -21,6 +22,7 @@
 ;; * For C++: clang-tidy (part of LLVM/Clang toolchain)
 ;; * For JSON: Python 3 and the jsonc_lint.py script
 ;; * For YAML: Python 3 and the yaml_lint.py script
+;; * For XML: Python 3 and the xml_lint.py script
 ;;
 ;; BASIC SETUP:
 ;; 1. Load this file in your Emacs configuration
@@ -40,6 +42,9 @@
 ;;
 ;;    ;; YAML setup
 ;;    (add-hook 'davidc-yaml-mode-hook #'davidc-flymake-yaml-setup)
+;;
+;;    ;; XML setup
+;;    (add-hook 'xml-mode-hook #'davidc-flymake-xml-setup)
 ;;
 ;; NAVIGATION COMMANDS:
 ;; This package provides convenient functions to navigate between diagnostics:
@@ -61,6 +66,7 @@
 ;;   (setq davidc-flymake-rust-cargo-path "/home/user/.cargo/bin/cargo")
 ;;   (setq davidc-flymake-jsonc-lint-path "/path/to/jsonc_lint.py")
 ;;   (setq davidc-flymake-yaml-lint-path "/path/to/yaml_lint.py")
+;;   (setq davidc-flymake-xml-lint-path "/path/to/xml_lint.py")
 ;;
 ;;   ;; Custom Rust clippy arguments
 ;;   (setq davidc-flymake-rust-cargo-clippy-args
@@ -77,6 +83,7 @@
 ;; * For C++, clang-tidy works best with "compile_commands.json".
 ;; * For JSON, make sure Python 3 and jsonc_lint.py are available.
 ;; * For YAML, make sure Python 3 and yaml_lint.py are available.
+;; * For XML, make sure Python 3 and xml_lint.py are available.
 ;; * Use M-x flymake-log to see detailed diagnostic information.
 ;;
 
@@ -116,6 +123,13 @@ Set this variable before loading this package to use a custom path.")
 (defvar davidc-flymake-yaml-lint-path
   (expand-file-name "bin/yaml_lint.py" user-emacs-directory)
   "Path to the YAML linter script.")
+
+(defvar davidc-flymake-xml-lint-path
+  (expand-file-name "bin/xml_lint.py" user-emacs-directory)
+  "Path to the XML linter script.
+This should be a Python script that can lint XML files.
+Defaults to ~/.emacs.d/bin/xml_lint.py.
+Set this variable before loading this package to use a custom path.")
 
 (defvar davidc-flymake-python-path
   (davidc-flymake--get-executable-path "python3")
@@ -293,6 +307,9 @@ FILE-MATCHER is a function to determine if a diagnostic applies to current file.
 (defvar-local davidc--flymake-yaml-proc nil
   "Current YAML lint flymake process.")
 
+(defvar-local davidc--flymake-xml-proc nil
+  "Current XML lint flymake process.")
+
 ;; File matcher functions.
 (defun davidc-flymake--exact-file-matcher (file-path source-file)
   "Match FILE-PATH against SOURCE-FILE exactly or by basename."
@@ -356,6 +373,17 @@ REPORT-FN is the callback function for reporting diagnostics.")
    #'davidc-flymake--basename-file-matcher)
   "Flymake backend for YAML files.")
 
+(defalias 'davidc-flymake-xml
+  (davidc-flymake--make-backend
+   "xml"
+   davidc-flymake-python-path
+   (lambda (source-file)
+     (list davidc-flymake-python-path davidc-flymake-xml-lint-path source-file))
+   "^\\(.+\\):\\([0-9]+\\):\\([0-9]+\\): \\(error\\|warning\\|note\\): \\(.+\\)$"
+   #'davidc-flymake--basename-file-matcher)
+  "Flymake backend for XML files.
+REPORT-FN is the callback function for reporting diagnostics.")
+
 ;; Setup functions.
 (defun davidc-flymake-clang-tidy-setup ()
   "Set up flymake for clang-tidy.
@@ -386,6 +414,14 @@ Call this function in js-json-mode-hook to enable automatic JSON linting."
   (interactive)
   (message "Setting up YAML linter for flymake.")
   (add-hook 'flymake-diagnostic-functions #'davidc-flymake-yaml nil t)
+  (flymake-mode 1))
+
+(defun davidc-flymake-xml-setup ()
+  "Set up flymake for XML files.
+Call this function in xml-mode-hook to enable automatic XML linting."
+  (interactive)
+  (message "Setting up XML linter for flymake.")
+  (add-hook 'flymake-diagnostic-functions #'davidc-flymake-xml nil t)
   (flymake-mode 1))
 
 

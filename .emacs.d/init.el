@@ -115,6 +115,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-flymake-xml nil
+  "Use xml_lint.py with flymake for XML linting."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-format nil
   "Use format tool."
   :type 'boolean
@@ -608,6 +613,21 @@
                 (davidc-flymake-yaml-setup))
               )
     )
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; XML mode
+
+;; Flymake integration
+(when davidc-config-use-flymake-xml
+  (require 'davidc-flymake)
+  (add-hook 'xml-mode-hook
+            (lambda ()
+              (setq-local flymake-no-changes-timeout nil)
+              (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
+              (davidc-flymake-xml-setup))
+            )
   )
 
 
