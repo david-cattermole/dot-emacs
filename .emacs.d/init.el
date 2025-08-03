@@ -342,10 +342,12 @@
 ;; "C-M-<down>" to select then kill a block of code.
 ;;
 ;; Same as "C-M-n" - the default function is the same as "C-M-d".
-;; (CTRL + ALT + Shift + Down arrow).
+;; (CTRL + ALT + Shift + Down arrow) or (CTRL + Page Down).
 (global-set-key (kbd "C-M-S-<down>") 'forward-list)
+(global-set-key (kbd "C-<next>") 'forward-list)
 ;; Same as "C-M-p" - the default function is the same as "C-M-u".
-;; (CTRL + ALT + Shift + Up arrow).
+;; (CTRL + ALT + Shift + Up arrow) or (CTRL + Page Up).
+(global-set-key (kbd "C-<prior>") 'backward-list)
 (global-set-key (kbd "C-M-S-<up>") 'backward-list)
 
 ;; Remapping "C-M-f" to "C-M-S-<right>".
