@@ -175,6 +175,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-davidc-harpoon nil
+  "Use the custom davidc-harpoon tool."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-symbol-highlight nil
   "Enable automatic symbol highlighting under cursor."
   :type 'boolean
@@ -1218,3 +1223,43 @@
   (defalias 'dfind-check-backend 'davidc-find-check-backend)
   (defalias 'dfind-check-toggle-ignore-patterns 'davidc-find-toggle-ignore-patterns)
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Harpoon-style quick navigation
+(when davidc-config-use-davidc-harpoon
+  (require 'davidc-harpoon)
+
+  ;; Main marking command
+  (global-set-key (kbd "C-c h m") 'davidc-harpoon-mark-position)
+
+  ;; Menu and navigation.
+  (global-set-key (kbd "C-c h l") 'davidc-harpoon-menu)
+  (global-set-key (kbd "C-<f3>") 'davidc-harpoon-prev)
+  (global-set-key (kbd "C-<f4>") 'davidc-harpoon-next)
+  (global-set-key (kbd "C-c h c") 'davidc-harpoon-clear-marks)
+
+  ;; Quick jumps.
+  (global-set-key (kbd "M-1") 'davidc-harpoon-jump-to-1)
+  (global-set-key (kbd "M-2") 'davidc-harpoon-jump-to-2)
+  (global-set-key (kbd "M-3") 'davidc-harpoon-jump-to-3)
+  (global-set-key (kbd "M-4") 'davidc-harpoon-jump-to-4)
+  (global-set-key (kbd "M-5") 'davidc-harpoon-jump-to-5)
+  (global-set-key (kbd "M-6") 'davidc-harpoon-jump-to-6)
+  (global-set-key (kbd "M-7") 'davidc-harpoon-jump-to-7)
+  (global-set-key (kbd "M-8") 'davidc-harpoon-jump-to-8)
+  (global-set-key (kbd "M-9") 'davidc-harpoon-jump-to-9)
+
+  ;; Quick marks to specific slots.
+  (global-set-key (kbd "C-M-1") (lambda () (interactive) (davidc-harpoon-mark-position 1)))
+  (global-set-key (kbd "C-M-2") (lambda () (interactive) (davidc-harpoon-mark-position 2)))
+  (global-set-key (kbd "C-M-3") (lambda () (interactive) (davidc-harpoon-mark-position 3)))
+  (global-set-key (kbd "C-M-4") (lambda () (interactive) (davidc-harpoon-mark-position 4)))
+  (global-set-key (kbd "C-M-5") (lambda () (interactive) (davidc-harpoon-mark-position 5)))
+  (global-set-key (kbd "C-M-6") (lambda () (interactive) (davidc-harpoon-mark-position 6)))
+  (global-set-key (kbd "C-M-7") (lambda () (interactive) (davidc-harpoon-mark-position 7)))
+  (global-set-key (kbd "C-M-8") (lambda () (interactive) (davidc-harpoon-mark-position 8)))
+  (global-set-key (kbd "C-M-9") (lambda () (interactive) (davidc-harpoon-mark-position 9)))
+
+  ;; Save marks to a file, to restore each time Emacs is opened.
+  (setq davidc-harpoon-persist-marks t))
