@@ -200,6 +200,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-dape nil
+  "Use Debug Adapter Protocol for Emacs (Dape) tool."
+  :type 'boolean
+  :group 'davidc-config)
+
 
 ;; Move customization variables to a separate file and load it
 (setq *custom-vars-file* (locate-user-emacs-file "custom-vars.el"))
@@ -1263,3 +1268,135 @@
 
   ;; Save marks to a file, to restore each time Emacs is opened.
   (setq davidc-harpoon-persist-marks t))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Dape - Debug Adapter Protocol for Emacs
+;;
+;; https://github.com/svaante/dape
+;;
+;; Ensure that your GDB version is 14.1 or newer for C, C++, Rust,
+;; etc, support. Alternatively, you can use the "cpptools" VS Code
+;; extension tool.
+;;
+;; For Dape setup, checkout this link;
+;; https://silosneeded.com/en/2024/04/configuring-dape
+;;
+(when davidc-config-use-dape
+  (defvar dap-configs nil)
+  (setq dape-default-breakpoints-file (expand-file-name "dape-breakpoints.el" user-emacs-directory)) ;; or 'gud
+
+  (setq dape-buffer-window-arrangement 'right) ;; or 'left or 'gud
+
+  ;; Below is prformance tuning values suggested on the dape README.
+  ;;
+  ;; https://github.com/svaante/dape?tab=readme-ov-file#gc-cons-threshold
+  (setq gc-cons-threshold 80000000) ;; original value * 100
+  ;;
+  ;; https://github.com/svaante/dape?tab=readme-ov-file#read-process-output-max
+  (setq read-process-output-max (* 1024 1024)) ;; 1mb
+
+  ;; Enable to debug dape.
+  ;; ;; (setq dape-debug t)
+
+  (require 'dape)
+
+  ;; Turn on global bindings for setting breakpoints with mouse.
+  (dape-breakpoint-global-mode)
+
+  ;; Info buffers to the right.
+  (setq dape-buffer-window-arrangement 'right)
+
+  ;; Info buffers like gud (gdb-mi).
+  (setq dape-buffer-window-arrangement 'gud)
+  (setq dape-info-hide-mode-line nil)
+
+  ;; Pulse source line (performance hit).
+  (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
+
+  ;; Showing inlay hints.
+  (setq dape-inlay-hints t)
+
+  ;; Save buffers on startup, useful for interpreted languages.
+  (add-hook 'dape-start-hook (lambda () (save-some-buffers t t)))
+
+  ;; Kill compile buffer on build success.
+  (add-hook 'dape-compile-hook 'kill-buffer)
+
+  ;; ;; Projectile users
+  ;; (setq dape-cwd-function 'projectile-project-root)
+
+  ;; Dape configs
+  ;;
+  ;; https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+  ;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Python (debugpy)
+  ;;
+  ;; https://github.com/microsoft/debugpy
+  ;;
+  ;; To install 'debugpy' in the Python interpeter for Maya. run:
+  ;;   $ /usr/autodesk/maya2024/bin/mayapy -m pip install debugpy
+  ;;
+
+  ;; This is the dape config for launching the current module with
+  ;; Python (assuming you can do that):
+  (add-to-list 'dape-configs
+               `(debugpy-davidc-launch
+                 modes (python-mode)
+                 command "python3"
+                 command-args ["-m" "debugpy.adapter" "--host" "0.0.0.0" "--port" :autoport]
+                 port :autoport
+                 :type "python"
+                 :request "launch"
+                 :program dape-buffer-default
+                 :console "integratedTerminal"
+                 :showReturnValue t
+                 :justMyCode nil
+                 :cwd dape-cwd-fn))
+
+  ;; Launch config for running inside Maya 2024 Python interpeter.
+  (add-to-list 'dape-configs
+               `(debugpy-maya2024-launch
+                 modes (python-mode)
+                 command "/usr/autodesk/maya2024/bin/mayapy"
+                 command-args ["-m" "debugpy.adapter" "--host" "0.0.0.0" "--port" :autoport]
+                 port :autoport
+                 :type "python"
+                 :request "launch"
+                 :program dape-buffer-default
+                 :console "integratedTerminal"
+                 :showReturnValue t
+                 :justMyCode nil
+                 :cwd dape-cwd-fn))
+
+  ;; This configuration is for attaching to a running Python interpreter
+  ;; with debugpy installed running.
+  ;;
+  ;; Use the following code in a Python file:
+  ;;
+  ;;     import debugpy
+  ;;     debugpy.listen(5678)
+  ;;     debugpy.wait_for_client()  # blocks execution until client is attached
+  ;;
+  ;; Or use debugpy from command line:
+  ;;
+  ;;     $ python -m debugpy --listen localhost:5678 --wait-for-client your_script.py
+  ;;
+  ;; Next run dape to start up dape, and choose the "debugpy-davidc-attach"
+  ;; config below:
+  ;;
+  ;;     M-x dape
+  ;;
+  (add-to-list 'dape-configs
+               `(debugpy-davidc-attach
+                 modes (python-mode)
+                 host "localhost"
+                 port 5678
+                 :type "python"
+                 :request "attach"
+                 :console "integratedTerminal"
+                 :showReturnValue t
+                 :justMyCode nil
+                 :cwd dape-cwd-fn))
+  )

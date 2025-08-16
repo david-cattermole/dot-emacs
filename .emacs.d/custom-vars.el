@@ -98,6 +98,7 @@
  '(davidc-config-use-server t)
  '(davidc-config-use-ibuffer t)
  '(davidc-config-use-icomplete nil)
+ '(davidc-config-use-dape t)
  '(project-switch-commands
    '(
      ;; (project-find-file "Find file")
