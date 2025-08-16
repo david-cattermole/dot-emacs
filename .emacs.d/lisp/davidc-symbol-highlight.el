@@ -97,6 +97,14 @@ insensitive. If a mode is not in this list, the value of
 (defvar-local davidc--symbol-highlight-count nil
   "Number of occurrences of the highlighted symbol.")
 
+(defvar-local davidc--symbol-highlight-opened-overlays nil
+  "List of overlays that have been opened for symbol highlighting.
+Similar to isearch-opened-overlays, tracks overlays we've made visible.")
+
+(defvar-local davidc--symbol-highlight-navigating nil
+  "When t, indicates we're in the middle of navigation.
+Used to prevent post-command hook from interfering with opened overlays.")
+
 (defun davidc--symbol-highlight-case-sensitive-p ()
   "Return whether symbol highlighting should be case sensitive in current buffer.
 Checks `davidc-symbol-highlight-case-sensitive-modes' first, then falls
@@ -107,10 +115,18 @@ back to `davidc-symbol-highlight-case-sensitive'."
       davidc-symbol-highlight-case-sensitive)))
 
 (defun davidc--symbol-highlight-cleanup ()
-  "Remove all symbol highlight overlays."
+  "Remove all symbol highlight overlays and restore hidden overlays."
   (when davidc--symbol-highlight-overlays
     (mapc #'delete-overlay davidc--symbol-highlight-overlays)
     (setq davidc--symbol-highlight-overlays nil))
+  ;; Only close opened overlays if we're not currently navigating.
+  ;;
+  ;; This prevents revealed text from being hidden immediately after
+  ;; navigation.
+  (unless davidc--symbol-highlight-navigating
+    (when davidc--symbol-highlight-opened-overlays
+      (mapc #'davidc--symbol-highlight-close-overlay davidc--symbol-highlight-opened-overlays)
+      (setq davidc--symbol-highlight-opened-overlays nil)))
   (setq davidc--symbol-highlight-count 0))
 
 (defun davidc--symbol-highlight-get-symbol ()
@@ -184,6 +200,7 @@ Respects the case sensitivity setting for the current mode."
   "Post-command hook for symbol highlighting."
   (when (and davidc-symbol-highlight-mode
              (not davidc--symbol-highlight-locked)  ; Don't update if locked.
+             (not davidc--symbol-highlight-navigating)  ; Don't update during navigation.
              (not (minibufferp))
              (not (region-active-p)))
     ;; Schedule update with delay.
@@ -253,19 +270,140 @@ highlighting to a specific symbol."
                (derived-mode-p 'prog-mode 'text-mode))
       (davidc-symbol-highlight-mode 1))))
 
-;; Cleanup hook for buffer/mode changes.
+;; Cleanup hooks for buffer/mode changes.
 (add-hook 'change-major-mode-hook
           (lambda ()
             (when (bound-and-true-p davidc-symbol-highlight-mode)
               (davidc-symbol-highlight-mode -1))))
 
+(add-hook 'kill-buffer-hook
+          (lambda ()
+            (when (bound-and-true-p davidc-symbol-highlight-mode)
+              (davidc--symbol-highlight-cleanup))))
+
+(defun davidc--symbol-highlight-open-overlay-temporary (ov)
+  "Open overlay OV temporarily for symbol highlighting.
+Based on isearch-open-overlay-temporary. Only opens overlays that can be opened
+according to isearch conventions (have isearch-open-invisible property)."
+  (when (overlay-get ov 'invisible)
+    (if (not (null (overlay-get ov 'isearch-open-invisible-temporary)))
+        ;; If overlay has custom temporary opening function, use it.
+        (funcall (overlay-get ov 'isearch-open-invisible-temporary) ov nil)
+      ;; Store the original invisible property and make overlay
+      ;; visible.
+      (overlay-put ov 'davidc-symbol-highlight-invisible (overlay-get ov 'invisible))
+      (overlay-put ov 'invisible nil))))
+
+(defun davidc--symbol-highlight-close-overlay (ov)
+  "Close overlay OV by restoring its original invisible property."
+  (let ((fct-temp (overlay-get ov 'isearch-open-invisible-temporary)))
+    (if fct-temp
+        ;; If overlay has custom temporary function, use it to close
+        (funcall fct-temp ov t)
+      ;; Restore original invisible property
+      (overlay-put ov 'invisible (overlay-get ov 'davidc-symbol-highlight-invisible))
+      (overlay-put ov 'davidc-symbol-highlight-invisible nil))))
+
+(defun davidc--symbol-highlight-intersects-p (start0 end0 start1 end1)
+  "Return t if regions START0..END0 and START1..END1 intersect."
+  (or (and (>= start0 start1) (<  start0 end1))
+      (and (>  end0 start1)   (<= end0 end1))
+      (and (>= start1 start0) (<  start1 end0))
+      (and (>  end1 start0)   (<= end1 end0))))
+
+(defun davidc--symbol-highlight-close-unnecessary-overlays (beg end)
+  "Close overlays in opened-overlays that don't intersect BEG to END region.
+Based on isearch-close-unnecessary-overlays."
+  (let ((overlays davidc--symbol-highlight-opened-overlays))
+    (setq davidc--symbol-highlight-opened-overlays nil)
+    (dolist (ov overlays)
+      (if (davidc--symbol-highlight-intersects-p beg end (overlay-start ov) (overlay-end ov))
+          ;; Keep overlay open if it intersects current region.
+          (push ov davidc--symbol-highlight-opened-overlays)
+        ;; Close overlay if it doesn't intersect.
+        (davidc--symbol-highlight-close-overlay ov)))))
+
+(defun davidc--symbol-highlight-range-invisible-p (beg end)
+  "Return t if all text from BEG to END is invisible.
+Based on isearch-range-invisible but simplified for symbol highlighting."
+  (when (/= beg end)
+    (save-excursion
+      (goto-char beg)
+      ;; Check if any character in the range is invisible.
+      (catch 'visible
+        (while (< (point) end)
+          (unless (invisible-p (point))
+            (throw 'visible nil))
+          (goto-char (1+ (point))))
+        t))))
+
+(defun davidc--symbol-highlight-reveal-range (beg end)
+  "Reveal overlays in range BEG to END that can be opened.
+Based on isearch logic. Returns t if any overlays were opened."
+  (when (/= beg end)
+    (save-excursion
+      (goto-char beg)
+      (let ((can-be-opened t)
+            (crt-overlays nil))
+        ;; Check invisibility across the range.
+        (while (and (< (point) end) (invisible-p (point)))
+          (if (invisible-p (get-text-property (point) 'invisible))
+              ;; Text property invisibility - skip and cannot be opened.
+              (progn
+                (goto-char (next-single-property-change (point) 'invisible nil end))
+                (setq can-be-opened nil))
+            ;; Overlay invisibility - check if openable.
+            (when can-be-opened
+              (let ((overlays (overlays-at (point)))
+                    ov-list o invis-prop)
+                (while overlays
+                  (setq o (car overlays)
+                        invis-prop (overlay-get o 'invisible))
+                  (when (invisible-p invis-prop)
+                    (if (overlay-get o 'isearch-open-invisible)
+                        ;; Can be opened.
+                        (push o ov-list)
+                      ;; Cannot be opened - whole chunk fails.
+                      (setq can-be-opened nil)))
+                  (setq overlays (cdr overlays)))
+                (when can-be-opened
+                  (setq crt-overlays (append ov-list crt-overlays)))))
+            (goto-char (next-overlay-change (point)))))
+
+        ;; Open collected overlays if we can.
+        (when (and can-be-opened (consp crt-overlays))
+          (setq davidc--symbol-highlight-opened-overlays
+                (append davidc--symbol-highlight-opened-overlays crt-overlays))
+          (mapc #'davidc--symbol-highlight-open-overlay-temporary crt-overlays)
+          t))))
+
+(defun davidc--symbol-highlight-reveal-overlays-at-point ()
+  "Reveal overlays with invisible property at current point.
+Returns t if something was revealed, nil otherwise."
+  (let ((overlays (overlays-at (point)))
+        (revealed nil))
+    (dolist (ov overlays)
+      (when (and (overlay-get ov 'invisible)
+                 (overlay-get ov 'isearch-open-invisible))
+        ;; Open overlay temporarily and track it.
+        (davidc--symbol-highlight-open-overlay-temporary ov)
+        (push ov davidc--symbol-highlight-opened-overlays)
+        (setq revealed t)))
+    revealed))
+
 (defun davidc--symbol-highlight-reveal-at-point ()
   "Reveal hidden text at point and ensure point is visible.
-Handles various hiding mechanisms including org-mode, hideshow, and outline-mode.
+Uses a hybrid approach: overlay-based for overlays, fallback for other mechanisms.
 Returns t if something was revealed, nil otherwise."
   (let ((revealed nil))
+    ;; First try overlay-based approach.
+    (when (davidc--symbol-highlight-reveal-overlays-at-point)
+      (setq revealed t))
+
+    ;; Fallback to mode-specific mechanisms for non-overlay hiding.
     (cond
-     ;; Handle org-mode folded sections.
+     ;; Handle org-mode folded sections (org uses overlays but also
+     ;; text properties).
      ((and (derived-mode-p 'org-mode)
            (org-invisible-p))
       (org-show-context 'link-search)
@@ -282,25 +420,7 @@ Returns t if something was revealed, nil otherwise."
                (bound-and-true-p outline-minor-mode))
            (outline-invisible-p))
       (outline-show-entry)
-      (setq revealed t))
-
-     ;; Handle general invisible text property.
-     ((get-text-property (point) 'invisible)
-      ;; Try to find the beginning of the invisible region and make it
-      ;; visible.
-      (let ((start (point))
-            (end (point)))
-        ;; Find start of invisible region.
-        (while (and (> start (point-min))
-                    (get-text-property (1- start) 'invisible))
-          (setq start (1- start)))
-        ;; Find end of invisible region.
-        (while (and (< end (point-max))
-                    (get-text-property end 'invisible))
-          (setq end (1+ end)))
-        ;; Remove invisible property from the region.
-        (remove-text-properties start end '(invisible nil))
-        (setq revealed t))))
+      (setq revealed t)))
 
     ;; Ensure the point is visible in the window.
     (when revealed
@@ -310,7 +430,7 @@ Returns t if something was revealed, nil otherwise."
       (unless (pos-visible-in-window-p)
         (recenter)))
 
-    revealed))
+    revealed)))
 
 (defun davidc--symbol-highlight-find-current-overlay ()
   "Find the symbol highlight overlay at current position.
@@ -331,6 +451,13 @@ Reveals the occurrence if it's hidden."
   (unless (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
     (user-error "No highlighted symbol"))
 
+  ;; Set navigation flag to prevent post-command hook interference.
+  (setq davidc--symbol-highlight-navigating t)
+  ;; Cancel any pending timer that might interfere.
+  (when davidc--symbol-highlight-timer
+    (cancel-timer davidc--symbol-highlight-timer)
+    (setq davidc--symbol-highlight-timer nil))
+
   (let* ((current-pos (point))
          (overlays (sort (copy-sequence davidc--symbol-highlight-overlays)
                         (lambda (a b) (< (overlay-start a) (overlay-start b)))))
@@ -348,15 +475,21 @@ Reveals the occurrence if it's hidden."
       (setq wrapped t))
 
     (when next-overlay
-      (let ((target-pos (overlay-start next-overlay)))
-        ;; Move to the target position.
+      (let ((target-pos (overlay-start next-overlay))
+            (target-end (overlay-end next-overlay)))
+        ;; Close any previously opened overlays that don't intersect
+        ;; with target.
+        (davidc--symbol-highlight-close-unnecessary-overlays target-pos target-end)
+
+        ;; Move to the target position first.
         (goto-char target-pos)
 
-        ;; Reveal hidden text at the new position.
-        (davidc--symbol-highlight-reveal-at-point)
+        ;; Reveal hidden text if the target symbol is invisible.
+        (when (davidc--symbol-highlight-range-invisible-p target-pos target-end)
+          (or (davidc--symbol-highlight-reveal-range target-pos target-end)
+              (davidc--symbol-highlight-reveal-at-point)))
 
-        ;; Ensure we're still at the right position after revealing
-        ;; (revealing might have changed buffer positions).
+        ;; Ensure we're still at the right position after revealing.
         (goto-char target-pos)
 
         ;; Make sure the position is visible in the window.
@@ -364,7 +497,10 @@ Reveals the occurrence if it's hidden."
           (recenter))
 
         (when wrapped
-          (message "Wrapped to beginning"))))))
+          (message "Wrapped to beginning"))))
+
+    ;; Clear navigation flag after a short delay to allow post-command hooks to run.
+    (run-with-idle-timer 0.1 nil (lambda () (setq davidc--symbol-highlight-navigating nil)))))
 
 (defun davidc-symbol-highlight-prev-occurrence ()
   "Jump to the previous occurrence of the highlighted symbol.
@@ -373,6 +509,13 @@ Reveals the occurrence if it's hidden."
   (interactive)
   (unless (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
     (user-error "No highlighted symbol"))
+
+  ;; Set navigation flag to prevent post-command hook interference.
+  (setq davidc--symbol-highlight-navigating t)
+  ;; Cancel any pending timer that might interfere.
+  (when davidc--symbol-highlight-timer
+    (cancel-timer davidc--symbol-highlight-timer)
+    (setq davidc--symbol-highlight-timer nil))
 
   (let* ((current-pos (point))
          ;; Check if we're inside a current overlay.
@@ -400,12 +543,19 @@ Reveals the occurrence if it's hidden."
       (setq wrapped t))
 
     (when prev-overlay
-      (let ((target-pos (overlay-start prev-overlay)))
-        ;; Move to the target position.
+      (let ((target-pos (overlay-start prev-overlay))
+            (target-end (overlay-end prev-overlay)))
+        ;; Close any previously opened overlays that don't intersect
+        ;; with target.
+        (davidc--symbol-highlight-close-unnecessary-overlays target-pos target-end)
+
+        ;; Move to the target position first.
         (goto-char target-pos)
 
-        ;; Reveal hidden text at the new position.
-        (davidc--symbol-highlight-reveal-at-point)
+        ;; Reveal hidden text if the target symbol is invisible.
+        (when (davidc--symbol-highlight-range-invisible-p target-pos target-end)
+          (or (davidc--symbol-highlight-reveal-range target-pos target-end)
+              (davidc--symbol-highlight-reveal-at-point)))
 
         ;; Ensure we're still at the right position after revealing
         ;; (revealing might have changed buffer positions).
@@ -416,12 +566,16 @@ Reveals the occurrence if it's hidden."
           (recenter))
 
         (when wrapped
-          (message "Wrapped to end"))))))
+          (message "Wrapped to end"))))
+
+    ;; Clear navigation flag after a short delay to allow post-command
+    ;; hooks to run.
+    (run-with-idle-timer 0.1 nil (lambda () (setq davidc--symbol-highlight-navigating nil)))))
 
 (defun davidc-symbol-highlight-show-count ()
   "Display the count of highlighted symbol occurrences."
-  (if (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
   (interactive)
+  (if (and davidc-symbol-highlight-mode davidc--symbol-highlight-overlays)
       (let ((symbol-name (or davidc--symbol-highlight-locked
                             (davidc--symbol-highlight-get-symbol)
                             "symbol")))
