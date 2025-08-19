@@ -33,7 +33,7 @@ This controls how much to indent nested structures."
 (defun davidc-markdown--get-font-lock-keywords ()
   "Generate font-lock keywords dynamically based on configuration."
   `(
-    ;; Fenced code blocks - opening/closing delimiters with language spec
+    ;; Fenced code blocks - opening/closing delimiters with language spec.
     ("^\\(```\\|~~~\\)\\(.*\\)$"
      (1 font-lock-keyword-face)
      (2 font-lock-type-face))
@@ -41,47 +41,55 @@ This controls how much to indent nested structures."
     ;; Code blocks (indented by 4+ spaces or 1+ tabs)
     ("^\\(    \\|\t\\)\\(.*\\)$" 2 font-lock-string-face)
 
-    ;; Headers - ATX style (# ## ### etc.) with optional trailing #
+    ;; Headers - ATX style (# ## ### etc.) with optional trailing #.
     ("^\\(#+\\)\\s-+\\(.*?\\)\\s-*\\(#+\\)?\\s-*$"
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face)
      (3 font-lock-keyword-face nil t))
 
-    ;; Setext-style header underlines (= and - lines)
+    ;; Setext-style header underlines (= and - lines).
     ("^\\s-*\\(=+\\)\\s-*$" 1 font-lock-keyword-face)
     ("^\\s-*\\(-+\\)\\s-*$" 1 font-lock-keyword-face)
 
-    ;; Horizontal rules
+    ;; Horizontal rules.
     ("^\\s-*\\(\\*\\s-*\\*\\s-*\\*\\|\\*\\s-*\\*\\s-*\\*.*\\)\\s-*$" 1 font-lock-keyword-face)
     ("^\\s-*\\(-\\s-*-\\s-*-\\|-\\s-*-\\s-*-.*\\)\\s-*$" 1 font-lock-keyword-face)
     ("^\\s-*\\(_\\s-*_\\s-*_\\|_\\s-*_\\s-*_.*\\)\\s-*$" 1 font-lock-keyword-face)
 
-    ;; Bold+Italic text - ***text*** and ___text___ (must come first)
-    ("\\(\\*\\*\\*\\)\\([^*\n]+\\)\\(\\*\\*\\*\\)"
+    ;; Bold+Italic text - ***text*** and ___text___ (must come first).
+    ;;
+    ;; Use word boundaries to prevent conflicts with other patterns.
+    ("\\(?:^\\|[^*]\\)\\(\\*\\*\\*\\)\\([^*\n]+?\\)\\(\\*\\*\\*\\)\\(?:[^*]\\|$\\)"
      (1 font-lock-warning-face)
      (2 font-lock-warning-face)
      (3 font-lock-warning-face))
-    ("\\(___\\)\\([^_\n]+\\)\\(___\\)"
+    ("\\(?:^\\|\\W\\)\\(___\\)\\([^_\n]+?\\)\\(___\\)\\(?:\\W\\|$\\)"
      (1 font-lock-warning-face)
      (2 font-lock-warning-face)
      (3 font-lock-warning-face))
 
     ;; Bold text - **text** and __text__
-    ("\\(\\*\\*\\)\\([^*\n]+\\)\\(\\*\\*\\)"
+    ;;
+    ;; Use word boundaries to prevent conflicts.
+    ("\\(?:^\\|[^*]\\)\\(\\*\\*\\)\\([^*\n]+?\\)\\(\\*\\*\\)\\(?:[^*]\\|$\\)"
      (1 font-lock-builtin-face)
      (2 font-lock-builtin-face)
      (3 font-lock-builtin-face))
-    ("\\(__\\)\\([^_\n]+\\)\\(__\\)"
+    ("\\(?:^\\|\\W\\)\\(__\\)\\([^_\n]+?\\)\\(__\\)\\(?:\\W\\|$\\)"
      (1 font-lock-builtin-face)
      (2 font-lock-builtin-face)
      (3 font-lock-builtin-face))
 
-    ;; Italic text - *text* and _text_ (simplified boundary detection)
-    ("\\(\\*\\)\\([^*\n]+\\)\\(\\*\\)"
+    ;; Italic text - *text* and _text_ with proper word boundary handling.
+    ;;
+    ;; Asterisk version: avoid matching within words like file*name*here.
+    ("\\(?:^\\|[^_*]\\)\\(\\*\\)\\([^*\n]+?\\)\\(\\*\\)\\(?:[^_*]\\|$\\)"
      (1 font-lock-variable-name-face)
      (2 font-lock-variable-name-face)
      (3 font-lock-variable-name-face))
-    ("\\(_\\)\\([^_\n]+\\)\\(_\\)"
+    ;; Underscore version: use word boundaries to avoid snake_case
+    ;; conflicts.
+    ("\\(?:^\\|\\W\\)\\(_\\)\\([^_\n]+?\\)\\(_\\)\\(?:\\W\\|$\\)"
      (1 font-lock-variable-name-face)
      (2 font-lock-variable-name-face)
      (3 font-lock-variable-name-face))
@@ -108,7 +116,7 @@ This controls how much to indent nested structures."
      (5 font-lock-type-face)
      (6 font-lock-type-face))
 
-    ;; Reference-style link definitions
+    ;; Reference-style link definitions.
     ("^\\s-*\\(\\[\\)\\([^]]+\\)\\(\\]\\)\\s-*:\\s-*\\(.*\\)$"
      (1 font-lock-type-face)
      (2 font-lock-type-face)
