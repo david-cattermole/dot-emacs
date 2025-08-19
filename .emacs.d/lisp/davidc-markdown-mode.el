@@ -38,8 +38,10 @@ This controls how much to indent nested structures."
      (1 font-lock-keyword-face)
      (2 font-lock-type-face))
 
-    ;; Code blocks (indented by 4+ spaces or 1+ tabs)
-    ("^\\(    \\|\t\\)\\(.*\\)$" 2 font-lock-string-face)
+    ;; Code blocks (indented by 4+ spaces or 1+ tabs).
+    ;;
+    ;; Only match if line doesn't start with list markers or blockquote markers.
+    ("^\\(    \\|\t\\)\\([^ \t>*+0-9-].*\\)$" 2 font-lock-string-face)
 
     ;; Headers - ATX style (# ## ### etc.) with optional trailing #.
     ("^\\(#+\\)\\s-+\\(.*?\\)\\s-*\\(#+\\)?\\s-*$"
