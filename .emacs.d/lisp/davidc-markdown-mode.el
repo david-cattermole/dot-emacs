@@ -142,8 +142,13 @@ This controls how much to indent nested structures."
      (2 font-lock-type-face)
      (3 font-lock-type-face))
 
-    ;; Lists - unordered (-, *, +)
-    ("^\\s-*\\([-*+]\\)\\s-+" 1 font-lock-builtin-face)
+    ;; Task lists - checkboxes in lists (must come before regular lists)
+    ("^\\s-*\\([-*+]\\)\\s-+\\(\\[[ xX]\\]\\)"
+     (1 font-lock-builtin-face)
+     (2 font-lock-constant-face))
+
+    ;; Lists - unordered (-, *, +) - only if not followed by checkbox
+    ("^\\s-*\\([-*+]\\)\\s-+\\(?!\\[[ xX]\\]\\)" 1 font-lock-builtin-face)
 
     ;; Lists - ordered (1. 2. etc.)
     ("^\\s-*\\([0-9]+\\.\\)\\s-+" 1 font-lock-builtin-face)
@@ -262,6 +267,19 @@ This controls how much to indent nested structures."
     (insert "~~~~")
     (backward-char 2)))
 
+(defun davidc-markdown-toggle-checkbox ()
+  "Toggle checkbox state on current line."
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (when (re-search-forward "^\\s-*[-*+]\\s-+\\(\\[[ xX]\\]\\)" (line-end-position) t)
+      (let ((current (match-string 1)))
+        (replace-match
+         (cond ((string= current "[ ]") "[x]")
+               ((string-match-p "[xX]" current) "[ ]")
+               (t "[ ]"))
+         t t nil 1)))))
+
 (defun davidc-markdown-insert-link ()
   "Insert a Markdown link."
   (interactive)
@@ -280,6 +298,7 @@ This controls how much to indent nested structures."
     (define-key map (kbd "C-c C-i") 'davidc-markdown-insert-italic)
     (define-key map (kbd "C-c C-s") 'davidc-markdown-insert-strikethrough)
     (define-key map (kbd "C-c C-c") 'davidc-markdown-insert-code)
+    (define-key map (kbd "C-c C-t") 'davidc-markdown-toggle-checkbox)
     (define-key map (kbd "C-c C-l") 'davidc-markdown-insert-link)
     (define-key map (kbd "RET") 'newline-and-indent)
     map)
@@ -292,7 +311,7 @@ This controls how much to indent nested structures."
 
 This mode provides Markdown editing support including:
 - Theme-compatible syntax highlighting using standard font-lock faces
-- Support for headers, emphasis, strikethrough, code, links, lists, blockquotes
+- Support for headers, emphasis, strikethrough, code, links, lists, task lists, blockquotes
 - Basic HTML tag and comment highlighting
 - Optional LaTeX math highlighting
 - Utility functions for common Markdown editing tasks
