@@ -101,6 +101,12 @@ This controls how much to indent nested structures."
      (2 font-lock-variable-name-face)
      (3 font-lock-variable-name-face))
 
+    ;; Strikethrough text - ~~text~~
+    ("\\(~~\\)\\([^~\n]+?\\)\\(~~\\)"
+     (1 font-lock-preprocessor-face)
+     (2 font-lock-preprocessor-face)
+     (3 font-lock-preprocessor-face))
+
     ;; Inline code - `code`
     ("\\(`\\)\\([^`\n]+\\)\\(`\\)"
      (1 font-lock-string-face)
@@ -243,6 +249,19 @@ This controls how much to indent nested structures."
     (insert "``")
     (backward-char 1)))
 
+(defun davidc-markdown-insert-strikethrough ()
+  "Insert strikethrough markup (~~) around region or at point."
+  (interactive)
+  (if (use-region-p)
+      (let ((start (region-beginning))
+            (end (region-end)))
+        (goto-char end)
+        (insert "~~")
+        (goto-char start)
+        (insert "~~"))
+    (insert "~~~~")
+    (backward-char 2)))
+
 (defun davidc-markdown-insert-link ()
   "Insert a Markdown link."
   (interactive)
@@ -259,6 +278,7 @@ This controls how much to indent nested structures."
     (define-key map (kbd "C-c C-h") 'davidc-markdown-insert-header)
     (define-key map (kbd "C-c C-b") 'davidc-markdown-insert-bold)
     (define-key map (kbd "C-c C-i") 'davidc-markdown-insert-italic)
+    (define-key map (kbd "C-c C-s") 'davidc-markdown-insert-strikethrough)
     (define-key map (kbd "C-c C-c") 'davidc-markdown-insert-code)
     (define-key map (kbd "C-c C-l") 'davidc-markdown-insert-link)
     (define-key map (kbd "RET") 'newline-and-indent)
@@ -272,7 +292,7 @@ This controls how much to indent nested structures."
 
 This mode provides Markdown editing support including:
 - Theme-compatible syntax highlighting using standard font-lock faces
-- Support for headers, emphasis, code, links, lists, blockquotes
+- Support for headers, emphasis, strikethrough, code, links, lists, blockquotes
 - Basic HTML tag and comment highlighting
 - Optional LaTeX math highlighting
 - Utility functions for common Markdown editing tasks
