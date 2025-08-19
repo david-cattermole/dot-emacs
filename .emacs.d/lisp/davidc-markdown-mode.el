@@ -49,9 +49,14 @@ This controls how much to indent nested structures."
      (2 font-lock-function-name-face)
      (3 font-lock-keyword-face nil t))
 
-    ;; Setext-style header underlines (= and - lines).
-    ("^\\s-*\\(=+\\)\\s-*$" 1 font-lock-keyword-face)
-    ("^\\s-*\\(-+\\)\\s-*$" 1 font-lock-keyword-face)
+    ;; Setext-style headers - text with underline (requires text
+    ;; above).
+    ("^\\(.+\\)\n\\(=+\\)\\s-*$"
+     (1 font-lock-function-name-face)
+     (2 font-lock-keyword-face))
+    ("^\\(.+\\)\n\\(-+\\)\\s-*$"
+     (1 font-lock-function-name-face)
+     (2 font-lock-keyword-face))
 
     ;; Horizontal rules.
     ("^\\s-*\\(\\*\\s-*\\*\\s-*\\*\\|\\*\\s-*\\*\\s-*\\*.*\\)\\s-*$" 1 font-lock-keyword-face)
