@@ -113,6 +113,23 @@ This controls how much to indent nested structures."
      (2 font-lock-string-face)
      (3 font-lock-string-face))
 
+    ;; Images - ![alt](url) and ![alt][ref] (must come before regular links)
+    ("\\(!\\[\\)\\([^]]*\\)\\(\\]\\)\\((\\)\\([^)]+\\)\\()\\)"
+     (1 font-lock-type-face)
+     (2 font-lock-doc-face)
+     (3 font-lock-type-face)
+     (4 font-lock-type-face)
+     (5 font-lock-string-face)
+     (6 font-lock-type-face))
+    ;; Reference-style images
+    ("\\(!\\[\\)\\([^]]*\\)\\(\\]\\)\\(\\(\\[\\)\\([^]]*\\)\\(\\]\\)\\)"
+     (1 font-lock-type-face)
+     (2 font-lock-doc-face)
+     (3 font-lock-type-face)
+     (5 font-lock-type-face)
+     (6 font-lock-string-face)
+     (7 font-lock-type-face))
+
     ;; Links - [text](url) and [text][ref]
     ("\\(\\[\\)\\([^]]+\\)\\(\\]\\)\\(\\(\\[\\)\\([^]]*\\)\\(\\]\\)\\)"
      (1 font-lock-type-face)
@@ -280,6 +297,16 @@ This controls how much to indent nested structures."
                (t "[ ]"))
          t t nil 1)))))
 
+(defun davidc-markdown-insert-image ()
+  "Insert a Markdown image."
+  (interactive)
+  (if (use-region-p)
+      (let ((text (buffer-substring (region-beginning) (region-end))))
+        (delete-region (region-beginning) (region-end))
+        (insert "![" text "]()"))
+    (insert "![]()")
+    (backward-char 3)))
+
 (defun davidc-markdown-insert-link ()
   "Insert a Markdown link."
   (interactive)
@@ -299,6 +326,7 @@ This controls how much to indent nested structures."
     (define-key map (kbd "C-c C-s") 'davidc-markdown-insert-strikethrough)
     (define-key map (kbd "C-c C-c") 'davidc-markdown-insert-code)
     (define-key map (kbd "C-c C-t") 'davidc-markdown-toggle-checkbox)
+    (define-key map (kbd "C-c C-g") 'davidc-markdown-insert-image)
     (define-key map (kbd "C-c C-l") 'davidc-markdown-insert-link)
     (define-key map (kbd "RET") 'newline-and-indent)
     map)
@@ -311,7 +339,7 @@ This controls how much to indent nested structures."
 
 This mode provides Markdown editing support including:
 - Theme-compatible syntax highlighting using standard font-lock faces
-- Support for headers, emphasis, strikethrough, code, links, lists, task lists, blockquotes
+- Support for headers, emphasis, strikethrough, code, images, links, lists, task lists, blockquotes
 - Basic HTML tag and comment highlighting
 - Optional LaTeX math highlighting
 - Utility functions for common Markdown editing tasks
