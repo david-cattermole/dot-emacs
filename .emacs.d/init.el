@@ -1340,77 +1340,8 @@
   ;; ;; Projectile users
   ;; (setq dape-cwd-function 'projectile-project-root)
 
-  ;; Dape configs
-  ;;
-  ;; https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
-  ;;
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; Python (debugpy)
-  ;;
-  ;; https://github.com/microsoft/debugpy
-  ;;
-  ;; To install 'debugpy' in the Python interpeter for Maya. run:
-  ;;   $ /usr/autodesk/maya2024/bin/mayapy -m pip install debugpy
-  ;;
+  ;; Setup attach configurations.
+  (require 'davidc-dape)
+  (davidc-dape-setup-attach-configs)
 
-  ;; This is the dape config for launching the current module with
-  ;; Python (assuming you can do that):
-  (add-to-list 'dape-configs
-               `(debugpy-davidc-launch
-                 modes (python-mode)
-                 command "python3"
-                 command-args ["-m" "debugpy.adapter" "--host" "0.0.0.0" "--port" :autoport]
-                 port :autoport
-                 :type "python"
-                 :request "launch"
-                 :program dape-buffer-default
-                 :console "integratedTerminal"
-                 :showReturnValue t
-                 :justMyCode nil
-                 :cwd dape-cwd-fn))
-
-  ;; Launch config for running inside Maya 2024 Python interpeter.
-  (add-to-list 'dape-configs
-               `(debugpy-maya2024-launch
-                 modes (python-mode)
-                 command "/usr/autodesk/maya2024/bin/mayapy"
-                 command-args ["-m" "debugpy.adapter" "--host" "0.0.0.0" "--port" :autoport]
-                 port :autoport
-                 :type "python"
-                 :request "launch"
-                 :program dape-buffer-default
-                 :console "integratedTerminal"
-                 :showReturnValue t
-                 :justMyCode nil
-                 :cwd dape-cwd-fn))
-
-  ;; This configuration is for attaching to a running Python interpreter
-  ;; with debugpy installed running.
-  ;;
-  ;; Use the following code in a Python file:
-  ;;
-  ;;     import debugpy
-  ;;     debugpy.listen(5678)
-  ;;     debugpy.wait_for_client()  # blocks execution until client is attached
-  ;;
-  ;; Or use debugpy from command line:
-  ;;
-  ;;     $ python -m debugpy --listen localhost:5678 --wait-for-client your_script.py
-  ;;
-  ;; Next run dape to start up dape, and choose the "debugpy-davidc-attach"
-  ;; config below:
-  ;;
-  ;;     M-x dape
-  ;;
-  (add-to-list 'dape-configs
-               `(debugpy-davidc-attach
-                 modes (python-mode)
-                 host "localhost"
-                 port 5678
-                 :type "python"
-                 :request "attach"
-                 :console "integratedTerminal"
-                 :showReturnValue t
-                 :justMyCode nil
-                 :cwd dape-cwd-fn))
   )
