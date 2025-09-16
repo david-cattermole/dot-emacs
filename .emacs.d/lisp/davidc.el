@@ -89,6 +89,18 @@ If REGION is non-nil, operate on the active region instead."
       (toggle-frame-fullscreen))))
 
 
+(defun davidc-theme-tsdh-dark ()
+  "Set the Emacs color theme to tsdh-dark."
+  (interactive)
+  (load-theme 'tsdh-dark t))
+
+
+(defun davidc-theme-modus-vivendi ()
+  "Set the Emacs color theme to modus-vivendi."
+  (interactive)
+  (load-theme 'modus-vivendi t))
+
+
 ;; Hide Dired details by default.
 ;;
 ;; http://xahlee.info/emacs/emacs/emacs_dired_tips.html

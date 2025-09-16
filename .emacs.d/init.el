@@ -231,9 +231,6 @@
 ;; How to auto-name conflicting buffer names.
 (setq uniquify-buffer-name-style 'forward)
 
-;; The color theme of Emacs.
-(load-theme 'tsdh-dark t)
-
 ;; Set up the fringe (sides of an Emacs buffer)
 (fringe-mode 0)
 (setq indicate-buffer-boundaries 'right)
@@ -336,8 +333,13 @@
     (require 'davidc-restart)
     ))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Automatic highlighting of lines.
 (add-hook 'find-file-hook 'davidc-highlight-it)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; The color theme of Emacs.
+(davidc-theme-tsdh-dark)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; VIM Bindings
