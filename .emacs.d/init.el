@@ -344,6 +344,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; VIM Bindings
 (when davidc-config-use-evil
+  ;; C-u deletes back to indentation in insert state (like Vim).
+   (setq evil-want-C-u-delete t)
+
+   ;; C-u scrolls up (like Vim). Otherwise, C-u applies a prefix argument.
+   (setq evil-want-C-u-scroll t)
+
+   ;; Undo system Evil should use. "undo-redo" is only available in
+   ;; Emacs 28+.
+   (setq evil-undo-system 'undo-redo)
+
    (require 'evil)
    (evil-mode 1)
    )
