@@ -318,6 +318,7 @@
 (setq load-path (cons "~/.emacs.d/lisp/my-common/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/my-tools/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/my-modes/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/rust-mode/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/" load-path))
 
 ;; Common library used by many scripts.
@@ -896,6 +897,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Rust Hook
 (when davidc-config-use-rust-mode
+   (require 'rust-mode)
    (add-hook 'rust-mode-hook
              (lambda ()
                (setq indent-tabs-mode nil)
