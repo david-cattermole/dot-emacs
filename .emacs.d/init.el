@@ -1310,8 +1310,8 @@
   (setq dape-buffer-window-arrangement 'right)
 
   ;; Info buffers like gud (gdb-mi).
-  (setq dape-buffer-window-arrangement 'gud)
-  (setq dape-info-hide-mode-line nil)
+  ;; (setq dape-buffer-window-arrangement 'gud)
+  ;; (setq dape-info-hide-mode-line nil)
 
   ;; Pulse source line (performance hit).
   (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
