@@ -89,15 +89,21 @@ If REGION is non-nil, operate on the active region instead."
       (toggle-frame-fullscreen))))
 
 
+(defun davidc-disable-all-themes ()
+  "Disable all currently enabled themes."
+  (mapc #'disable-theme custom-enabled-themes))
+
 (defun davidc-theme-tsdh-dark ()
   "Set the Emacs color theme to tsdh-dark."
   (interactive)
+  (davidc-disable-all-themes)
   (load-theme 'tsdh-dark t))
 
 
 (defun davidc-theme-modus-vivendi ()
   "Set the Emacs color theme to modus-vivendi."
   (interactive)
+  (davidc-disable-all-themes)
   (load-theme 'modus-vivendi t))
 
 
