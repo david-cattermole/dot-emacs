@@ -1254,9 +1254,7 @@
 
   ;; Menu and navigation.
   (global-set-key (kbd "C-c h l") 'davidc-harpoon-menu)
-  (global-set-key (kbd "C-<f3>") 'davidc-harpoon-prev)
-  (global-set-key (kbd "C-<f4>") 'davidc-harpoon-next)
-  (global-set-key (kbd "C-c h c") 'davidc-harpoon-clear-marks)
+  (global-set-key (kbd "C-c h c") 'davidc-harpoon-clear-registers)
 
   ;; Quick jumps.
   (global-set-key (kbd "M-1") 'davidc-harpoon-jump-to-1)
