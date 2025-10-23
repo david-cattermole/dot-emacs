@@ -1340,6 +1340,11 @@
 
   ;; Setup attach configurations.
   (require 'davidc-dape)
-  (davidc-dape-setup-attach-configs)
+
+  ;; Add custom dape configurations to the global dape-configs.
+  (setq dape-configs (append davidc-dape-custom-configs dape-configs))
+
+  (defalias 'dape-launch 'davidc-dape-launch)
+  (defalias 'dape-attach 'davidc-dape-attach)
 
   )
