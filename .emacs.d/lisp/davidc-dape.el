@@ -56,6 +56,18 @@
   "Stores the PID selected by the user for the current attach session.
 Set by `davidc-dape-attach' before calling dape, used by the :pid lambda.")
 
+(defvar davidc-dape--selected-program nil
+  "Stores the executable path selected by the user for the current launch session.
+Set by `davidc-dape-launch' before calling dape, used by the :program lambda.")
+
+(defvar davidc-dape--selected-cwd nil
+  "Stores the working directory selected by the user for the current launch session.
+Set by `davidc-dape-launch' before calling dape, used by the :cwd lambda.")
+
+(defvar davidc-dape--selected-args nil
+  "Stores the command-line arguments selected by the user for the current launch session.
+Set by `davidc-dape-launch' before calling dape, used by the :args lambda.")
+
 (defun davidc-dape-convert-lstart-to-yyyy-mm-dd (lstart-string)
   "Convert ps lstart format to YYYY/MM/DD HH:MM:SS format.
 Input format: 'Day Mon DD HH:MM:SS YYYY' (e.g., 'Mon Sep 15 12:10:22 2025')
@@ -77,7 +89,7 @@ Output format: 'YYYY/MM/DD HH:MM:SS' (e.g., '2025/09/15 12:10:22')"
 Returns a list of plists with :pid, :command, :args, :start-time, and :elapsed-seconds keys.
 Processes are sorted by start time with newest first."
   ;; TODO: This code uses "ps" and "grep" commands for Linux, but this
-  ;; does not work for Windows. We need to add support fori Microsoft Windows.
+  ;; does not work for Windows. We need to add support for Microsoft Windows.
   (let ((ps-output (shell-command-to-string
                     (format "ps -eo pid,lstart,etimes,args --no-headers | grep -E '%s' | grep -v grep"
                             (regexp-quote process-name))))
@@ -128,6 +140,59 @@ If no processes match, signal an error."
                        (format "Multiple '%s' processes found, select one: " process-name)
                        choices nil t)))
         (cdr (assoc selected choices)))))))
+
+(defun davidc-dape-read-executable ()
+  "Prompt for executable with file completion and PATH search.
+Supports both file paths (with completion) and executable names (searches PATH).
+Returns absolute path to executable."
+  (let* ((input (read-file-name "Executable name or path: "
+                                default-directory nil nil nil
+                                ;; Predicate to show only executable files
+                                (lambda (name)
+                                  (or (file-directory-p name)
+                                      (file-executable-p name)))))
+         (expanded (expand-file-name input)))
+    (cond
+     ;; If it's an absolute or relative path that exists, use it
+     ((file-exists-p expanded)
+      (if (file-executable-p expanded)
+          (progn
+            (message "[dape-debug] Using executable: %s" expanded)
+            expanded)
+        (user-error "File exists but is not executable: %s" expanded)))
+
+     ;; If no slashes, try finding on PATH
+     ((not (string-match-p "[/\\]" input))
+      (if-let ((found (executable-find input)))
+          (progn
+            (message "[dape-debug] Found on PATH: %s" found)
+            found)
+        (user-error "Executable '%s' not found on PATH or as file" input)))
+
+     ;; Path with slashes but doesn't exist
+     (t
+      (user-error "File not found: %s" expanded)))))
+
+(defun davidc-dape-read-program ()
+  "Return the selected program path.
+If `davidc-dape--selected-program' is set, return it.
+Otherwise return nil (will trigger default behavior in config)."
+  (when davidc-dape--selected-program
+    (message "[dape-debug] Using pre-selected program: %s" davidc-dape--selected-program)
+    davidc-dape--selected-program))
+
+(defun davidc-dape-read-cwd ()
+  "Return the selected working directory as an absolute path.
+If `davidc-dape--selected-cwd' is set, return it.
+Otherwise return dape-cwd (default behavior).
+Always expands ~ and returns absolute path."
+  (expand-file-name (or davidc-dape--selected-cwd dape-cwd)))
+
+(defun davidc-dape-read-args ()
+  "Return the selected command-line arguments.
+If `davidc-dape--selected-args' is set, return it.
+Otherwise return empty vector []."
+  (or davidc-dape--selected-args []))
 
 (defun davidc-dape-read-process-name-and-pid ()
   "Read process name and return selected PID.
@@ -241,6 +306,56 @@ If not, prompts for process selection."
      :request "attach"
      :pid ,(lambda () (davidc-dape-read-process-name-and-pid)))
 
+    (codelldb-launch-rust
+     modes (rust-mode rust-ts-mode)
+     ensure dape-ensure-command
+     command-cwd dape-command-cwd
+     command ,(file-name-concat dape-adapter-dir "codelldb" "extension" "adapter" "codelldb")
+     command-args ("--port" :autoport "--settings" "{\"sourceLanguages\":[\"rust\"]}")
+     port :autoport
+     :type "lldb"
+     :request "launch"
+     :program ,(lambda () (davidc-dape-read-program))
+     :args ,(lambda () (davidc-dape-read-args))
+     :cwd ,(lambda () (davidc-dape-read-cwd))
+     :stopOnEntry nil)
+
+    (codelldb-launch-cpp
+     modes (c-mode c-ts-mode c++-mode c++-ts-mode)
+     ensure dape-ensure-command
+     command-cwd dape-command-cwd
+     command ,(file-name-concat dape-adapter-dir "codelldb" "extension" "adapter" "codelldb")
+     command-args ("--port" :autoport)
+     port :autoport
+     :type "lldb"
+     :request "launch"
+     :program ,(lambda () (davidc-dape-read-program))
+     :args ,(lambda () (davidc-dape-read-args))
+     :cwd ,(lambda () (davidc-dape-read-cwd))
+     :stopOnEntry nil)
+
+    (gdb-launch-rust
+     modes (rust-mode rust-ts-mode)
+     ensure dape-ensure-command
+     command-cwd dape-command-cwd
+     command "gdb"
+     command-args ("--interpreter=dap")
+     :request "launch"
+     :program ,(lambda () (davidc-dape-read-program))
+     :args ,(lambda () (davidc-dape-read-args))
+     :cwd ,(lambda () (davidc-dape-read-cwd)))
+
+    (gdb-launch-cpp
+     modes (c-mode c-ts-mode c++-mode c++-ts-mode)
+     ensure dape-ensure-command
+     command-cwd dape-command-cwd
+     command "gdb"
+     command-args ("--interpreter=dap")
+     :request "launch"
+     :program ,(lambda () (davidc-dape-read-program))
+     :args ,(lambda () (davidc-dape-read-args))
+     :cwd ,(lambda () (davidc-dape-read-cwd)))
+
     (cpptools-launch-rust
      modes (rust-mode rust-ts-mode)
      ensure dape-ensure-command
@@ -253,7 +368,10 @@ If not, prompts for process selection."
                                 "OpenDebugAD7")
      :type "cppdbg"
      :request "launch"
-     :program ,(lambda () (read-file-name "Path to executable: " dape-cwd))
+     :program ,(lambda () (or (davidc-dape-read-program)
+                              (read-file-name "Path to executable: " dape-cwd)))
+     :args ,(lambda () (davidc-dape-read-args))
+     :cwd ,(lambda () (davidc-dape-read-cwd))
      :MIMode ,(seq-find 'executable-find '("lldb" "gdb")))
 
     (cpptools-attach
@@ -278,18 +396,19 @@ If not, prompts for process selection."
               (let ((python (dape-config-get config 'command)))
                 (unless (zerop
                          (call-process-shell-command
-                          (format "%s -c "import debugpy.adapter"" python)))
+                          (format "%s -c \"import debugpy.adapter\"" python)))
                   (user-error "%s module debugpy is not installed" python))))
      command "python3"
      command-args ("-m" "debugpy.adapter" "--host" "0.0.0.0" "--port" :autoport)
      port :autoport
      :type "python"
      :request "launch"
-     :program dape-buffer-default
+     :program ,(lambda () (or (davidc-dape-read-program) dape-buffer-default))
+     :args ,(lambda () (davidc-dape-read-args))
      :console "integratedTerminal"
      :showReturnValue t
      :justMyCode nil
-     :cwd dape-cwd)
+     :cwd ,(lambda () (davidc-dape-read-cwd)))
 
     (debugpy-maya2024-launch
      modes (python-mode python-ts-mode)
@@ -298,18 +417,19 @@ If not, prompts for process selection."
               (let ((python (dape-config-get config 'command)))
                 (unless (zerop
                          (call-process-shell-command
-                          (format "%s -c "import debugpy.adapter"" python)))
+                          (format "%s -c \"import debugpy.adapter\"" python)))
                   (user-error "%s module debugpy is not installed" python))))
      command "/usr/autodesk/maya2024/bin/mayapy"
      command-args ("-m" "debugpy.adapter" "--host" "0.0.0.0" "--port" :autoport)
      port :autoport
      :type "python"
      :request "launch"
-     :program dape-buffer-default
+     :program ,(lambda () (or (davidc-dape-read-program) dape-buffer-default))
+     :args ,(lambda () (davidc-dape-read-args))
      :console "integratedTerminal"
      :showReturnValue t
      :justMyCode nil
-     :cwd dape-cwd)
+     :cwd ,(lambda () (davidc-dape-read-cwd)))
 
     (debugpy-davidc-attach
      modes (python-mode python-ts-mode)
@@ -331,23 +451,25 @@ Prompts for process name/PID first, then shows available attach configurations."
   (condition-case err
       (progn
         (message "[dape-debug] Filtering configs for attach...")
-        (setq-local dape-configs
-                    (seq-filter (lambda (c) (string= (plist-get (cdr c) :request) "attach"))
-                                dape-configs))
-        (message "[dape-debug] Found %d attach configs" (length dape-configs))
+        ;; Filter from the global dape-configs (which includes custom configs)
+        (let* ((global-configs (default-value 'dape-configs))
+               (attach-configs (seq-filter (lambda (c) (string= (plist-get (cdr c) :request) "attach"))
+                                           global-configs)))
+          (message "[dape-debug] Found %d attach configs" (length attach-configs))
 
-        ;; Prompt for process name and PID first
-        (let ((process-name (read-string "Process name to attach to: ")))
-          (message "[dape-debug] Prompting for process to attach...")
-          (setq davidc-dape--selected-pid (davidc-dape-select-process-pid process-name))
-          (message "[dape-debug] Selected PID: %d" davidc-dape--selected-pid))
+          ;; Prompt for process name and PID first
+          (let ((process-name (read-string "Process name to attach to: ")))
+            (message "[dape-debug] Prompting for process to attach...")
+            (setq davidc-dape--selected-pid (davidc-dape-select-process-pid process-name))
+            (message "[dape-debug] Selected PID: %d" davidc-dape--selected-pid))
 
-        ;; Now call dape with the PID already selected
-        (unwind-protect
-            (call-interactively #'dape)
-          ;; Always clear the selected PID after dape finishes
-          (setq davidc-dape--selected-pid nil)
-          (message "[dape-debug] Cleared selected PID")))
+          ;; Now call dape with filtered configs
+          (unwind-protect
+              (let ((dape-configs attach-configs))
+                (call-interactively #'dape))
+            ;; Always clear the selected PID after dape finishes
+            (setq davidc-dape--selected-pid nil)
+            (message "[dape-debug] Cleared selected PID"))))
     (error
      ;; Make sure to clear the PID even on error
      (setq davidc-dape--selected-pid nil)
@@ -356,58 +478,61 @@ Prompts for process name/PID first, then shows available attach configurations."
 
 ;;;###autoload
 (defun davidc-dape-launch ()
-  "Run dape with only launch configurations."
+  "Run dape with only launch configurations.
+Prompts for executable, working directory, and arguments first."
   (interactive)
   (condition-case err
       (progn
         (message "[dape-debug] Filtering configs for launch...")
-        (setq-local dape-configs
-                    (seq-filter (lambda (c) (string= (plist-get (cdr c) :request) "launch"))
-                                dape-configs))
-        (message "[dape-debug] Found %d launch configs" (length dape-configs))
-        (call-interactively #'dape))
+        ;; Filter from the global dape-configs (which includes custom configs)
+        (let* ((global-configs (default-value 'dape-configs))
+               (launch-configs (seq-filter (lambda (c) (string= (plist-get (cdr c) :request) "launch"))
+                                           global-configs)))
+          (message "[dape-debug] Found %d launch configs" (length launch-configs))
+
+          ;; Prompt for executable path (with file completion and PATH search)
+          (message "[dape-debug] Prompting for executable...")
+          (let ((program (davidc-dape-read-executable)))
+            (setq davidc-dape--selected-program program)
+            (message "[dape-debug] Selected program: %s" program)
+
+            ;; Prompt for working directory (default = executable's directory)
+            (let* ((default-cwd (file-name-directory program))
+                   (cwd (expand-file-name (read-directory-name "Working directory: " default-cwd default-cwd))))
+              (setq davidc-dape--selected-cwd cwd)
+              (message "[dape-debug] Selected cwd: %s" cwd)
+
+              ;; Prompt for arguments (optional)
+              (let* ((args-string (read-string "Arguments (optional): " nil nil ""))
+                     (args-list (if (string-empty-p args-string)
+                                    []
+                                  (vconcat (split-string-and-unquote args-string)))))
+                (setq davidc-dape--selected-args args-list)
+                (message "[dape-debug] Selected args: %s" args-list))))
+
+          ;; Now call dape with filtered configs
+          (unwind-protect
+              (let ((dape-configs launch-configs))
+                (call-interactively #'dape))
+            ;; Always clear the selected values after dape finishes
+            (setq davidc-dape--selected-program nil)
+            (setq davidc-dape--selected-cwd nil)
+            (setq davidc-dape--selected-args nil)
+            (message "[dape-debug] Cleared selected launch values"))))
     (error
+     ;; Make sure to clear the values even on error
+     (setq davidc-dape--selected-program nil)
+     (setq davidc-dape--selected-cwd nil)
+     (setq davidc-dape--selected-args nil)
      (message "[dape-debug] Error in davidc-dape-launch: %s" (error-message-string err))
      (signal (car err) (cdr err)))))
 
-;;; Debugging Functions
-
 ;;;###autoload
-(defun davidc-dape-debug-ps-output ()
-  "Show raw ps command output for debugging.
-This helps diagnose why process discovery might be failing."
-  (interactive)
-  (let* ((process-name (read-string "Process name to test: "))
-         (ps-cmd (format "ps -eo pid,lstart,etimes,args --no-headers | grep -E '%s' | grep -v grep"
-                        (regexp-quote process-name)))
-         (ps-output (shell-command-to-string ps-cmd)))
-    (with-current-buffer (get-buffer-create "*dape-ps-debug*")
-      (erase-buffer)
-      (insert (format "Process name: %s\n" process-name))
-      (insert (format "Command: %s\n\n" ps-cmd))
-      (insert "=== RAW PS OUTPUT ===\n")
-      (insert ps-output)
-      (insert "\n\n=== SPLIT LINES ===\n")
-      (let ((lines (split-string ps-output "\n" t "[ \t]+")))
-        (insert (format "Number of lines: %d\n\n" (length lines)))
-        (dolist (line lines)
-          (insert (format "Line: |%s|\n" line))
-          (insert (format "  Length: %d chars\n" (length line)))
-          (when (string-match "^[ \t]*\\([0-9]+\\)[ \t]+\\([A-Za-z]+ [A-Za-z]+ [0-9]+ [0-9:]+ [0-9]+\\)[ \t]+\\([0-9]+\\)[ \t]+\\(.+\\)$" line)
-            (insert (format "    MATCHES REGEX\n"))
-            (insert (format "    PID: %s\n" (match-string 1 line)))
-            (insert (format "    LSTART: %s\n" (match-string 2 line)))
-            (insert (format "    ETIMES: %s\n" (match-string 3 line)))
-            (insert (format "    ARGS: %s\n" (match-string 4 line))))
-          (insert "\n")))
-      (display-buffer (current-buffer)))))
-
-;;;###autoload
-(defun davidc-dape-debug-process-discovery ()
-  "Test process discovery and display results.
+(defun davidc-dape-find-process-info ()
+  "Find a process by name.
 This helps debug issues with finding and selecting processes to attach to."
   (interactive)
-  (let ((process-name (read-string "Process name to test: ")))
+  (let ((process-name (read-string "Process name to find: ")))
     (message "[dape-debug] Searching for processes matching: %s" process-name)
     (let ((processes (davidc-dape-get-processes-by-name process-name)))
       (message "[dape-debug] Found %d processes:" (length processes))
