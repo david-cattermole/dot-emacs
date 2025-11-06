@@ -94,8 +94,10 @@ Processes are sorted by start time with newest first."
                     (format "ps -eo pid,lstart,etimes,args --no-headers | grep -E '%s' | grep -v grep"
                             (regexp-quote process-name))))
         (processes '()))
-    (dolist (line (split-string ps-output "\n" t "[ \t]+"))
-      (when (string-match "^[ \t]*\\([0-9]+\\)[ \t]+\\([A-Za-z]+ [A-Za-z]+ [0-9]+ [0-9:]+ [0-9]+\\)[ \t]+\\([0-9]+\\)[ \t]+\\(.+\\)$" line)
+    (dolist (line (split-string ps-output "\n" t "[:space:]+"))
+      (when (string-match
+             "^[[:space:]]*\\([0-9]+\\)[[:space:]]+\\([A-Za-z]+ [A-Za-z]+[[:space:]]+[0-9]+[[:space:]]+[0-9:]+[[:space:]]+[0-9]+\\)[[:space:]]+\\([0-9]+\\)[[:space:]]+\\(.*\\)$"
+             line)
         (let* ((pid (string-to-number (match-string 1 line)))
                (lstart-raw (match-string 2 line))
                (elapsed-seconds (string-to-number (match-string 3 line)))
