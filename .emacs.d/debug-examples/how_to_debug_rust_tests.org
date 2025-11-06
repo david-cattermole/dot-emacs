@@ -1,0 +1,123 @@
+* How to debug Rust code in Emacs
+
+** 0) Setup test Profile in Cargo.toml
+
+To get debugging information for GDB to use, make sure debug is enabled in your ~test~ profile
+
+#+begin_src toml
+[profile.test]
+debug = true        # ensures debug symbols (-g).
+opt-level = 0       # disable optimizations for better debugging.
+#+end_src
+
+To add as much information as possible for GDB, you must enable
+"dwarf" debug information, with ~debug = 2~:
+#+begin_src toml
+[profile.test]
+debug = 2           # equivalent to rustc -C debuginfo=2.
+opt-level = 0
+#+end_src
+
+** 1) Inject code snippet.
+
+Place the following code snippet into the start of the test code; from
+this point in the code on-wards, you'll be able to test.
+
+#+begin_src rust
+let mut counter = 1usize;
+println!("Rust test attach program started with PID: {}", std::process::id());
+println!("Waiting for client to connect...");
+loop {
+    println!("Sleeping counter: {}", counter);
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    if counter == 0 {
+        break;
+    }
+    counter += 1;
+}
+#+end_src
+
+Once finished editing the file, save the file.
+
+NOTE: We use full paths to the modules to avoid needing to add ~use std::...;~.
+
+NOTE: Our example code will loop forever unless we change ~counter~ to
+~0~ using a debugger. Another approach is to automatically detect when
+the debugger is attached. Here are some articles on the different
+approaches:
+
+https://en.cppreference.com/w/cpp/utility/is_debugger_present.html
+https://github.com/boostorg/test/blob/develop/include/boost/test/impl/debug.ipp#L647
+https://isc.sans.edu/diary/31450
+https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-isdebuggerpresent
+https://stackoverflow.com/questions/16687102/how-to-detect-whether-there-is-a-debugger-attached-in-c
+https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
+https://stackoverflow.com/questions/41043074/pause-process-to-allow-time-for-debugger-to-attach
+
+** 2) Run the test
+
+Run ~cargo test~ to start the process.
+
+Add ~-- --nocapture~ to print the standard output.
+
+#+begin_src sh
+> cargo test --test bundle_adjust_sba_test -- --no-capture
+#+end_src
+
+** 3) Get the Process Id (PID)
+
+Get process id (pid) of the running test.
+
+You can either read the process id number from the program's output
+(from the code snippet), or you can use the Emacs Lisp function:
+
+#+begin_quote
+M-x davidc-dape-find-process-info RET process_name_here RET
+#+end_quote
+
+Otherwise, you can also use the Linux command line to search for a
+~process_name_here~:
+#+begin_src sh
+$ ps -eo pid,lstart,etimes,args --no-headers | grep -E 'process_name_here' | grep -v grepD
+92047 Tue Nov  4 01:14:19 2025     833 ./process_name_here
+#+end_src
+
+** 4) Attach Debugger
+
+Run GDB, and attach to ~<process id here>~.
+#+begin_quote
+M-x gdb -i=mi -p <process id here>
+#+end_quote
+
+Display all the windows:
+#+begin_quote
+M-x gdb-many-windows
+#+end_quote
+
+Other shortcuts:
+https://www.gnu.org/software/emacs/manual/html_node/emacs/Commands-of-GUD.html
+https://www.gnu.org/software/emacs/manual/html_node/emacs/Starting-GUD.html
+https://www.gnu.org/software/emacs/manual/html_node/emacs/GDB-Graphical-Interface.html
+https://www.gnu.org/software/emacs/manual/html_node/tramp/Running-a-debugger-on-a-remote-host.html#Running-a-debugger-on-a-remote-host
+
+** 5) Continue Control flow
+
+Once you have attached to the program, the issue remains that your
+program is in an infinite loop.
+
+While in the infinite loop, interatively set a breakpoint on the
+source code line you wish to stop at.
+
+Set breakpoint on current line.
+#+begin_quote
+M-x gud-break
+#+end_quote
+
+Next, using the ~Locals~ Emacs window to override the ~counter~ value
+to ~0~, then continue the execution (~continue~ key in GDB).
+
+The execution will continue as normal, however
+
+** 6) Happy Debugging
+
+You should now be setup to debug in GDB, inside Emacs.
