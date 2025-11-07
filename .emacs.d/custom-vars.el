@@ -77,6 +77,7 @@
  '(davidc-config-use-davidc-markdown-mode t)
  '(davidc-config-use-python-black t)
  '(davidc-config-use-python-flymake-ruff t)
+ '(davidc-config-use-python-flymake-mypy t)
  '(davidc-config-use-clang-format t)
  '(davidc-config-use-flymake-clang-tidy t)
  '(davidc-config-use-flymake-rust-cargo-clippy t)

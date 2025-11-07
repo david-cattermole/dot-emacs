@@ -9,6 +9,7 @@
 ;;
 ;; SUPPORTED LANGUAGES:
 ;; * Python - Uses "ruff" for fast Python linting.
+;; * Python - Uses "mypy" for static type checking.
 ;; * Rust   - Uses "cargo clippy" for comprehensive Rust analysis.
 ;; * C++    - Uses "clang-tidy" for static analysis.
 ;; * JSON   - Uses custom Python script for JSON with comments.
@@ -18,6 +19,7 @@
 ;; PREREQUISITES:
 ;; Make sure the following tools are installed and available in your PATH:
 ;; * For Python: ruff (install via: pip install ruff)
+;; * For Python: mypy (install via: pip install mypy)
 ;; * For Rust: cargo with clippy component (rustup component add clippy)
 ;; * For C++: clang-tidy (part of LLVM/Clang toolchain)
 ;; * For JSON: Python 3 and the jsonc_lint.py script
@@ -30,6 +32,7 @@
 ;;
 ;;    ;; Python setup
 ;;    (add-hook 'python-mode-hook #'davidc-python-flymake-ruff-setup)
+;;    (add-hook 'python-mode-hook #'davidc-python-flymake-mypy-setup)
 ;;
 ;;    ;; C++ setup
 ;;    (add-hook 'c++-mode-hook #'davidc-flymake-clang-tidy-setup)
@@ -62,6 +65,7 @@
 ;;
 ;;   ;; Custom tool paths (useful if tools aren't in PATH)
 ;;   (setq davidc-python-flymake-ruff-path "/usr/local/bin/ruff")
+;;   (setq davidc-python-flymake-mypy-path "/usr/local/bin/mypy")
 ;;   (setq davidc-flymake-clang-tidy-path "/opt/llvm/bin/clang-tidy")
 ;;   (setq davidc-flymake-rust-cargo-path "/home/user/.cargo/bin/cargo")
 ;;   (setq davidc-flymake-jsonc-lint-path "/path/to/jsonc_lint.py")
@@ -101,6 +105,11 @@
 (defvar davidc-python-flymake-ruff-path
   (davidc-flymake--get-executable-path "ruff")
   "Path to the ruff executable for Python linting.
+Set this variable before loading this package to use a custom path.")
+
+(defvar davidc-python-flymake-mypy-path
+  (davidc-flymake--get-executable-path "mypy")
+  "Path to the mypy executable for Python type checking.
 Set this variable before loading this package to use a custom path.")
 
 (defvar davidc-flymake-clang-tidy-path
@@ -301,6 +310,9 @@ FILE-MATCHER is a function to determine if a diagnostic applies to current file.
 (defvar-local davidc--flymake-rust-cargo-clippy-proc nil
   "Current cargo clippy flymake process.")
 
+(defvar-local davidc--flymake-python-mypy-proc nil
+  "Current mypy flymake process.")
+
 (defvar-local davidc--flymake-jsonc-proc nil
   "Current JSONC lint flymake process.")
 
@@ -350,6 +362,22 @@ REPORT-FN is the callback function for reporting diagnostics.")
    "\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\): \\(warning\\|error\\(?:\\[E[0-9]+\\]\\)?\\): \\(.*\\)$"
    #'davidc-flymake--basename-file-matcher)
   "Flymake backend for Rust's clippy.
+REPORT-FN is the callback function for reporting diagnostics.")
+
+(defalias 'davidc-flymake-python-mypy
+  (davidc-flymake--make-backend
+   "python-mypy"
+   davidc-python-flymake-mypy-path
+   (lambda (source-file)
+     (list davidc-python-flymake-mypy-path
+           "--show-column-numbers"
+           "--no-error-summary"
+           "--hide-error-context"
+           "--no-pretty"
+           source-file))
+   "^\\([^:]+\\):\\([0-9]+\\):\\([0-9]+\\): \\(error\\|warning\\|note\\): \\(.+\\)$"
+   #'davidc-flymake--basename-file-matcher)
+  "Flymake backend for Python's mypy type checker.
 REPORT-FN is the callback function for reporting diagnostics.")
 
 (defalias 'davidc-flymake-jsonc
@@ -422,6 +450,14 @@ Call this function in xml-mode-hook to enable automatic XML linting."
   (interactive)
   (message "Setting up XML linter for flymake.")
   (add-hook 'flymake-diagnostic-functions #'davidc-flymake-xml nil t)
+  (flymake-mode 1))
+
+(defun davidc-python-flymake-mypy-setup ()
+  "Set up flymake for Python type checking with mypy.
+Call this function in python-mode-hook to enable automatic Python type checking."
+  (interactive)
+  (message "Setting up mypy for flymake.")
+  (add-hook 'flymake-diagnostic-functions #'davidc-flymake-python-mypy nil t)
   (flymake-mode 1))
 
 

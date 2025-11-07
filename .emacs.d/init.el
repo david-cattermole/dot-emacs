@@ -95,6 +95,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-python-flymake-mypy nil
+  "Use mypy with flymake for Python type-checking."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-clang-format nil
   "Use clang-format for C/C++ formatting."
   :type 'boolean
@@ -693,6 +698,11 @@
   (add-hook 'python-mode-hook 'davidc-python-flymake-ruff-setup)
    )
 
+;; Use Mypy with flymake.
+(when davidc-config-use-python-flymake-mypy
+  (require 'davidc-flymake)
+  (add-hook 'python-mode-hook 'davidc-python-flymake-mypy-setup)
+   )
 
 ;; Add your python shebang detection here:
 (add-to-list 'magic-mode-alist '("\\`#!/usr/bin/env python.*" . python-mode))
