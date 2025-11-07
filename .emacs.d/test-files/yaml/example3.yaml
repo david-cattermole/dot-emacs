@@ -1,0 +1,19 @@
+---
+# This is a comment
+name: "John Doe"  # Another comment
+age: 30
+active: true
+salary: 1234.56
+projects:
+  - name: Project 1
+    status: active
+  - name: Project 2
+    status: false
+address: null
+config: &default_config
+  timeout: 300
+  retries: 3
+production:
+  <<: *default_config
+  debug: false
+...
