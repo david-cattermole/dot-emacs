@@ -359,6 +359,7 @@
    ;; Emacs 28+.
    (setq evil-undo-system 'undo-redo)
 
+   ;; Enable EVIL!!! Mwha-ha-ha.
    (require 'evil)
    (evil-mode 1)
    )
