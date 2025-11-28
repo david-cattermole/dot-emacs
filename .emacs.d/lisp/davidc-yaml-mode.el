@@ -329,16 +329,16 @@ If at beginning of line with only whitespace, performs smart dedentation."
     (save-excursion (newline-and-indent))))
 
 (defun davidc-yaml-fold-all ()
-  "Fold all YAML blocks (requires hideshow or similar)."
+  "Fold all YAML blocks (requires outline-minor-mode or similar)."
   (interactive)
-  (when (bound-and-true-p hs-minor-mode)
-    (hs-hide-all)))
+  (when (bound-and-true-p outline-minor-mode)
+    (outline-hide-body)))
 
 (defun davidc-yaml-unfold-all ()
-  "Unfold all YAML blocks (requires hideshow or similar)."
+  "Unfold all YAML blocks (requires outline-minor-mode or similar)."
   (interactive)
-  (when (bound-and-true-p hs-minor-mode)
-    (hs-show-all)))
+  (when (bound-and-true-p outline-minor-mode)
+    (outline-show-all)))
 
 ;; Function to handle paragraph filling in YAML context.
 (defun davidc-yaml-fill-paragraph (&optional justify)
