@@ -13,10 +13,10 @@
 ;; overview mode shows only major structural elements.
 ;;
 ;; Features:
-;; - Smart three-state cycling (Folded -> Children -> Subtree -> repeat)
-;; - Language-specific folding patterns (Python, C/C++, Rust, MEL)
-;; - Generic comment block folding (only folds the first line of multi-line blocks)
-;; - TAB to cycle local fold state, Shift-TAB to toggle global visibility
+;; - Smart three-state cycling (Folded -> Children -> Subtree -> repeat).
+;; - Language-specific folding patterns (Python, C/C++, Rust, MEL).
+;; - Generic comment block folding (only folds the first line of multi-line blocks).
+;; - CTRL-TAB to cycle local fold state, Shift-TAB to toggle global visibility.
 
 ;;; Code:
 
@@ -333,7 +333,7 @@ Keybindings:
 
 Scope limitation:
 Only applies in prog-mode derived buffers to avoid conflicts with other
-modes that use TAB for different purposes (e.g., org-mode, text-mode)."
+modes that use CTRL-TAB for different purposes (e.g., org-mode, text-mode)."
   (when (derived-mode-p 'prog-mode)
     (local-set-key (kbd "C-<tab>") 'davidc-outline-toggle)
     (local-set-key (kbd "<backtab>") 'davidc-outline-toggle-global)))
