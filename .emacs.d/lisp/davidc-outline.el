@@ -358,7 +358,7 @@ between top-level and nested constructs is less important."
   "Set up outline keybindings for prog-mode buffers.
 
 Keybindings:
-- TAB (<tab>): Cycle through fold states for current heading
+- CTRL-TAB (C-<tab>): Cycle through fold states for current heading
   (Folded -> Children -> Subtree -> Folded)
 - Shift-TAB (<backtab>): Toggle global visibility for entire buffer
   (Overview mode <-> Fully expanded)
@@ -367,7 +367,7 @@ Scope limitation:
 Only applies in prog-mode derived buffers to avoid conflicts with other
 modes that use TAB for different purposes (e.g., org-mode, text-mode)."
   (when (derived-mode-p 'prog-mode)
-    (local-set-key (kbd "<tab>") 'davidc-outline-toggle)
+    (local-set-key (kbd "C-<tab>") 'davidc-outline-toggle)
     (local-set-key (kbd "<backtab>") 'davidc-outline-toggle-global)))
 
 (provide 'davidc-outline)

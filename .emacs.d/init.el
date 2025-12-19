@@ -1007,9 +1007,6 @@
   (require 'outline)
   (require 'davidc-outline)
 
-  ;; Global keybinding for toggling all folds
-  (global-set-key (kbd "C-=") 'davidc-outline-toggle-global)
-
   ;; Enable for all programming modes
   (add-hook 'prog-mode-hook 'outline-minor-mode)
 
