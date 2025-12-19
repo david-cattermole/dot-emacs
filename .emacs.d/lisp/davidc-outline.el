@@ -152,7 +152,7 @@ State detection:
 
 ;;; Comment Folding Support.
 ;;
-;; Generic approach to comment block folding (replaces 3 language-specific functions):
+;; Generic approach to comment block folding:
 ;; - Language setup sets `davidc-outline-comment-starter` to match comment prefix.
 ;; - `davidc-outline--comment-continuation-p` checks if a line continues a comment block.
 ;; - Advice on `outline-on-heading-p` filters out continuation lines.
