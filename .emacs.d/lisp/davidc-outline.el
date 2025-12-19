@@ -23,7 +23,7 @@
 (require 'outline)
 (require 'rx)
 
-;;; Variables
+;;; Variables.
 
 (defvar-local davidc-outline-comment-starter nil
   "Regex matching the start of a line comment for multi-line block detection.
@@ -60,7 +60,7 @@ with all nested content (control structures, comments, function bodies) hidden."
   (save-excursion
     (goto-char (point-min))
     (let ((has-hidden nil))
-      ;; Check if any outline heading has hidden content
+      ;; Check if any outline heading has hidden content.
       (while (and (not has-hidden) (not (eobp)))
         (when (and (outline-on-heading-p)
                    (save-excursion
@@ -68,7 +68,7 @@ with all nested content (control structures, comments, function bodies) hidden."
                      (outline-invisible-p)))
           (setq has-hidden t))
         (outline-next-heading))
-      ;; Toggle based on current state
+      ;; Toggle based on current state.
       (if has-hidden
           (outline-show-all)
         (davidc-outline--hide-sublevels-custom 1)))))
@@ -89,17 +89,17 @@ Example with LEVELS=1:
 - Level 2+ headings (control structures, comments): hidden
 - All body text: hidden"
   (save-excursion
-    ;; First hide all body text, keeping headings visible
+    ;; First hide all body text, keeping headings visible.
     (outline-hide-body)
-    ;; Then hide headings that are above the requested level
+    ;; Then hide headings that are above the requested level.
     (goto-char (point-min))
     (while (not (eobp))
       (when (outline-on-heading-p)
         (let ((heading-level (funcall outline-level)))
           (if (> heading-level levels)
-              ;; Hide headings deeper than requested level
+              ;; Hide headings deeper than requested level.
               (outline-hide-subtree)
-            ;; Keep headings at or above requested level visible
+            ;; Keep headings at or above requested level visible.
             (outline-show-heading))))
       (outline-next-heading))))
 
@@ -131,13 +131,13 @@ State detection:
              (outline-on-heading-p))
     (let ((parent-level (funcall outline-level)))
       (cond
-       ;; Folded -> Show Children
+       ;; Folded -> Show Children.
        ((save-excursion
           (outline-end-of-heading)
           (outline-invisible-p))
         (outline-show-entry)
         (outline-show-children))
-       ;; Children visible -> Show Subtree
+       ;; Children visible -> Show Subtree.
        ((save-excursion
           (outline-next-heading)
           (and (not (eobp))
@@ -146,11 +146,11 @@ State detection:
                  (outline-end-of-heading)
                  (outline-invisible-p))))
         (outline-show-subtree))
-       ;; Subtree visible -> Hide all
+       ;; Subtree visible -> Hide all.
        (t
         (outline-hide-subtree))))))
 
-;;; Comment Folding Support
+;;; Comment Folding Support.
 ;;
 ;; Generic approach to comment block folding (replaces 3 language-specific functions):
 ;; - Language setup sets `davidc-outline-comment-starter` to match comment prefix.
@@ -200,7 +200,7 @@ multi-line comment blocks are treated as single foldable units throughout."
 
 (advice-add 'outline-on-heading-p :around #'davidc-outline--on-heading-p-advice)
 
-;;; Language Setup
+;;; Language Setup.
 
 (defun davidc-outline-python-setup ()
   "Configure outline-minor-mode for Python with hierarchical folding.
@@ -230,7 +230,7 @@ function to see its internal structure (conditionals, loops, comments)."
               (lambda ()
                 (save-excursion
                   (beginning-of-line)
-                  ;; Level 1 for definitions, Level 2+ for everything else
+                  ;; Level 1 for definitions, Level 2+ for everything else.
                   (if (looking-at (rx (* space) (or (seq bow (or "class" "def" "async") eow) (seq "@"))))
                       1
                     (+ 2 (/ (current-indentation) python-indent-offset))))))
@@ -321,7 +321,7 @@ between top-level and nested constructs is less important."
   (setq-local outline-level
               (lambda () (1+ (/ (current-indentation) c-basic-offset)))))
 
-;;; Keybindings
+;;; Keybindings.
 
 (defun davidc-outline-setup-keybindings ()
   "Set up outline keybindings for prog-mode buffers.
@@ -342,4 +342,4 @@ modes that use TAB/SHIFT-TAB for different purposes (e.g., org-mode, text-mode).
     (local-set-key (kbd "C-=") 'davidc-outline-toggle-global)))
 
 (provide 'davidc-outline)
-;;; davidc-outline.el ends here
+;;; davidc-outline.el ends here.
