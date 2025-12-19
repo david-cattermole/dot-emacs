@@ -150,11 +150,6 @@
   :type 'boolean
   :group 'davidc-config)
 
-(defcustom davidc-config-use-auto-fold nil
-  "Automatically fold all blocks when opening files with outline-minor-mode."
-  :type 'boolean
-  :group 'davidc-config)
-
 (defcustom davidc-config-use-dynamic-abbreviations nil
   "Use dynamic abbreviations."
   :type 'boolean
@@ -1013,7 +1008,7 @@
   ;; Setup keybindings when outline-minor-mode is enabled
   (add-hook 'outline-minor-mode-hook 'davidc-outline-setup-keybindings)
 
-  ;; Language-specific configurations (auto-fold is called within each setup)
+  ;; Language-specific configurations.
   (add-hook 'python-mode-hook 'davidc-outline-python-setup)
   (add-hook 'c-mode-common-hook 'davidc-outline-c-setup)
 

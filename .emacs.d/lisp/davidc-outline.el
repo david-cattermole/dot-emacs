@@ -16,7 +16,6 @@
 ;; - Smart three-state cycling (Folded -> Children -> Subtree -> repeat)
 ;; - Language-specific folding patterns (Python, C/C++, Rust, MEL)
 ;; - Generic comment block folding (only folds the first line of multi-line blocks)
-;; - Auto-folding on file open (optional via `davidc-config-use-auto-fold`)
 ;; - TAB to cycle local fold state, Shift-TAB to toggle global visibility
 
 ;;; Code:
@@ -201,33 +200,6 @@ multi-line comment blocks are treated as single foldable units throughout."
 
 (advice-add 'outline-on-heading-p :around #'davidc-outline--on-heading-p-advice)
 
-;;; Auto-Fold
-
-(defun davidc-outline-auto-fold-setup ()
-  "Automatically fold buffer if `davidc-config-use-auto-fold` is non-nil.
-
-This function is called by language setup functions after configuring
-`outline-regexp` and `outline-level`. It uses an idle timer to ensure
-the outline patterns are fully configured before folding.
-
-Timing strategy:
-- Uses `run-with-idle-timer` with 0.1 second delay
-- Ensures language hooks have finished setting up outline-regexp
-- Only folds if buffer is still alive (handles rapid buffer switching)
-
-Folding behavior:
-- Calls `outline-hide-body` to hide all body text
-- Keeps all headings visible (no level filtering)
-- User can then use Shift-TAB to toggle to overview mode (level 1 only)"
-  (when (and (bound-and-true-p outline-minor-mode)
-             (bound-and-true-p davidc-config-use-auto-fold))
-    (let ((buf (current-buffer)))
-      (run-with-idle-timer 0.1 nil
-                           (lambda ()
-                             (when (buffer-live-p buf)
-                               (with-current-buffer buf
-                                 (outline-hide-body))))))))
-
 ;;; Language Setup
 
 (defun davidc-outline-python-setup ()
@@ -262,8 +234,7 @@ to see its internal structure (conditionals, loops, comments)."
                   (if (looking-at (rx (* space) (or (seq bow (or "class" "def" "async") eow) (seq "@"))))
                       1
                     (+ 2 (/ (current-indentation) python-indent-offset))))))
-  (setq-local davidc-outline-comment-starter (rx (* space) "#"))
-  (davidc-outline-auto-fold-setup))
+  (setq-local davidc-outline-comment-starter (rx (* space) "#")))
 
 (defun davidc-outline-c-setup ()
   "Configure outline-minor-mode for C/C++ with hierarchical folding.
@@ -292,8 +263,7 @@ its internal structure (if statements, loops, comments)."
                                                     "//" "/*")))
                       (+ 2 (/ (current-indentation) c-basic-offset))
                     1))))
-  (setq-local davidc-outline-comment-starter (rx (* space) "//"))
-  (davidc-outline-auto-fold-setup))
+  (setq-local davidc-outline-comment-starter (rx (* space) "//")))
 
 (defun davidc-outline-rust-setup ()
   "Configure outline-minor-mode for Rust with hierarchical folding.
@@ -329,8 +299,7 @@ Press TAB on a function to see its internal structure (match statements, loops, 
                                                     "//" "/*" "///" "//!" )))
                       (+ 2 (/ (current-indentation) rust-indent-offset))
                     1))))
-  (setq-local davidc-outline-comment-starter (rx (* space) "//"))
-  (davidc-outline-auto-fold-setup))
+  (setq-local davidc-outline-comment-starter (rx (* space) "//")))
 
 (defun davidc-outline-mel-setup ()
   "Configure outline-minor-mode for MEL (Maya Embedded Language).
@@ -349,8 +318,7 @@ This simpler approach works well for MEL's scripting nature where the distinctio
 between top-level and nested constructs is less important."
   (setq-local outline-regexp "[^\n]*{[ \t]*$")
   (setq-local outline-level
-              (lambda () (1+ (/ (current-indentation) c-basic-offset))))
-  (davidc-outline-auto-fold-setup))
+              (lambda () (1+ (/ (current-indentation) c-basic-offset)))))
 
 ;;; Keybindings
 

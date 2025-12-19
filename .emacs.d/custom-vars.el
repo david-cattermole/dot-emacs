@@ -88,7 +88,6 @@
  '(davidc-config-use-rename-symbol t)
  '(davidc-config-use-region t)
  '(davidc-config-use-outline t)
- '(davidc-config-use-auto-fold nil)
  '(davidc-config-use-dynamic-abbreviations t)
  '(davidc-config-use-string-inflection t)
  '(davidc-config-use-project t)
