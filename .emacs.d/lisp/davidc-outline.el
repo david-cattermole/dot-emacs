@@ -96,7 +96,7 @@ Example with LEVELS=1:
     (while (not (eobp))
       (when (outline-on-heading-p)
         (let ((heading-level (funcall outline-level)))
-          (if (> heading-level levels)
+          (if (>= heading-level levels)
               ;; Hide headings deeper than requested level.
               (outline-hide-subtree)
             ;; Keep headings at or above requested level visible.
