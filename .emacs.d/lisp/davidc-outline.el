@@ -16,7 +16,7 @@
 ;; - Smart three-state cycling (Folded -> Children -> Subtree -> repeat).
 ;; - Language-specific folding patterns (Python, C/C++, Rust, MEL).
 ;; - Generic comment block folding (only folds the first line of multi-line blocks).
-;; - CTRL-TAB to cycle local fold state, Shift-TAB to toggle global visibility.
+;; - SHIFT-TAB to cycle local fold state, CTRL-= to toggle global visibility.
 
 ;;; Code:
 
@@ -106,22 +106,22 @@ Example with LEVELS=1:
 (defun davidc-outline-toggle ()
   "Cycle through fold states: Folded -> Children -> Subtree -> Folded.
 
-Three-state cycling behavior (press TAB repeatedly):
+Three-state cycling behavior (press SHIFT-TAB repeatedly):
 
 1. Folded (initial state):
    - Only the heading line is visible
    - All content and child headings are hidden
-   -> Press TAB: Show Children
+   -> Press SHIFT-TAB: Show Children
 
 2. Children visible:
    - Heading and immediate child headings are visible
    - Child heading bodies remain hidden
    - Own body content is visible
-   -> Press TAB: Show Subtree
+   -> Press SHIFT-TAB: Show Subtree
 
 3. Subtree visible:
    - Everything visible: heading, body, all descendants and their content
-   -> Press TAB: Hide all (return to Folded state)
+   -> Press SHIFT-TAB: Hide all (return to Folded state)
 
 State detection:
 - Checks visibility at end of heading to determine current state
@@ -216,8 +216,8 @@ Hierarchical structure:
 - Level 2+: Control structures, docstrings, comments (based on indentation)
 
 This ensures the top outline level (overview) shows only functions, methods, and
-classes, with all control flow and comments nested inside. Press TAB on a function
-to see its internal structure (conditionals, loops, comments)."
+classes, with all control flow and comments nested inside. Press SHIFT-TAB on a
+function to see its internal structure (conditionals, loops, comments)."
   (setq-local outline-regexp
               (rx line-start (* space)
                   (or (seq bow (or "class" "def" "async") eow)
@@ -250,8 +250,8 @@ Hierarchical structure:
 - Level 2+: Control structures and comments (based on indentation)
 
 This ensures the top outline level (overview) shows only functions and classes,
-with all control flow and comments nested inside. Press TAB on a function to see
-its internal structure (if statements, loops, comments)."
+with all control flow and comments nested inside. Press SHIFT-TAB on a function
+to see its internal structure (if statements, loops, comments)."
   (setq-local outline-regexp
               (rx (or (seq (*? nonl) "{" (* space) eol)
                       (seq line-start (* space) (or "//" "/*")))))
@@ -281,7 +281,8 @@ Hierarchical structure:
 
 This ensures the top outline level (overview) shows only functions, impl blocks,
 traits, and data structures, with all control flow and comments nested inside.
-Press TAB on a function to see its internal structure (match statements, loops, comments)."
+Press SHIFT-TAB on a function to see its internal structure (match statements,
+loops, comments)."
   (setq-local outline-regexp
               (rx line-start (* space)
                   (or (seq (? (or "pub" "pub(crate)" "pub(super)") (+ space))
@@ -326,17 +327,19 @@ between top-level and nested constructs is less important."
   "Set up outline keybindings for prog-mode buffers.
 
 Keybindings:
-- CTRL-TAB (C-<tab>): Cycle through fold states for current heading
+
+- SHIFT-TAB (<backtab>): Cycle through fold states for current heading.
   (Folded -> Children -> Subtree -> Folded)
-- Shift-TAB (<backtab>): Toggle global visibility for entire buffer
+
+- CTRL-= (C-=): Toggle global visibility for entire buffer.
   (Overview mode <-> Fully expanded)
 
 Scope limitation:
 Only applies in prog-mode derived buffers to avoid conflicts with other
-modes that use CTRL-TAB for different purposes (e.g., org-mode, text-mode)."
+modes that use TAB/SHIFT-TAB for different purposes (e.g., org-mode, text-mode)."
   (when (derived-mode-p 'prog-mode)
-    (local-set-key (kbd "C-<tab>") 'davidc-outline-toggle)
-    (local-set-key (kbd "<backtab>") 'davidc-outline-toggle-global)))
+    (local-set-key (kbd "<backtab>") 'davidc-outline-toggle)
+    (local-set-key (kbd "C-=") 'davidc-outline-toggle-global)))
 
 (provide 'davidc-outline)
 ;;; davidc-outline.el ends here
