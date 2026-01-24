@@ -150,6 +150,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-hideshow nil
+  "Use hideshow for code folding."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-dynamic-abbreviations nil
   "Use dynamic abbreviations."
   :type 'boolean
@@ -684,6 +689,7 @@
           (lambda ()
             (flyspell-prog-mode)
             (subword-mode 1)
+            (hs-minor-mode 1)
             (flymake-mode 1)))
 
 ;; Auto formatting with 'black'.
@@ -875,6 +881,7 @@
             (cwarn-mode 1)
             (semantic-mode 0)
             (subword-mode 1)
+            (hs-minor-mode 1)
             (setq indent-tabs-mode nil)
             (c-toggle-electric-state 1)
             (c-toggle-auto-newline 0)
@@ -906,6 +913,7 @@
              (lambda ()
                (flyspell-prog-mode)
                (subword-mode 1)
+               (hs-minor-mode 1)
                (c-toggle-electric-state 1)
                (c-toggle-auto-newline 0)
                (c-toggle-auto-hungry-state 1)
@@ -921,6 +929,7 @@
              (lambda ()
                (setq indent-tabs-mode nil)
                (flyspell-prog-mode)
+               (hs-minor-mode 1)
                (subword-mode 1)))
   )
 
@@ -1018,6 +1027,49 @@
   (when davidc-config-use-mel-mode
     (add-hook 'mel-mode-hook 'davidc-outline-mel-setup))
   )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code Folding - Hide/Show (hs-minor-mode)
+(when davidc-config-use-hideshow
+  (require 'hideshow)
+  (require 'davidc-hideshow)
+
+  ;; Workaround hideshow interation problems with vc-diff and Ediff,
+  ;; as suggested in the hideshow.el source code documentation.
+  (add-hook 'ediff-prepare-buffer-hook #'turn-off-hideshow)
+  (add-hook 'vc-before-checkin-hook #'turn-off-hideshow)
+
+  ;; Display line counts in the hidden areas, or use
+  ;; "davidc-hs-display-code-as-tooltip" to display the inner text as a
+  ;; tooltip when the user hovers over the area.
+  (setq hs-set-up-overlay 'davidc-hs-display-code-line-counts)
+
+  ;; Cycling the code folding of the entire buffer.
+  (global-set-key (kbd "C-=") 'davidc-hs-global-cycle)
+
+  ;; Cycling the active-block-at-point's folding.
+  (global-set-key (kbd "C--") 'davidc-hs-cycle)
+
+  ;; Add code folding regular expressions for Rust
+  ;;
+  ;; Based on the Ruby implementation here;
+  ;; https://gist.github.com/Karina7777/e6207b027af0b391ff38
+  (when davidc-config-use-rust-mode
+    (add-to-list 'hs-special-modes-alist
+                 '(rust-mode
+                   "{" ;; Block start.
+                   "}" ;; Block end.
+                   ;; NOTE: Does not handle comments with "/* */" style.
+                   "//" ;; Comment start.
+                   forward-sexp ;; FORWARD-SEXP-FUNC
+                   hs-c-like-adjust-block-beginning ;; ADJUST-BEG-FUNC
+                   nil  ;; FIND-BLOCK-BEGINNING-FUNC
+                   nil  ;; FIND-NEXT-BLOCK-FUNC
+                   nil  ;; LOOKING-AT-BLOCK-START-P-FUNC
+                   ))
+    )
+  )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Dynamic Abbreviations (dabbrev).
