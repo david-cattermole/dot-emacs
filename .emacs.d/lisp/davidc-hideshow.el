@@ -18,21 +18,21 @@
         (pcase last-command
           ('davidc-hs-cycle
            (hs-hide-level 1)
-           (setq this-command 'hs-cycle-children))
-          ('hs-cycle-children
+           (setq this-command 'davidc-hs-cycle-children))
+          ('davidc-hs-cycle-children
            ;; TODO: Fix this case. `hs-show-block' needs to be
            ;; called twice to open all folds of the parent
            ;; block.
            (save-excursion (hs-show-block))
            (hs-show-block)
-           (setq this-command 'hs-cycle-subtree))
-          ('hs-cycle-subtree
+           (setq this-command 'davidc-hs-cycle-subtree))
+          ('davidc-hs-cycle-subtree
            (hs-hide-block))
           (_
            (if (not (hs-already-hidden-p))
                (hs-hide-block)
              (hs-hide-level 1)
-             (setq this-command 'hs-cycle-children))))
+             (setq this-command 'davidc-hs-cycle-children))))
       (hs-hide-level level)
       (setq this-command 'hs-hide-level))))
 
@@ -44,7 +44,7 @@
   (pcase last-command
     ('davidc-hs-global-cycle
      (save-excursion (hs-show-all))
-     (setq this-command 'hs-global-show))
+     (setq this-command 'davidc-hs-global-show))
     (_ (hs-hide-all))))
 
 
