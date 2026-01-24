@@ -420,7 +420,7 @@
 (global-set-key (kbd "<f7>") 'whitespace-cleanup)
 
 ;; Increase/decrease font size.
-(global-set-key (kbd "<f9>") 'text-scale-decrease)
+(global-set-key (kbd "S-<f12>") 'text-scale-decrease)
 (global-set-key (kbd "<f12>") 'text-scale-increase)
 
 ;; Show the Interative Menu (IMenu) for the currently active buffer.
