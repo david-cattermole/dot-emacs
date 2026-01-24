@@ -417,7 +417,7 @@
 
 ;; Display and remove excessive whitespace.
 (global-set-key (kbd "<f6>") 'whitespace-mode)
-(global-set-key (kbd "<f7>") 'whitespace-cleanup)
+(global-set-key (kbd "S-<f6>") 'whitespace-cleanup)
 
 ;; Increase/decrease font size.
 (global-set-key (kbd "S-<f12>") 'text-scale-decrease)
