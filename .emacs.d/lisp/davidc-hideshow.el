@@ -10,6 +10,8 @@
 ;; subtle ways.
 (defun davidc-hs-cycle (&optional level)
   (interactive "p")
+  (unless hs-minor-mode
+    (hs-minor-mode 1))
   (let (message-log-max
         (inhibit-message t))
     (if (= level 1)
@@ -37,6 +39,8 @@
 ;; Toggles the hide-show cycle for the entire buffer.
 (defun davidc-hs-global-cycle ()
   (interactive)
+  (unless hs-minor-mode
+    (hs-minor-mode 1))
   (pcase last-command
     ('davidc-hs-global-cycle
      (save-excursion (hs-show-all))
