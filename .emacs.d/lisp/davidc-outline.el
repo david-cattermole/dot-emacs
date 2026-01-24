@@ -16,7 +16,7 @@
 ;; - Smart three-state cycling (Folded -> Children -> Subtree -> repeat).
 ;; - Language-specific folding patterns (Python, C/C++, Rust, MEL).
 ;; - Generic comment block folding (only folds the first line of multi-line blocks).
-;; - SHIFT-TAB to cycle local fold state, CTRL-= to toggle global visibility.
+;; - CTRL-- to cycle local fold state, CTRL-= to toggle global visibility.
 
 ;;; Code:
 
@@ -328,7 +328,7 @@ between top-level and nested constructs is less important."
 
 Keybindings:
 
-- SHIFT-TAB (<backtab>): Cycle through fold states for current heading.
+- CTRL-- (C--): Cycle through fold states for current heading.
   (Folded -> Children -> Subtree -> Folded)
 
 - CTRL-= (C-=): Toggle global visibility for entire buffer.
@@ -338,7 +338,7 @@ Scope limitation:
 Only applies in prog-mode derived buffers to avoid conflicts with other
 modes that use TAB/SHIFT-TAB for different purposes (e.g., org-mode, text-mode)."
   (when (derived-mode-p 'prog-mode)
-    (local-set-key (kbd "<backtab>") 'davidc-outline-toggle)
+    (local-set-key (kbd "C--") 'davidc-outline-toggle)
     (local-set-key (kbd "C-=") 'davidc-outline-toggle-global)))
 
 (provide 'davidc-outline)
