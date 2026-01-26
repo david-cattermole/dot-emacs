@@ -67,4 +67,14 @@
                  (buffer-substring (overlay-start ov)
                                    (overlay-end ov)))))
 
+;; Expand when using a `goto-line` function (like it does in search
+;; mode).
+;;
+;; https://www.emacswiki.org/emacs/HideShow#h5o-9
+(defadvice goto-line (after expand-after-goto-line
+                            activate compile)
+  "hideshow-expand affected block when using goto-line in a collapsed buffer"
+  (save-excursion
+    (hs-show-block)))
+
 (provide 'davidc-hideshow)
