@@ -1071,6 +1071,11 @@ Different computers can use different default values by customizing this variabl
   ;; Custom hideshow behaviour for Python mode.
   (add-hook 'python-mode-hook #'davidc-python-hideshow-setup)
   (add-hook 'python-ts-mode-hook #'davidc-python-hideshow-setup)
+
+  ;; Custom hideshow behaviour for C++ mode.
+  (add-hook 'c++-mode-hook #'davidc-cpp-hideshow-setup)
+  (add-hook 'c++-ts-mode-hook #'davidc-cpp-hideshow-setup)
+  (add-hook 'c-mode-hook #'davidc-cpp-hideshow-setup)
   )
 
 

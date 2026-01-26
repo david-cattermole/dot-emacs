@@ -147,4 +147,31 @@ Modules will not be hidden when running `hs-hide-all'."
     (setq-local hs-hide-all-non-comment-function
                 #'davidc-rust-hs-hide-all-non-module)))
 
+(defun davidc-cpp-hs-hide-all-non-namespace ()
+  "Hide all C++ blocks except namespace definitions.
+This function is meant to be used as `hs-hide-all-non-comment-function'
+for C++ mode."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "{" nil t)
+      (goto-char (match-beginning 0))
+      (when (funcall hs-looking-at-block-start-p-func)
+        ;; Check if this is NOT a namespace definition.
+        (unless (save-excursion
+                  (beginning-of-line)
+                  (looking-at (rx line-start
+                                  (* space)
+                                  "namespace"
+                                  (or (+ space) line-end))))
+          (hs-hide-block-at-point t)))
+      ;; Move past this { to continue searching.
+      (forward-char 1))))
+
+(defun davidc-cpp-hideshow-setup ()
+  "Set up custom hideshow behaviour for C++ mode.
+Namespaces will not be hidden when running `hs-hide-all'."
+  (when (derived-mode-p 'c++-mode 'c++-ts-mode 'c-mode)
+    (setq-local hs-hide-all-non-comment-function
+                #'davidc-cpp-hs-hide-all-non-namespace)))
+
 (provide 'davidc-hideshow)
