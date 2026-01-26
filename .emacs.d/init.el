@@ -349,6 +349,10 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The color theme of Emacs.
+;;
+;; TODO: Make the option of the different theme a custom option, so we
+;; can have different computers use different values by default at
+;; start-up.
 (davidc-theme-tsdh-dark)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
