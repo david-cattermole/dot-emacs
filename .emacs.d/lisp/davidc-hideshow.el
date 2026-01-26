@@ -77,4 +77,25 @@
   (save-excursion
     (hs-show-block)))
 
+(defun davidc-python-hs-hide-all-non-class ()
+  "Hide all Python blocks except class definitions.
+This function is meant to be used as `hs-hide-all-non-comment-function'
+for Python mode."
+  (save-excursion
+    (goto-char (point-min))
+    (while (python-nav-forward-block)
+      (when (funcall hs-looking-at-block-start-p-func)
+        ;; Check if this is NOT a class definition
+        (unless (looking-at (rx line-start (* space) "class" (+ space)))
+          (hs-hide-block-at-point t))
+        ;; Move past the current block to continue searching
+        (goto-char (match-end 0))))))
+
+(defun davidc-python-hideshow-setup ()
+  "Set up custom hideshow behaviour for Python mode.
+Classes will not be hidden when running `hs-hide-all'."
+  (when (derived-mode-p 'python-mode 'python-ts-mode)
+    (setq-local hs-hide-all-non-comment-function
+                #'davidc-python-hs-hide-all-non-class)))
+
 (provide 'davidc-hideshow)

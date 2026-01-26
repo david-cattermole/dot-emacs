@@ -1072,6 +1072,10 @@
                    nil  ;; LOOKING-AT-BLOCK-START-P-FUNC
                    ))
     )
+
+  ;; Custom hideshow behaviour for Python mode.
+  (add-hook 'python-mode-hook #'davidc-python-hideshow-setup)
+  (add-hook 'python-ts-mode-hook #'davidc-python-hideshow-setup)
   )
 
 
