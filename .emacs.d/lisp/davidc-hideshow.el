@@ -98,4 +98,53 @@ Classes will not be hidden when running `hs-hide-all'."
     (setq-local hs-hide-all-non-comment-function
                 #'davidc-python-hs-hide-all-non-class)))
 
+(defun davidc-rust-hs-hide-all-non-module ()
+  "Hide all Rust blocks except module definitions.
+This function is meant to be used as `hs-hide-all-non-comment-function'
+for Rust mode."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "{" nil t)
+      (goto-char (match-beginning 0))
+      (when (funcall hs-looking-at-block-start-p-func)
+        ;; Check if this is NOT a module definition
+        (unless (save-excursion
+                  (beginning-of-line)
+                  (looking-at (rx line-start
+                                  (* space)
+                                  (? (or "pub" "pub(crate)" "pub(super)") (+ space))
+                                  (? (or "unsafe" "async") (+ space))
+                                  "mod"
+                                  (+ space))))
+          (hs-hide-block-at-point t)))
+      ;; Move past this { to continue searching
+      (forward-char 1))))
+
+(defun davidc-rust-hideshow-setup ()
+  "Set up custom hideshow behaviour for Rust mode.
+Modules will not be hidden when running `hs-hide-all'."
+
+  ;; Add code folding regular expressions for Rust
+  ;;
+  ;; Based on the Ruby implementation here;
+  ;; https://gist.github.com/Karina7777/e6207b027af0b391ff38
+  (when davidc-config-use-rust-mode
+    (add-to-list 'hs-special-modes-alist
+                 '(rust-mode
+                   "{" ;; Block start.
+                   "}" ;; Block end.
+                   ;; NOTE: Does not handle comments with "/* */" style.
+                   "//" ;; Comment start.
+                   forward-sexp ;; FORWARD-SEXP-FUNC
+                   hs-c-like-adjust-block-beginning ;; ADJUST-BEG-FUNC
+                   nil  ;; FIND-BLOCK-BEGINNING-FUNC
+                   nil  ;; FIND-NEXT-BLOCK-FUNC
+                   nil  ;; LOOKING-AT-BLOCK-START-P-FUNC
+                   ))
+    )
+
+  (when (derived-mode-p 'rust-mode 'rust-ts-mode)
+    (setq-local hs-hide-all-non-comment-function
+                #'davidc-rust-hs-hide-all-non-module)))
+
 (provide 'davidc-hideshow)

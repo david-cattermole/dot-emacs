@@ -1064,24 +1064,9 @@ Different computers can use different default values by customizing this variabl
   ;; Cycling the active-block-at-point's folding.
   (global-set-key (kbd "C--") 'davidc-hs-cycle)
 
-  ;; Add code folding regular expressions for Rust
-  ;;
-  ;; Based on the Ruby implementation here;
-  ;; https://gist.github.com/Karina7777/e6207b027af0b391ff38
-  (when davidc-config-use-rust-mode
-    (add-to-list 'hs-special-modes-alist
-                 '(rust-mode
-                   "{" ;; Block start.
-                   "}" ;; Block end.
-                   ;; NOTE: Does not handle comments with "/* */" style.
-                   "//" ;; Comment start.
-                   forward-sexp ;; FORWARD-SEXP-FUNC
-                   hs-c-like-adjust-block-beginning ;; ADJUST-BEG-FUNC
-                   nil  ;; FIND-BLOCK-BEGINNING-FUNC
-                   nil  ;; FIND-NEXT-BLOCK-FUNC
-                   nil  ;; LOOKING-AT-BLOCK-START-P-FUNC
-                   ))
-    )
+  ;; Custom hideshow behaviour for Rust mode.
+  (add-hook 'rust-mode-hook #'davidc-rust-hideshow-setup)
+  (add-hook 'rust-ts-mode-hook #'davidc-rust-hideshow-setup)
 
   ;; Custom hideshow behaviour for Python mode.
   (add-hook 'python-mode-hook #'davidc-python-hideshow-setup)
