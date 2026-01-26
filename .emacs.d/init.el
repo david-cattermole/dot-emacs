@@ -215,6 +215,13 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-color-theme 'tsdh-dark
+  "Color theme to use for Emacs.
+Different computers can use different default values by customizing this variable."
+  :type '(choice (const :tag "TSDH Dark" tsdh-dark)
+                 (const :tag "Modus Vivendi" modus-vivendi))
+  :group 'davidc-config)
+
 
 ;; Move customization variables to a separate file and load it
 (setq *custom-vars-file* (locate-user-emacs-file "custom-vars.el"))
@@ -350,10 +357,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The color theme of Emacs.
 ;;
-;; TODO: Make the option of the different theme a custom option, so we
-;; can have different computers use different values by default at
-;; start-up.
-(davidc-theme-tsdh-dark)
+;; The theme can be customized via the davidc-config-color-theme
+;; variable, allowing different computers to use different default
+;; themes.
+(pcase davidc-config-color-theme
+  ('tsdh-dark (davidc-theme-tsdh-dark))
+  ('modus-vivendi (davidc-theme-modus-vivendi))
+  (_ (davidc-theme-tsdh-dark)))  ; Default fallback
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; VIM Bindings

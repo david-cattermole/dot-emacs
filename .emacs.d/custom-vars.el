@@ -101,6 +101,7 @@
  '(davidc-config-use-ibuffer t)
  '(davidc-config-use-icomplete nil)
  '(davidc-config-use-dape t)
+ '(davidc-config-color-theme 'modus-vivendi)
  '(project-switch-commands
    '(
      ;; (project-find-file "Find file")
