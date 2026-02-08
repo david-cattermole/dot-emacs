@@ -113,8 +113,10 @@ for Rust mode."
                   (looking-at (rx line-start
                                   (* space)
                                   (? (or "pub" "pub(crate)" "pub(super)") (+ space))
-                                  (? (or "unsafe" "async") (+ space))
-                                  "mod"
+                                  (? (or "unsafe" "async" "const" "extern") (+ space))
+                                  ;; TODO: Do we need to handle angle
+                                  ;; braces "<>", or any other syntax?
+                                  (or "impl" "trait" "mod")
                                   (+ space))))
           (hs-hide-block-at-point t)))
       ;; Move past this { to continue searching
