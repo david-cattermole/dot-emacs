@@ -1395,3 +1395,24 @@ Different computers can use different default values by customizing this variabl
   (defalias 'dape-attach 'davidc-dape-attach)
 
   )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Term Mode Keybinding
+;;
+;; Toggle between term-char-mode and term-line-mode.
+;;
+;; https://joelmccracken.github.io/entries/switching-between-term-mode-and-line-mode-in-emacs-term/
+(require 'term)
+
+(defun davidc-term-toggle-mode ()
+  "Toggle between `term-line-mode' and `term-char-mode'."
+  (interactive)
+  (message "davidc-term-toggle-mode called. Current mode: %s" major-mode) ; Debug message
+  (if (term-in-line-mode)
+      (term-char-mode)
+    (term-line-mode)))
+
+(define-key term-mode-map (kbd "C-c C-j") 'davidc-term-toggle-mode)
+(define-key term-mode-map (kbd "C-c C-k") 'davidc-term-toggle-mode)
+(define-key term-raw-map (kbd "C-c C-j") 'davidc-term-toggle-mode)
+(define-key term-raw-map (kbd "C-c C-k") 'davidc-term-toggle-mode)
