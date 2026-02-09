@@ -1407,7 +1407,6 @@ Different computers can use different default values by customizing this variabl
 (defun davidc-term-toggle-mode ()
   "Toggle between `term-line-mode' and `term-char-mode'."
   (interactive)
-  (message "davidc-term-toggle-mode called. Current mode: %s" major-mode) ; Debug message
   (if (term-in-line-mode)
       (term-char-mode)
     (term-line-mode)))
