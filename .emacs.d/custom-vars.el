@@ -90,6 +90,7 @@
  '(davidc-config-use-hideshow t)
  '(davidc-config-use-outline nil)
  '(davidc-config-use-dynamic-abbreviations t)
+ '(davidc-config-use-skeletons t)
  '(davidc-config-use-string-inflection t)
  '(davidc-config-use-project t)
  '(davidc-config-use-dumb-jump t)

@@ -160,6 +160,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-skeletons nil
+  "Use skeleton snippets."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-string-inflection nil
   "Use string-inflection for case conversion."
   :type 'boolean
@@ -1093,6 +1098,17 @@ Different computers can use different default values by customizing this variabl
    (global-set-key (kbd "C-<return>") 'dabbrev-expand)
    (define-key minibuffer-local-map (kbd "C-<return>") 'dabbrev-expand)
    )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Skeleton Snippets (skeletons).
+;;
+;; https://www.emacswiki.org/emacs/SkeletonMode
+;;
+(when davidc-config-use-skeletons
+  (require 'davidc-skeletons)
+  (global-set-key (kbd "<f7>") 'davidc-skeleton-insert)
+  )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
