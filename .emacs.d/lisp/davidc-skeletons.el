@@ -26,6 +26,83 @@
   "    }\n"
   "}" > \n)
 
+(define-skeleton davidc-skeleton-rust-fn
+  "Insert a Rust function definition."
+  "Function name: "
+  "fn " str "() {\n"
+  "    " _ "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-fn-return
+  "Insert a Rust function with return type."
+  "Function name: "
+  "fn " str "() -> " (skeleton-read "Return type: ") " {\n"
+  "    " _ "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-struct
+  "Insert a Rust struct definition."
+  "Struct name: "
+  "struct " str " {\n"
+  "    " _ "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-enum
+  "Insert a Rust enum definition."
+  "Enum name: "
+  "enum " str " {\n"
+  "    " _ "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-impl
+  "Insert a Rust impl block."
+  "Type name: "
+  "impl " str " {\n"
+  "    " _ "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-match
+  "Insert a Rust match statement."
+  nil
+  > "match " _ " {\n"
+  "    " "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-if-let
+  "Insert a Rust if let statement."
+  nil
+  > "if let " _ " = " " {\n"
+  "    " "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-for
+  "Insert a Rust for loop."
+  "Iterator variable: "
+  > "for " str " in " _ " {\n"
+  "    " "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-while
+  "Insert a Rust while loop."
+  nil
+  > "while " _ " {\n"
+  "    " "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-result
+  "Insert a Rust function returning Result."
+  "Function name: "
+  "fn " str "() -> Result<" (skeleton-read "Ok type: ") ", " (skeleton-read "Err type: ") "> {\n"
+  "    " _ "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-rust-option
+  "Insert a Rust function returning Option."
+  "Function name: "
+  "fn " str "() -> Option<" (skeleton-read "Type: ") "> {\n"
+  "    " _ "\n"
+  "}" > \n)
+
 ;;; ------------------------------------------------------------------
 ;;; C / C++ SKELETONS
 ;;; ------------------------------------------------------------------
@@ -162,13 +239,103 @@ You need to give the quotation marks or the angles yourself."
   "    def __init__(self):\n"
   "        " _ "\n" > \n)
 
+(define-skeleton davidc-skeleton-python-function
+  "Insert a Python function definition."
+  "Function name: "
+  "def " str "():\n"
+  "    " _ "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-function-docstring
+  "Insert a Python function with docstring."
+  "Function name: "
+  "def " str "():\n"
+  "    \"\"\"" (skeleton-read "Docstring: ") "\"\"\"\n"
+  "    " _ "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-method
+  "Insert a Python method definition."
+  "Method name: "
+  "def " str "(self):\n"
+  "    " _ "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-for
+  "Insert a Python for loop."
+  "Loop variable: "
+  > "for " str " in " _ ":\n"
+  "    " "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-while
+  "Insert a Python while loop."
+  nil
+  > "while " _ ":\n"
+  "    " "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-if
+  "Insert a Python if statement."
+  nil
+  > "if " _ ":\n"
+  "    " "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-if-else
+  "Insert a Python if-else statement."
+  nil
+  > "if " _ ":\n"
+  "    " "\n"
+  > "else:\n"
+  "    " "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-try-except
+  "Insert a Python try-except block."
+  "Exception type (or leave empty for generic): "
+  > "try:\n"
+  "    " _ "\n"
+  > "except" (if (string= str "") "" (concat " " str)) ":\n"
+  "    " "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-with
+  "Insert a Python with statement."
+  nil
+  > "with " _ " as :\n"
+  "    " "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-main
+  "Insert a Python if __name__ == '__main__' block."
+  nil
+  > "if __name__ == \"__main__\":\n"
+  "    " _ "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-dataclass
+  "Insert a Python dataclass definition."
+  "Class name: "
+  "from dataclasses import dataclass\n\n"
+  "@dataclass\n"
+  "class " str ":\n"
+  "    " _ "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-async-function
+  "Insert a Python async function definition."
+  "Function name: "
+  "async def " str "():\n"
+  "    " _ "\n" > \n)
+
 ;;; ------------------------------------------------------------------
 ;;; SMART SELECTION
 ;;; ------------------------------------------------------------------
 
 (defvar davidc-skeleton-registry
   '((rust-mode . (davidc-skeleton-rust-main
-                  davidc-skeleton-rust-test))
+                  davidc-skeleton-rust-test
+                  davidc-skeleton-rust-fn
+                  davidc-skeleton-rust-fn-return
+                  davidc-skeleton-rust-struct
+                  davidc-skeleton-rust-enum
+                  davidc-skeleton-rust-impl
+                  davidc-skeleton-rust-match
+                  davidc-skeleton-rust-if-let
+                  davidc-skeleton-rust-for
+                  davidc-skeleton-rust-while
+                  davidc-skeleton-rust-result
+                  davidc-skeleton-rust-option))
     (c-mode    . (davidc-skeleton-c-main
                   davidc-skeleton-c-include-guard
                   davidc-skeleton-c-include
@@ -186,7 +353,19 @@ You need to give the quotation marks or the angles yourself."
                   davidc-skeleton-c-loop-while
                   davidc-skeleton-cc-endl))
     (python-mode . (davidc-skeleton-python-script
-                    davidc-skeleton-python-class)))
+                    davidc-skeleton-python-class
+                    davidc-skeleton-python-function
+                    davidc-skeleton-python-function-docstring
+                    davidc-skeleton-python-method
+                    davidc-skeleton-python-for
+                    davidc-skeleton-python-while
+                    davidc-skeleton-python-if
+                    davidc-skeleton-python-if-else
+                    davidc-skeleton-python-try-except
+                    davidc-skeleton-python-with
+                    davidc-skeleton-python-main
+                    davidc-skeleton-python-dataclass
+                    davidc-skeleton-python-async-function)))
   "Alist mapping major modes to a list of skeleton command symbols.")
 
 (defun davidc-skeleton--get-relevant-definitions ()
