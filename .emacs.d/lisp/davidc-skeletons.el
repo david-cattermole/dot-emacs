@@ -323,53 +323,51 @@ You need to give the quotation marks or the angles yourself."
 ;;; ------------------------------------------------------------------
 
 (defvar davidc-skeleton-registry
-  '((rust-mode . (davidc-skeleton-rust-main
-                  davidc-skeleton-rust-test
-                  davidc-skeleton-rust-fn
-                  davidc-skeleton-rust-fn-return
-                  davidc-skeleton-rust-struct
-                  davidc-skeleton-rust-enum
-                  davidc-skeleton-rust-impl
-                  davidc-skeleton-rust-match
-                  davidc-skeleton-rust-if-let
-                  davidc-skeleton-rust-for
-                  davidc-skeleton-rust-while
-                  davidc-skeleton-rust-result
-                  davidc-skeleton-rust-option))
-    (c-mode    . (davidc-skeleton-c-main
-                  davidc-skeleton-c-include-guard
-                  davidc-skeleton-c-include
-                  davidc-skeleton-c-comment
-                  davidc-skeleton-c-printf
-                  davidc-skeleton-c-printf-newline
-                  davidc-skeleton-c-printf-flush
-                  davidc-skeleton-c-loop-for
-                  davidc-skeleton-c-loop-while))
-    (c++-mode  . (davidc-skeleton-cc-main
-                  davidc-skeleton-c-include
-                  davidc-skeleton-c-include-guard
-                  davidc-skeleton-c-comment
-                  davidc-skeleton-c-loop-for
-                  davidc-skeleton-c-loop-while
-                  davidc-skeleton-cc-endl))
-    (python-mode . (davidc-skeleton-python-script
-                    davidc-skeleton-python-class
-                    davidc-skeleton-python-function
-                    davidc-skeleton-python-docstring
-                    davidc-skeleton-python-method
-                    davidc-skeleton-python-for
-                    davidc-skeleton-python-while
-                    davidc-skeleton-python-if
-                    davidc-skeleton-python-if-else
-                    davidc-skeleton-python-try-except
-                    davidc-skeleton-python-with
-                    davidc-skeleton-python-main
-                    davidc-skeleton-python-dataclass
-                    davidc-skeleton-python-async-function)))
-  "Alist mapping major modes to a list of skeleton command symbols.")
+  '((rust-mode . (("main"      . davidc-skeleton-rust-main)
+                  ("test"      . davidc-skeleton-rust-test)
+                  ("fn"        . davidc-skeleton-rust-fn)
+                  ("fn-return" . davidc-skeleton-rust-fn-return)
+                  ("struct"    . davidc-skeleton-rust-struct)
+                  ("enum"      . davidc-skeleton-rust-enum)
+                  ("impl"      . davidc-skeleton-rust-impl)
+                  ("match"     . davidc-skeleton-rust-match)
+                  ("if-let"    . davidc-skeleton-rust-if-let)
+                  ("for"       . davidc-skeleton-rust-for)
+                  ("while"     . davidc-skeleton-rust-while)))
+    (c-mode    . (("main"          . davidc-skeleton-c-main)
+                  ("include-guard" . davidc-skeleton-c-include-guard)
+                  ("include"       . davidc-skeleton-c-include)
+                  ("comment"       . davidc-skeleton-c-comment)
+                  ("printf"        . davidc-skeleton-c-printf)
+                  ("printf-newline" . davidc-skeleton-c-printf-newline)
+                  ("printf-flush"  . davidc-skeleton-c-printf-flush)
+                  ("for"           . davidc-skeleton-c-loop-for)
+                  ("while"         . davidc-skeleton-c-loop-while)))
+    (c++-mode  . (("main"          . davidc-skeleton-cc-main)
+                  ("include"       . davidc-skeleton-c-include)
+                  ("include-guard" . davidc-skeleton-c-include-guard)
+                  ("comment"       . davidc-skeleton-c-comment)
+                  ("for"           . davidc-skeleton-c-loop-for)
+                  ("while"         . davidc-skeleton-c-loop-while)
+                  ("endl"          . davidc-skeleton-cc-endl)))
+    (python-mode . (("script"         . davidc-skeleton-python-script)
+                    ("class"          . davidc-skeleton-python-class)
+                    ("function"       . davidc-skeleton-python-function)
+                    ("docstring"      . davidc-skeleton-python-docstring)
+                    ("method"         . davidc-skeleton-python-method)
+                    ("for"            . davidc-skeleton-python-for)
+                    ("while"          . davidc-skeleton-python-while)
+                    ("if"             . davidc-skeleton-python-if)
+                    ("if-else"        . davidc-skeleton-python-if-else)
+                    ("try-except"     . davidc-skeleton-python-try-except)
+                    ("with"           . davidc-skeleton-python-with)
+                    ("main"           . davidc-skeleton-python-main)
+                    ("dataclass"      . davidc-skeleton-python-dataclass)
+                    ("async-function" . davidc-skeleton-python-async-function))))
+  "Alist mapping major modes to an alist of (SHORT-NAME . SKELETON-FUNCTION).")
 
 (defun davidc-skeleton--get-relevant-definitions ()
-  "Return a list of skeleton symbols relevant to the current major mode.
+  "Return an alist of (SHORT-NAME . SKELETON-FUNCTION) relevant to the current major mode.
 Checks derived modes so that 'c++-ts-mode' inherits 'c++-mode' skeletons."
   (let ((candidates '()))
     (dolist (entry davidc-skeleton-registry)
@@ -385,13 +383,12 @@ Checks derived modes so that 'c++-ts-mode' inherits 'c++-mode' skeletons."
   "Prompt user with completing-read to insert a skeleton relevant to the current mode."
   (interactive)
   (let* ((candidates (davidc-skeleton--get-relevant-definitions))
-         ;; Convert symbols to strings for completing-read
-         (candidate-strings (mapcar #'symbol-name candidates))
+         (names (mapcar #'car candidates))
          (choice (if candidates
-                     (completing-read "Insert skeleton: " candidate-strings nil t)
+                     (completing-read "Insert skeleton: " names nil t)
                    nil)))
     (if choice
-        (funcall (intern choice))
+        (funcall (cdr (assoc choice candidates)))
       (message "No skeletons defined for %s" major-mode))))
 
 (provide 'davidc-skeletons)
