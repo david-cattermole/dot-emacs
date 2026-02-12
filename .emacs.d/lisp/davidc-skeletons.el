@@ -40,6 +40,20 @@
   "    " _ "\n"
   "}" > \n)
 
+;; (define-skeleton davidc-skeleton-rust-result
+;;   "Insert a Rust function returning Result."
+;;   "Function name: "
+;;   "fn " str "() -> Result<" (skeleton-read "Ok type: ") ", " (skeleton-read "Err type: ") "> {\n"
+;;   "    " _ "\n"
+;;   "}" > \n)
+
+;; (define-skeleton davidc-skeleton-rust-option
+;;   "Insert a Rust function returning Option."
+;;   "Function name: "
+;;   "fn " str "() -> Option<" (skeleton-read "Type: ") "> {\n"
+;;   "    " _ "\n"
+;;   "}" > \n)
+
 (define-skeleton davidc-skeleton-rust-struct
   "Insert a Rust struct definition."
   "Struct name: "
@@ -64,44 +78,32 @@
 (define-skeleton davidc-skeleton-rust-match
   "Insert a Rust match statement."
   nil
-  > "match " _ " {\n"
-  "    " "\n"
-  "}" > \n)
+  > "match " _ " {" \n
+  > "    " \n
+  > "}" \n)
+
+;; TODO: Write a "match" for handling an Option.
 
 (define-skeleton davidc-skeleton-rust-if-let
   "Insert a Rust if let statement."
-  nil
-  > "if let " _ " = " " {\n"
-  "    " "\n"
-  "}" > \n)
+  "Outer variable: "
+  > "if let Some(" (skeleton-read "Inner variable: ") ") = " str " {" \n
+  > "    " _ \n
+  > "}" \n)
 
 (define-skeleton davidc-skeleton-rust-for
   "Insert a Rust for loop."
-  "Iterator variable: "
-  > "for " str " in " _ " {\n"
-  "    " "\n"
-  "}" > \n)
+  "Iteration variable: "
+  > "for " str " in " (skeleton-read "Iterable: ") " {" \n
+  > "    " _ \n
+  > "}" \n)
 
 (define-skeleton davidc-skeleton-rust-while
   "Insert a Rust while loop."
-  nil
-  > "while " _ " {\n"
-  "    " "\n"
-  "}" > \n)
-
-(define-skeleton davidc-skeleton-rust-result
-  "Insert a Rust function returning Result."
-  "Function name: "
-  "fn " str "() -> Result<" (skeleton-read "Ok type: ") ", " (skeleton-read "Err type: ") "> {\n"
-  "    " _ "\n"
-  "}" > \n)
-
-(define-skeleton davidc-skeleton-rust-option
-  "Insert a Rust function returning Option."
-  "Function name: "
-  "fn " str "() -> Option<" (skeleton-read "Type: ") "> {\n"
-  "    " _ "\n"
-  "}" > \n)
+  "While condition: "
+  > "while " str " {" \n
+  > "    " _ \n
+  > "}" \n)
 
 ;;; ------------------------------------------------------------------
 ;;; C / C++ SKELETONS
@@ -109,7 +111,7 @@
 ;;
 ;; Some of these skeletons come from Stefan Kamphausen (www.skamphausen.de):
 ;; https://github.com/ska2342/ska-init-files/blob/master/dot.emacs.d/init.el
-;; 
+;;
 
 (define-skeleton davidc-skeleton-c-main
   "Insert a standard C main function with includes."
@@ -132,7 +134,7 @@
 
 
 (define-skeleton davidc-skeleton-c-include
-  "Insert a precompiler include statement, asking for what to include.       
+  "Insert a precompiler include statement, asking for what to include.
 You need to give the quotation marks or the angles yourself."
   "include what? "
   > "#include " str
@@ -232,76 +234,16 @@ You need to give the quotation marks or the angles yourself."
   "if __name__ == \"__main__\":\n"
   "    main()" > \n)
 
-(define-skeleton davidc-skeleton-python-class
-  "Insert a Python class definition."
-  "Class Name: "
-  "class " str ":\n"
-  "    def __init__(self):\n"
-  "        " _ "\n" > \n)
-
 (define-skeleton davidc-skeleton-python-function
   "Insert a Python function definition."
   "Function name: "
   "def " str "():\n"
   "    " _ "\n" > \n)
 
-(define-skeleton davidc-skeleton-python-function-docstring
-  "Insert a Python function with docstring."
+(define-skeleton davidc-skeleton-python-async-function
+  "Insert a Python async function definition."
   "Function name: "
-  "def " str "():\n"
-  "    \"\"\"" (skeleton-read "Docstring: ") "\"\"\"\n"
-  "    " _ "\n" > \n)
-
-(define-skeleton davidc-skeleton-python-method
-  "Insert a Python method definition."
-  "Method name: "
-  "def " str "(self):\n"
-  "    " _ "\n" > \n)
-
-(define-skeleton davidc-skeleton-python-for
-  "Insert a Python for loop."
-  "Loop variable: "
-  > "for " str " in " _ ":\n"
-  "    " "\n" > \n)
-
-(define-skeleton davidc-skeleton-python-while
-  "Insert a Python while loop."
-  nil
-  > "while " _ ":\n"
-  "    " "\n" > \n)
-
-(define-skeleton davidc-skeleton-python-if
-  "Insert a Python if statement."
-  nil
-  > "if " _ ":\n"
-  "    " "\n" > \n)
-
-(define-skeleton davidc-skeleton-python-if-else
-  "Insert a Python if-else statement."
-  nil
-  > "if " _ ":\n"
-  "    " "\n"
-  > "else:\n"
-  "    " "\n" > \n)
-
-(define-skeleton davidc-skeleton-python-try-except
-  "Insert a Python try-except block."
-  "Exception type (or leave empty for generic): "
-  > "try:\n"
-  "    " _ "\n"
-  > "except" (if (string= str "") "" (concat " " str)) ":\n"
-  "    " "\n" > \n)
-
-(define-skeleton davidc-skeleton-python-with
-  "Insert a Python with statement."
-  nil
-  > "with " _ " as :\n"
-  "    " "\n" > \n)
-
-(define-skeleton davidc-skeleton-python-main
-  "Insert a Python if __name__ == '__main__' block."
-  nil
-  > "if __name__ == \"__main__\":\n"
+  "async def " str "():\n"
   "    " _ "\n" > \n)
 
 (define-skeleton davidc-skeleton-python-dataclass
@@ -312,10 +254,68 @@ You need to give the quotation marks or the angles yourself."
   "class " str ":\n"
   "    " _ "\n" > \n)
 
-(define-skeleton davidc-skeleton-python-async-function
-  "Insert a Python async function definition."
-  "Function name: "
-  "async def " str "():\n"
+(define-skeleton davidc-skeleton-python-class
+  "Insert a Python class definition."
+  "Class Name: "
+  "class " str ":\n"
+  "    def __init__(self):\n"
+  "        " _ "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-method
+  "Insert a Python method definition."
+  "Method name: "
+  "def " str "(self):\n"
+  "    " _ "\n" > \n)
+
+(define-skeleton davidc-skeleton-python-docstring
+  "Insert a Python docstring."
+  "Docstring: "
+  "\"\"\"" str "\"\"\"\n" \n)
+
+(define-skeleton davidc-skeleton-python-for
+  "Insert a Python for loop."
+  "Loop variable: "
+  "for " str " in " (skeleton-read "Iterable: ") ":" \n
+  > "    " _ \n)
+
+(define-skeleton davidc-skeleton-python-while
+  "Insert a Python while loop."
+  "While condition: "
+  "while " str ":" \n
+  > "    " _ \n)
+
+(define-skeleton davidc-skeleton-python-if
+  "Insert a Python if statement."
+  "If condition: "
+  "if " str ":" \n
+  > "    " _ \n)
+
+(define-skeleton davidc-skeleton-python-if-else
+  "Insert a Python if-else statement."
+  "If condition: "
+  "if " str ":" \n
+  > "    " _ \n
+  "else:" \n
+  > "    pass" \n)
+
+(define-skeleton davidc-skeleton-python-try-except
+  "Insert a Python try-except block."
+  "Exception type: "
+  "try:" \n
+  > "    " _ \n
+  "except " str " as e:" \n
+  > "    raise" \n)
+
+(define-skeleton davidc-skeleton-python-with
+  "Insert a Python with statement."
+  "Context object: "
+  "with " str " as name:" \n
+  > "    " _ \n)
+
+(define-skeleton davidc-skeleton-python-main
+  "Insert a Python if __name__ == '__main__' block."
+  nil
+  > "if __name__ == \"__main__\":\n"
   "    " _ "\n" > \n)
 
 ;;; ------------------------------------------------------------------
@@ -355,7 +355,7 @@ You need to give the quotation marks or the angles yourself."
     (python-mode . (davidc-skeleton-python-script
                     davidc-skeleton-python-class
                     davidc-skeleton-python-function
-                    davidc-skeleton-python-function-docstring
+                    davidc-skeleton-python-docstring
                     davidc-skeleton-python-method
                     davidc-skeleton-python-for
                     davidc-skeleton-python-while
