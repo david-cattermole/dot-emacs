@@ -319,6 +319,139 @@ You need to give the quotation marks or the angles yourself."
   "    " _ "\n" > \n)
 
 ;;; ------------------------------------------------------------------
+;;; BASH SKELETONS
+;;; ------------------------------------------------------------------
+
+(define-skeleton davidc-skeleton-bash-script
+  "Insert a Bash script header with main structure."
+  "Description: "
+  "#!/usr/bin/env bash\n"
+  "# " str | "Script description here." \n
+  "set -euo pipefail\n\n"
+  _ "\n")
+
+(define-skeleton davidc-skeleton-bash-function
+  "Insert a Bash function definition."
+  "Function name: "
+  str "() {\n"
+  "    " _ "\n"
+  "}" > \n)
+
+(define-skeleton davidc-skeleton-bash-variable
+  "Insert a Bash variable assignment."
+  "Variable name: "
+  str "=\"" _ "\"")
+
+(define-skeleton davidc-skeleton-bash-if
+  "Insert a Bash if statement."
+  "Condition: "
+  > "if [[ " str " ]]; then" \n
+  > "    " _ \n
+  > "fi" \n)
+
+(define-skeleton davidc-skeleton-bash-if-else
+  "Insert a Bash if-else statement."
+  "Condition: "
+  > "if [[ " str " ]]; then" \n
+  > "    " _ \n
+  > "else" \n
+  > "    :" \n
+  > "fi" \n)
+
+(define-skeleton davidc-skeleton-bash-for
+  "Insert a Bash for loop."
+  "Loop variable: "
+  > "for " str " in " (skeleton-read "List: ") "; do" \n
+  > "    " _ \n
+  > "done" \n)
+
+(define-skeleton davidc-skeleton-bash-while
+  "Insert a Bash while loop."
+  "Condition: "
+  > "while [[ " str " ]]; do" \n
+  > "    " _ \n
+  > "done" \n)
+
+(define-skeleton davidc-skeleton-bash-case
+  "Insert a Bash case statement."
+  "Variable: "
+  > "case \"$" str "\" in" \n
+  > "    " _ ")" \n
+  > "        ;;" \n
+  > "    *)" \n
+  > "        ;;" \n
+  > "esac" \n)
+
+(define-skeleton davidc-skeleton-bash-while-read
+  "Insert a Bash while-read loop for processing lines."
+  "Variable: "
+  > "while IFS= read -r " str "; do" \n
+  > "    " _ \n
+  > "done" \n)
+
+;;; ------------------------------------------------------------------
+;;; TCSH SKELETONS
+;;; ------------------------------------------------------------------
+
+(define-skeleton davidc-skeleton-tcsh-script
+  "Insert a tcsh script header."
+  "Description: "
+  "#!/usr/bin/env tcsh\n"
+  "# " str | "Script description here." \n
+  \n
+  _ "\n")
+
+(define-skeleton davidc-skeleton-tcsh-variable
+  "Insert a tcsh variable assignment."
+  "Variable name: "
+  "set " str " = \"" _ "\"")
+
+(define-skeleton davidc-skeleton-tcsh-env
+  "Insert a tcsh environment variable assignment."
+  "Variable name: "
+  "setenv " str " \"" _ "\"")
+
+(define-skeleton davidc-skeleton-tcsh-if
+  "Insert a tcsh if statement."
+  "Condition: "
+  > "if (" str ") then" \n
+  > "    " _ \n
+  > "endif" \n)
+
+(define-skeleton davidc-skeleton-tcsh-if-else
+  "Insert a tcsh if-else statement."
+  "Condition: "
+  > "if (" str ") then" \n
+  > "    " _ \n
+  > "else" \n
+  > "    " \n
+  > "endif" \n)
+
+(define-skeleton davidc-skeleton-tcsh-foreach
+  "Insert a tcsh foreach loop."
+  "Loop variable: "
+  > "foreach " str " (" (skeleton-read "List: ") ")" \n
+  > "    " _ \n
+  > "end" \n)
+
+(define-skeleton davidc-skeleton-tcsh-while
+  "Insert a tcsh while loop."
+  "Condition: "
+  > "while (" str ")" \n
+  > "    " _ \n
+  > "end" \n)
+
+(define-skeleton davidc-skeleton-tcsh-switch
+  "Insert a tcsh switch statement."
+  "Variable: "
+  > "switch ($" str ")" \n
+  > "    case " _ ":" \n
+  > "        breaksw" \n
+  > "    default:" \n
+  > "        breaksw" \n
+  > "endsw" \n)
+
+;;; ------------------------------------------------------------------
 ;;; SMART SELECTION
 ;;; ------------------------------------------------------------------
 
@@ -363,7 +496,24 @@ You need to give the quotation marks or the angles yourself."
                     ("with"           . davidc-skeleton-python-with)
                     ("main"           . davidc-skeleton-python-main)
                     ("dataclass"      . davidc-skeleton-python-dataclass)
-                    ("async-function" . davidc-skeleton-python-async-function))))
+                    ("async-function" . davidc-skeleton-python-async-function)))
+    (sh-mode     . (("bash-script"     . davidc-skeleton-bash-script)
+                    ("bash-function"   . davidc-skeleton-bash-function)
+                    ("bash-variable"   . davidc-skeleton-bash-variable)
+                    ("bash-if"         . davidc-skeleton-bash-if)
+                    ("bash-if-else"    . davidc-skeleton-bash-if-else)
+                    ("bash-for"        . davidc-skeleton-bash-for)
+                    ("bash-while"      . davidc-skeleton-bash-while)
+                    ("bash-case"       . davidc-skeleton-bash-case)
+                    ("bash-while-read" . davidc-skeleton-bash-while-read)
+                    ("tcsh-script"     . davidc-skeleton-tcsh-script)
+                    ("tcsh-variable"   . davidc-skeleton-tcsh-variable)
+                    ("tcsh-env"        . davidc-skeleton-tcsh-env)
+                    ("tcsh-if"         . davidc-skeleton-tcsh-if)
+                    ("tcsh-if-else"    . davidc-skeleton-tcsh-if-else)
+                    ("tcsh-foreach"    . davidc-skeleton-tcsh-foreach)
+                    ("tcsh-while"      . davidc-skeleton-tcsh-while)
+                    ("tcsh-switch"     . davidc-skeleton-tcsh-switch))))
   "Alist mapping major modes to an alist of (SHORT-NAME . SKELETON-FUNCTION).")
 
 (defun davidc-skeleton--get-relevant-definitions ()
