@@ -64,6 +64,7 @@
  '(davidc-config-override-ispell-binary t)
  '(davidc-config-override-rg-binary nil)
  '(davidc-config-use-evil nil)
+ '(davidc-config-use-magit nil)
  '(davidc-config-use-p4 nil)
  '(davidc-config-use-bat-mode t)
  '(davidc-config-use-glsl-mode t)

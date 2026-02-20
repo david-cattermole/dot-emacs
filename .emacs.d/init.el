@@ -30,6 +30,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-magit nil
+  "Use Magit Git client?"
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-p4 nil
   "Use P4 tool?"
   :type 'boolean
@@ -332,6 +337,7 @@ Different computers can use different default values by customizing this variabl
 (setq load-path (cons "~/.emacs.d/lisp/wgrep/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/p4/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/evil/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/magit/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/project/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/compat/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/my-common/" load-path))
@@ -526,6 +532,13 @@ Different computers can use different default values by customizing this variabl
   (unless (server-running-p)
     (server-start)
     (message "Emacs server started - you can now use 'emacsclient' to connect.")))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Magit - Git Client
+(when davidc-config-use-magit
+  (require 'magit)
+  )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
