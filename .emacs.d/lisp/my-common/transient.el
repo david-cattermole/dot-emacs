@@ -5480,18 +5480,4 @@ as stand-in for elements of exhausted lists."
 
 ;;; _
 (provide 'transient)
-;; Local Variables:
-;; checkdoc-symbol-words: ("command-line" "edit-mode" "help-mode")
-;; indent-tabs-mode: nil
-;; lisp-indent-local-overrides: (
-;;   (cond . 0)
-;;   (interactive . 0))
-;; read-symbol-shorthands: (
-;;   ("and$"         . "cond-let--and$")
-;;   ("and-let"      . "cond-let--and-let")
-;;   ("if-let"       . "cond-let--if-let")
-;;   ("when$"        . "cond-let--when$")
-;;   ("when-let"     . "cond-let--when-let")
-;;   ("while-let"    . "cond-let--while-let"))
-;; End:
 ;;; transient.el ends here
