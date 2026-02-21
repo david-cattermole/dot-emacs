@@ -15,6 +15,7 @@
      (awk-mode . "awk")
      (other . "gnu")))
  '(custom-enabled-themes '(tsdh-dark))
+ '(ediff-window-setup-function 'ediff-setup-windows-plain)
  '(eol-mnemonic-dos "(DOS)")
  '(eol-mnemonic-mac "(Mac)")
  '(focus-follows-mouse nil)
