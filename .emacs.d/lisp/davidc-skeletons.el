@@ -14,7 +14,7 @@
   "    " _ "\n"
   "}" > \n)
 
-(define-skeleton davidc-skeleton-rust-test
+(define-skeleton davidc-skeleton-rust-test-module
   "Insert a Rust test module."
   nil
   "#[cfg(test)]\n"
@@ -32,27 +32,6 @@
   "fn " str "() {\n"
   "    " _ "\n"
   "}" > \n)
-
-(define-skeleton davidc-skeleton-rust-fn-return
-  "Insert a Rust function with return type."
-  "Function name: "
-  "fn " str "() -> " (skeleton-read "Return type: ") " {\n"
-  "    " _ "\n"
-  "}" > \n)
-
-;; (define-skeleton davidc-skeleton-rust-result
-;;   "Insert a Rust function returning Result."
-;;   "Function name: "
-;;   "fn " str "() -> Result<" (skeleton-read "Ok type: ") ", " (skeleton-read "Err type: ") "> {\n"
-;;   "    " _ "\n"
-;;   "}" > \n)
-
-;; (define-skeleton davidc-skeleton-rust-option
-;;   "Insert a Rust function returning Option."
-;;   "Function name: "
-;;   "fn " str "() -> Option<" (skeleton-read "Type: ") "> {\n"
-;;   "    " _ "\n"
-;;   "}" > \n)
 
 (define-skeleton davidc-skeleton-rust-struct
   "Insert a Rust struct definition."
@@ -223,10 +202,10 @@ You need to give the quotation marks or the angles yourself."
 
 (define-skeleton davidc-skeleton-python-script
   "Insert a Python script structure with main check."
-  "Description: "
+  "File description: "
   "#!/usr/bin/env python3\n"
   "\"\"\"\n"
-  str | "Script description here." \n
+  str \n
   "\"\"\"\n\n"
   "import sys\n\n"
   "def main():\n"
@@ -312,21 +291,15 @@ You need to give the quotation marks or the angles yourself."
   "with " str " as name:" \n
   > "    " _ \n)
 
-(define-skeleton davidc-skeleton-python-main
-  "Insert a Python if __name__ == '__main__' block."
-  nil
-  > "if __name__ == \"__main__\":\n"
-  "    " _ "\n" > \n)
-
 ;;; ------------------------------------------------------------------
 ;;; BASH SKELETONS
 ;;; ------------------------------------------------------------------
 
 (define-skeleton davidc-skeleton-bash-script
   "Insert a Bash script header with main structure."
-  "Description: "
+  "File description: "
   "#!/usr/bin/env bash\n"
-  "# " str | "Script description here." \n
+  "# " str \n
   "set -euo pipefail\n\n"
   _ "\n")
 
@@ -395,9 +368,9 @@ You need to give the quotation marks or the angles yourself."
 
 (define-skeleton davidc-skeleton-tcsh-script
   "Insert a tcsh script header."
-  "Description: "
+  "File description: "
   "#!/usr/bin/env tcsh\n"
-  "# " str | "Script description here." \n
+  "# " str \n
   \n
   _ "\n")
 
@@ -456,17 +429,16 @@ You need to give the quotation marks or the angles yourself."
 ;;; ------------------------------------------------------------------
 
 (defvar davidc-skeleton-registry
-  '((rust-mode . (("main"      . davidc-skeleton-rust-main)
-                  ("test"      . davidc-skeleton-rust-test)
-                  ("fn"        . davidc-skeleton-rust-fn)
-                  ("fn-return" . davidc-skeleton-rust-fn-return)
-                  ("struct"    . davidc-skeleton-rust-struct)
-                  ("enum"      . davidc-skeleton-rust-enum)
-                  ("impl"      . davidc-skeleton-rust-impl)
-                  ("match"     . davidc-skeleton-rust-match)
-                  ("if-let"    . davidc-skeleton-rust-if-let)
-                  ("for"       . davidc-skeleton-rust-for)
-                  ("while"     . davidc-skeleton-rust-while)))
+  '((rust-mode . (("main"        . davidc-skeleton-rust-main)
+                  ("test-module" . davidc-skeleton-rust-test-module)
+                  ("fn"          . davidc-skeleton-rust-fn)
+                  ("struct"      . davidc-skeleton-rust-struct)
+                  ("enum"        . davidc-skeleton-rust-enum)
+                  ("impl"        . davidc-skeleton-rust-impl)
+                  ("match"       . davidc-skeleton-rust-match)
+                  ("if-let"      . davidc-skeleton-rust-if-let)
+                  ("for"         . davidc-skeleton-rust-for)
+                  ("while"       . davidc-skeleton-rust-while)))
     (c-mode    . (("main"          . davidc-skeleton-c-main)
                   ("include-guard" . davidc-skeleton-c-include-guard)
                   ("include"       . davidc-skeleton-c-include)
@@ -485,7 +457,9 @@ You need to give the quotation marks or the angles yourself."
                   ("endl"          . davidc-skeleton-cc-endl)))
     (python-mode . (("script"         . davidc-skeleton-python-script)
                     ("class"          . davidc-skeleton-python-class)
+                    ("dataclass"      . davidc-skeleton-python-dataclass)
                     ("function"       . davidc-skeleton-python-function)
+                    ("function-async" . davidc-skeleton-python-async-function)
                     ("docstring"      . davidc-skeleton-python-docstring)
                     ("method"         . davidc-skeleton-python-method)
                     ("for"            . davidc-skeleton-python-for)
@@ -493,10 +467,7 @@ You need to give the quotation marks or the angles yourself."
                     ("if"             . davidc-skeleton-python-if)
                     ("if-else"        . davidc-skeleton-python-if-else)
                     ("try-except"     . davidc-skeleton-python-try-except)
-                    ("with"           . davidc-skeleton-python-with)
-                    ("main"           . davidc-skeleton-python-main)
-                    ("dataclass"      . davidc-skeleton-python-dataclass)
-                    ("async-function" . davidc-skeleton-python-async-function)))
+                    ("with"           . davidc-skeleton-python-with)))
     (sh-mode     . (("bash-script"     . davidc-skeleton-bash-script)
                     ("bash-function"   . davidc-skeleton-bash-function)
                     ("bash-variable"   . davidc-skeleton-bash-variable)
