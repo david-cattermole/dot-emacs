@@ -21,6 +21,7 @@
  '(focus-follows-mouse nil)
  '(fringe-mode '(0) nil (fringe))
  '(global-auto-complete-mode nil)
+ '(ido-mode t)
  '(indicate-buffer-boundaries 'right)
  '(indicate-empty-lines t)
  '(inhibit-startup-screen t)
