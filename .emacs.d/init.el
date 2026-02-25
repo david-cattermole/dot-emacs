@@ -220,6 +220,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-ido nil
+  "Enable the use of ido-mode."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-dape nil
   "Use Debug Adapter Protocol for Emacs (Dape) tool."
   :type 'boolean
@@ -556,6 +561,39 @@ Different computers can use different default values by customizing this variabl
 (when davidc-config-use-icomplete
   (if (fboundp 'icomplete-mode)
       (icomplete-mode t))
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Use 'ido-mode'
+;;
+(when davidc-config-use-ido
+  (require 'davidc-ido)
+
+  ;; Flexible (fuzzy) matching makes it much easier to find things.
+  (setq ido-enable-flex-matching t)
+
+  ;; Enable ido "everywhere" (lots of non-default places).
+  (setq ido-everywhere t)
+
+  ;; Flatten imenu results (prevent submenus by count) and auto-rescan.
+  (setq imenu-max-items 99999)
+  (setq imenu-auto-rescan t)
+
+  ;; Display ido results vertically, rather than horizontally.
+  (setq ido-decorations (quote ("\n-> " "" "\n   " "\n   ..." "[" "]" " [No match]" " [Matched]" " [Not readable]" " [Too big]" " [Confirm]")))
+
+  (ido-mode t)
+
+  (add-hook 'ido-minibuffer-setup-hook 'ido-disable-line-truncation)
+  (add-hook 'ido-setup-hook 'ido-define-keys)
+
+  (global-set-key (kbd "<f9>") 'ido-goto-symbol)
+
+  (add-hook 'ibuffer-mode-hook
+            (lambda ()
+              (define-key ibuffer-mode-map "\C-x\C-f"
+                          'ibuffer-ido-find-file)))
   )
 
 

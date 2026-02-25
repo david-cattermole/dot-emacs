@@ -21,7 +21,7 @@
  '(focus-follows-mouse nil)
  '(fringe-mode '(0) nil (fringe))
  '(global-auto-complete-mode nil)
- '(ido-mode t)
+ '(davidc-config-use-ido nil)
  '(indicate-buffer-boundaries 'right)
  '(indicate-empty-lines t)
  '(inhibit-startup-screen t)
