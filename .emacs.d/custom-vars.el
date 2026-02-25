@@ -105,6 +105,7 @@
  '(davidc-config-use-ibuffer t)
  '(davidc-config-use-icomplete nil)
  '(davidc-config-use-dape t)
+ '(davidc-config-use-remember-session nil)
  '(davidc-config-color-theme 'modus-vivendi)
  '(project-switch-commands
    '(

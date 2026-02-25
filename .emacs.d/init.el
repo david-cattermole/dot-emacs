@@ -230,6 +230,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-remember-session nil
+  "Use session persistence tools (save-place, savehist, and desktop-save)."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-color-theme 'tsdh-dark
   "Color theme to use for Emacs.
 Different computers can use different default values by customizing this variable."
@@ -537,6 +542,25 @@ Different computers can use different default values by customizing this variabl
   (unless (server-running-p)
     (server-start)
     (message "Emacs server started - you can now use 'emacsclient' to connect.")))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Session Persistence
+;;
+;; Save and restore cursor positions, minibuffer history, and the
+;; entire Emacs session (open buffers and windows).
+;;
+(when davidc-config-use-remember-session
+  ;; Remember cursor position in files.
+  (save-place-mode 1)
+
+  ;; Save minibuffer history.
+  (savehist-mode 1)
+
+  ;; Save and restore the entire Emacs session.
+  (setq desktop-save t)
+  (desktop-save-mode 1)
+  )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
