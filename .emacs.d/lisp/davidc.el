@@ -287,4 +287,15 @@ In other buffers: toggle symbol highlight lock."
         (message "Enabled symbol highlighting mode"))))))
 
 
+(defun davidc-show-message-log ()
+  (interactive)
+  (switch-to-buffer-other-window "*Messages*")
+  (goto-char (point-max)))
+
+
+(defun davidc-toggle-long-lines ()
+  (interactive)
+  (setq truncate-lines (not truncate-lines)))
+
+
 (provide 'davidc)
