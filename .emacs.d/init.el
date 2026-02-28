@@ -591,6 +591,23 @@ Different computers can use different default values by customizing this variabl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Use 'ido-mode'
 ;;
+;; https://www.masteringemacs.org/article/introduction-to-ido-mode
+;;
+;; Here are some common key-bindings:
+;;
+;; Backspace - Deletes characters as usual or goes up one directory if it makes sense to do so..
+;; TAB - Attempt to complete the input like the normal completing read functionality.
+;; C-n - Moves to the next match.
+;; C-p - Moves to the previous match.
+;;
+;; Here are some other, less common but very useful key-bindings:
+;;
+;; C-b - Reverts to the old switch-buffer completion engine.
+;; C-f - Reverts to the old find-file completion engine.
+;; C-d - Opens a dired buffer in the current directory.
+;; M-d - Searches for the input in all sub-directories to the directory you’re in.
+;; C-k - Kills the currently focused buffer or deletes the file depending on the mode.
+;;
 (when davidc-config-use-ido
   (require 'davidc-ido)
 
@@ -614,6 +631,7 @@ Different computers can use different default values by customizing this variabl
 
   (global-set-key (kbd "<f9>") 'ido-goto-symbol)
 
+  ;; Use ido for ibuffer find file.
   (add-hook 'ibuffer-mode-hook
             (lambda ()
               (define-key ibuffer-mode-map "\C-x\C-f"
