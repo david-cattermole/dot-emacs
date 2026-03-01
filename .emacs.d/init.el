@@ -240,6 +240,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-quick-docs nil
+  "Enable quick documentation and diagnostics access."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-color-theme 'tsdh-dark
   "Color theme to use for Emacs.
 Different computers can use different default values by customizing this variable."
@@ -1558,3 +1563,49 @@ Different computers can use different default values by customizing this variabl
 (define-key term-mode-map (kbd "C-c C-k") 'davidc-term-toggle-mode)
 (define-key term-raw-map (kbd "C-c C-j") 'davidc-term-toggle-mode)
 (define-key term-raw-map (kbd "C-c C-k") 'davidc-term-toggle-mode)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Quick Docs - Fast access to documentation and diagnostics.
+;;
+;; Provides keybindings:
+;;
+;;   C-c d d   - Show brief eldoc summary in the minibuffer.
+;;   C-c d a   - Toggle eldoc documentation buffer.
+;;
+;;   C-c f f   - Toggle flymake diagnostics buffer.
+;;   C-c f n   - Next flymake error.
+;;   C-c f p   - Prev flymake error.
+;;   C-c f N   - Next flymake warning.
+;;   C-c f P   - Prev flymake warning.
+;;   C-c f M-n - Next flymake note.
+;;   C-c f M-p - Prev flymake note.
+;;
+(when davidc-config-use-quick-docs
+  (require 'davidc-quick-docs)
+
+  ;; Eldoc configuration.
+  (setq eldoc-idle-delay 0.3)
+  (setq eldoc-echo-area-use-multiline-p 4)
+  ;; Don't eagerly show the doc buffer - only when explicitly requested.
+  (setq eldoc-display-functions '(eldoc-display-in-echo-area
+                                  eldoc-display-in-buffer))
+
+  ;; Eldoc.
+  (global-set-key (kbd "C-c d d") #'davidc-quick-docs-eldoc-show-minibuffer)
+  (global-set-key (kbd "C-c d a") #'davidc-quick-docs-eldoc-toggle-buffer)
+
+  ;; Flymake diagnostics buffer.
+  (global-set-key (kbd "C-c f f") #'davidc-quick-docs-flymake-toggle)
+
+  ;; Flymake navigation - errors.
+  (global-set-key (kbd "C-c f n") #'davidc-quick-docs-flymake-next-error)
+  (global-set-key (kbd "C-c f p") #'davidc-quick-docs-flymake-prev-error)
+
+  ;; Flymake navigation - warnings.
+  (global-set-key (kbd "C-c f N") #'davidc-quick-docs-flymake-next-warning)
+  (global-set-key (kbd "C-c f P") #'davidc-quick-docs-flymake-prev-warning)
+
+  ;; Flymake navigation - notes.
+  (global-set-key (kbd "C-c f M-n") #'davidc-quick-docs-flymake-next-note)
+  (global-set-key (kbd "C-c f M-p") #'davidc-quick-docs-flymake-prev-note))
