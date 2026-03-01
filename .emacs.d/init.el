@@ -1590,6 +1590,9 @@ Different computers can use different default values by customizing this variabl
   ;; Don't eagerly show the doc buffer - only when explicitly requested.
   (setq eldoc-display-functions '(eldoc-display-in-echo-area
                                   eldoc-display-in-buffer))
+  ;; Display results from multiple documentation sources as they come
+  ;; in, rather than waiting for all sources to complete.
+  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
 
   ;; Eldoc.
   (global-set-key (kbd "C-c d d") #'davidc-quick-docs-eldoc-show-minibuffer)
