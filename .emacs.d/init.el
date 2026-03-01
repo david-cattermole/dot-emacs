@@ -1074,9 +1074,9 @@ Different computers can use different default values by customizing this variabl
 ;;   rustup component add rust-analyzer
 ;;
 ;; Common Eglot keybindings:
-;;   C-c l a - Perform code action at point (eglot-code-actions)
 ;;   M-.     - Find definition (xref-find-definitions)
 ;;   M-?     - Find references (xref-find-references)
+;;   C-c l a - Perform code action at point (eglot-code-actions)
 ;;   C-c l r - Rename symbol (eglot-rename)
 ;;
 (when davidc-config-use-eglot
