@@ -230,6 +230,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-eglot nil
+  "Use Eglot LSP client for language server integration."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-remember-session nil
   "Use session persistence tools (save-place, savehist, and desktop-save)."
   :type 'boolean
@@ -1054,6 +1059,35 @@ Different computers can use different default values by customizing this variabl
               (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
               (davidc-flymake-rust-cargo-clippy-setup))
             )
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Eglot - LSP Client (built-in since Emacs 29)
+;;
+;; rust-analyzer must be installed separately:
+;;   rustup component add rust-analyzer
+;;
+;; Common Eglot keybindings:
+;;   C-c l a - Perform code action at point (eglot-code-actions)
+;;   M-.     - Find definition (xref-find-definitions)
+;;   M-?     - Find references (xref-find-references)
+;;   C-c l r - Rename symbol (eglot-rename)
+;;
+(when davidc-config-use-eglot
+  (require 'eglot)
+
+  ;; rust-analyzer configuration: use clippy for checking, enable
+  ;; proc macros and build scripts for full project analysis.
+  (setq-default eglot-workspace-configuration
+                '(:rust-analyzer
+                  (:check (:command "clippy")
+                   :procMacro (:enable t)
+                   :cargo (:buildScripts (:enable t)))))
+
+  ;; Trigger code actions (e.g. imports, quick fixes) at point.
+  (global-set-key (kbd "C-c l a") 'eglot-code-actions)
+  (global-set-key (kbd "C-c l r") 'eglot-rename)
   )
 
 
