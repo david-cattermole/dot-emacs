@@ -108,6 +108,7 @@
  '(davidc-config-use-eglot nil)
  '(davidc-config-use-remember-session nil)
  '(davidc-config-use-quick-docs nil)
+ '(davidc-config-use-ztree nil)
  '(davidc-config-color-theme 'modus-vivendi)
  '(project-switch-commands
    '(

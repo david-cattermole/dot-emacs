@@ -245,6 +245,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-ztree nil
+  "Enable ztree for tree views of directories and diffs."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-color-theme 'tsdh-dark
   "Color theme to use for Emacs.
 Different computers can use different default values by customizing this variable."
@@ -355,6 +360,7 @@ Different computers can use different default values by customizing this variabl
 ;; find some files, add to the library path.
 (setq load-path (cons "~/.emacs.d/lisp/rg/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/wgrep/" load-path))
+(setq load-path (cons "~/.emacs.d/lisp/ztree/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/p4/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/evil/" load-path))
 (setq load-path (cons "~/.emacs.d/lisp/magit/" load-path))
@@ -1612,3 +1618,13 @@ Different computers can use different default values by customizing this variabl
   ;; Flymake navigation - notes.
   (global-set-key (kbd "C-c f M-n") #'davidc-quick-docs-flymake-next-note)
   (global-set-key (kbd "C-c f M-p") #'davidc-quick-docs-flymake-prev-note))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ZTree - Tree view of directories and directory diffs.
+;;
+;; Use the `ztree-dir` or `ztree-diff` commands to get started.
+;;
+(when davidc-config-use-ztree
+  (require 'ztree)
+  )
