@@ -105,6 +105,13 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-python-region-formatter 'ruff
+  "Formatter to use for Python region formatting.
+Possible values: \\='ruff or \\='black."
+  :type '(choice (const :tag "ruff format" ruff)
+                 (const :tag "black" black))
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-clang-format nil
   "Use clang-format for C/C++ formatting."
   :type 'boolean

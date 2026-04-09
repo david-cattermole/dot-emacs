@@ -29,11 +29,50 @@ For now we use 'clang-format'."
                              t)))
 
 
+(defun davidc--format-python-region-with-file (program args)
+  "Write the buffer to a temp .py file, run PROGRAM with ARGS and the file path.
+Replaces buffer contents with the formatted result on success."
+  (let ((temp-file (make-temp-file "python-format" nil ".py")))
+    (unwind-protect
+        (progn
+          (write-region (point-min) (point-max) temp-file nil :quiet)
+          (let ((exit-code (apply #'call-process program nil nil nil
+                                  (append args (list temp-file)))))
+            (if (zerop exit-code)
+                (insert-file-contents temp-file nil nil nil t)
+              (message "%s failed (exit code %d)" program exit-code))))
+      (delete-file temp-file))))
+
+(defun davidc-format-region-ruff (beg end)
+  "Format a region of Python code using 'ruff format --range'.
+Passes the full buffer file context; only the selected lines are modified."
+  (interactive "r")
+  (davidc--format-python-region-with-file
+   "ruff"
+   (list "format"
+         (format "--range=%d-%d"
+                 (line-number-at-pos beg)
+                 (line-number-at-pos end)))))
+
+(defun davidc-format-region-black (beg end)
+  "Format a region of Python code using 'black --line-ranges'.
+Passes the full buffer file context; only the selected lines are modified."
+  (interactive "r")
+  (davidc--format-python-region-with-file
+   "black"
+   (list (format "--line-ranges=%d-%d"
+                 (line-number-at-pos beg)
+                 (line-number-at-pos end)))))
+
 (defun davidc-format-region-python ()
-  "Formats a region of Python code.
-For now we use 'python black'."
+  "Format a region of Python code.
+The formatter is controlled by `davidc-config-python-region-formatter'."
   (interactive)
-  (call-interactively 'python-black-region))
+  (cond
+   ((eq davidc-config-python-region-formatter 'ruff)
+    (call-interactively 'davidc-format-region-ruff))
+   (t
+    (call-interactively 'davidc-format-region-black))))
 
 (defun davidc-format-buffer-python ()
   "Formats a Python buffer.

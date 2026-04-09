@@ -81,6 +81,7 @@
  '(davidc-config-use-python-black t)
  '(davidc-config-use-python-flymake-ruff t)
  '(davidc-config-use-python-flymake-mypy t)
+ '(davidc-config-python-region-formatter 'ruff)
  '(davidc-config-use-clang-format t)
  '(davidc-config-use-flymake-clang-tidy t)
  '(davidc-config-use-flymake-rust-cargo-clippy t)
