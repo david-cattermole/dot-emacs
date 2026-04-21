@@ -3,6 +3,24 @@
 ;; Format different types of buffers.
 ;;
 
+;; Utility function to get platform-specific executable path.
+;;
+;; TODO: Merge this with the davidc-flymake--get-executable-path
+;; function.
+(defun davidc-format--get-executable-path (base-name)
+  "Get the platform-specific executable path for BASE-NAME."
+  (if (string-equal system-type "windows-nt")
+      (concat base-name ".exe")
+    base-name))
+
+;; Define default settings if not already defined in 'custom-vars.el'.
+(defvar davidc-python-format-ruff-path
+  (davidc-format--get-executable-path "ruff")
+  "Path to the ruff executable for Python formatting.
+Set this variable before loading this package to use a custom path.")
+
+
+;; Tools
 (defun davidc-format-region-c++ ()
   "Format a region of C++ code.
 For now we use 'clang-format'."
@@ -48,7 +66,7 @@ Replaces buffer contents with the formatted result on success."
 Passes the full buffer file context; only the selected lines are modified."
   (interactive "r")
   (davidc--format-python-region-with-file
-   "ruff"
+   davidc-python-format-ruff-path
    (list "format"
          (format "--range=%d-%d"
                  (line-number-at-pos beg)
