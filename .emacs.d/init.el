@@ -142,6 +142,11 @@ Possible values: \\='ruff or \\='black."
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-flymake-html-htmlhint nil
+  "Use htmlhint with flymake for HTML linting."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-format nil
   "Use format tool."
   :type 'boolean
@@ -810,7 +815,20 @@ Different computers can use different default values by customizing this variabl
   )
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; HTML Hint Flymake
+
+(when davidc-config-use-flymake-html-htmlhint
+  (require 'davidc-flymake)
+  (add-hook 'html-mode-hook
+            (lambda ()
+              (setq-local flymake-no-changes-timeout nil)
+              (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
+              (davidc-flymake-html-htmlhint-setup)))
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Auxilary modes for various file formats.
 ;; (add-to-list 'auto-mode-alist '("\\.yaml\\'" . conf-mode))
 ;; (add-to-list 'auto-mode-alist '("\\.yml\\'" . conf-mode))
