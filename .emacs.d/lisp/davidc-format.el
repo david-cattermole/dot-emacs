@@ -19,6 +19,11 @@
   "Path to the ruff executable for Python formatting.
 Set this variable before loading this package to use a custom path.")
 
+(defvar davidc-format-html-prettier-path
+  (davidc-format--get-executable-path "prettier")
+  "Path to the prettier executable for HTML formatting.
+Set this variable before loading this package to use a custom path.")
+
 
 ;; Tools
 (defun davidc-format-region-c++ ()
@@ -104,10 +109,29 @@ For now we use 'rustfmt'."
   (interactive)
   (call-interactively 'rust-format-buffer))
 
+(defun davidc-format-buffer-html ()
+  "Format an HTML buffer using prettier."
+  (interactive)
+  (let ((pos (point))
+        (outbuf (generate-new-buffer " *prettier-format*")))
+    (unwind-protect
+        (let ((exit-code (call-process-region
+                          (point-min) (point-max)
+                          davidc-format-html-prettier-path
+                          nil (list outbuf nil) nil
+                          "--stdin-filepath" "dummy.html" "--parser" "html")))
+          (if (zerop exit-code)
+              (progn
+                (erase-buffer)
+                (insert-buffer-substring outbuf)
+                (goto-char (min pos (point-max))))
+            (message "prettier formatting failed (exit code %d)" exit-code)))
+      (kill-buffer outbuf))))
+
 (defun davidc-format-region ()
   "Format the selected region of text for supported major modes.
 Supported major modes are C++ (c++-mode) and Python (python-mode).
-For Rust (rust-mode), we format the entire buffer instead."
+For Rust (rust-mode) and HTML (html-mode), we format the entire buffer instead."
   (interactive)
   (cond
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-region-c++))
@@ -115,22 +139,31 @@ For Rust (rust-mode), we format the entire buffer instead."
    ((string-equal major-mode "rust-mode")
     (message "Region formatting not supported for Rust - formatting entire buffer")
     (call-interactively 'davidc-format-buffer-rust))
+   ((or (string-equal major-mode "html-mode")
+        (string-equal major-mode "mhtml-mode"))
+    (message "Region formatting not supported for HTML - formatting entire buffer")
+    (call-interactively 'davidc-format-buffer-html))
    ))
 
 (defun davidc-format-buffer ()
   "Format the selected buffer of text for supported major modes.
-Supported major modes are C++ (c++-mode), Python (python-mode) and Rust (rust-mode)."
+Supported major modes are C++ (c++-mode), Python (python-mode),
+Rust (rust-mode) and HTML (html-mode)."
   (interactive)
   (cond
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-buffer-c++))
    ((string-equal major-mode "python-mode") (call-interactively 'davidc-format-buffer-python))
    ((string-equal major-mode "rust-mode") (call-interactively 'davidc-format-buffer-rust))
+   ((or (string-equal major-mode "html-mode")
+        (string-equal major-mode "mhtml-mode"))
+    (call-interactively 'davidc-format-buffer-html))
    )
   )
 
 (defun davidc-format ()
   "Format the buffer or region for supported major modes.
-Supported major modes are C++ (c++-mode) and Python (python-mode)."
+Supported major modes are C++ (c++-mode), Python (python-mode),
+Rust (rust-mode) and HTML (html-mode)."
   (interactive)
   ;; http://xahlee.info/emacs/emacs/emacs_region.html
   (if (use-region-p)

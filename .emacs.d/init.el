@@ -147,6 +147,11 @@ Possible values: \\='ruff or \\='black."
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-html-prettier nil
+  "Use prettier for HTML formatting."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-format nil
   "Use format tool."
   :type 'boolean

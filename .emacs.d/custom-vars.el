@@ -87,6 +87,7 @@
  '(davidc-config-use-flymake-xml t)
  '(davidc-config-use-flymake-yaml t)
  '(davidc-config-use-flymake-html-htmlhint t)
+ '(davidc-config-use-html-prettier t)
  '(davidc-config-use-format t)
  '(davidc-config-use-glsl-mode t)
  '(davidc-config-use-graphviz-dot-mode nil)
