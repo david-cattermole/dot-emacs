@@ -1,7 +1,7 @@
 ;;; -*- lexical-binding: t -*-
 ;;
 ;; Enhanced Flymake integration for Python, Rust, C++, JSON with
-;; comments, YAML, XML, and HTML.
+;; comments, YAML, XML, HTML, and JavaScript.
 ;;
 ;; This package provides streamlined Flymake backends for multiple
 ;; programming languages, offering real-time syntax checking and
@@ -16,6 +16,7 @@
 ;; * YAML   - Uses custom Python script for YAML.
 ;; * XML    - Uses custom Python script for XML validation.
 ;; * HTML   - Uses "htmlhint" for HTML linting.
+;; * JS     - Uses "jshint" for JavaScript linting.
 ;;
 ;; PREREQUISITES:
 ;; Make sure the following tools are installed and available in your PATH:
@@ -27,6 +28,7 @@
 ;; * For YAML: Python 3 and the yaml_lint.py script
 ;; * For XML: Python 3 and the xml_lint.py script
 ;; * For HTML: htmlhint (install via: npm install -g htmlhint)
+;; * For JS: jshint (install via: npm install -g jshint)
 ;;
 ;; BASIC SETUP:
 ;; 1. Load this file in your Emacs configuration
@@ -54,6 +56,9 @@
 ;;    ;; HTML setup
 ;;    (add-hook 'html-mode-hook #'davidc-flymake-html-htmlhint-setup)
 ;;
+;;    ;; JavaScript setup
+;;    (add-hook 'js-mode-hook #'davidc-flymake-jshint-setup)
+;;
 ;; NAVIGATION COMMANDS:
 ;; This package provides convenient functions to navigate between diagnostics:
 ;;
@@ -77,6 +82,7 @@
 ;;   (setq davidc-flymake-yaml-lint-path "/path/to/yaml_lint.py")
 ;;   (setq davidc-flymake-xml-lint-path "/path/to/xml_lint.py")
 ;;   (setq davidc-flymake-html-htmlhint-path "/path/to/htmlhint")
+;;   (setq davidc-flymake-jshint-path "/path/to/jshint")
 ;;
 ;;   ;; Custom htmlhint arguments
 ;;   (setq davidc-flymake-html-htmlhint-args
@@ -99,6 +105,7 @@
 ;; * For YAML, make sure Python 3 and yaml_lint.py are available.
 ;; * For XML, make sure Python 3 and xml_lint.py are available.
 ;; * For HTML, make sure htmlhint is installed (npm install -g htmlhint).
+;; * For JS, make sure jshint is installed (npm install -g jshint).
 ;; * Use M-x flymake-log to see detailed diagnostic information.
 ;;
 
@@ -154,6 +161,11 @@ Set this variable before loading this package to use a custom path.")
 (defvar davidc-flymake-html-htmlhint-path
   (davidc-flymake--get-executable-path "htmlhint")
   "Path to the htmlhint executable.
+Set this variable before loading this package to use a custom path.")
+
+(defvar davidc-flymake-jshint-path
+  (davidc-flymake--get-executable-path "jshint")
+  "Path to the jshint executable for JavaScript linting.
 Set this variable before loading this package to use a custom path.")
 
 (defvar davidc-flymake-html-htmlhint-args
@@ -233,12 +245,14 @@ SOURCE-FILE is the path of the file being checked."
         (let* ((file-path (match-string 1))
                (line (string-to-number (match-string 2)))
                (col (string-to-number (match-string 3)))
-               (type-str (match-string 4))
-               (message-text (match-string 5))
-               (level (cond
-                       ((string-match-p "^error" type-str) :error)
-                       ((string= type-str "warning") :warning)
-                       (t :note))))
+               (type-str (downcase (or (match-string 4) "")))
+               (message-text (or (match-string 5) (match-string 4) ""))
+               (level (if (match-string 5)
+                          (cond
+                           ((string-match-p "^error" type-str) :error)
+                           ((string= type-str "warning") :warning)
+                           (t :note))
+                        :error)))
 
           ;; ;; Debug output for each match
           ;; (message "[DEBUG] Found: %s at %s:%d:%d - %s"
@@ -349,6 +363,9 @@ FILE-MATCHER is a function to determine if a diagnostic applies to current file.
 (defvar-local davidc--flymake-html-htmlhint-proc nil
   "Current htmlhint flymake process.")
 
+(defvar-local davidc--flymake-jshint-proc nil
+  "Current jshint flymake process.")
+
 ;; File matcher functions.
 (defun davidc-flymake--exact-file-matcher (file-path source-file)
   "Match FILE-PATH against SOURCE-FILE exactly or by basename."
@@ -452,6 +469,17 @@ REPORT-FN is the callback function for reporting diagnostics.")
   "Flymake backend for HTML files using htmlhint.
 REPORT-FN is the callback function for reporting diagnostics.")
 
+(defalias 'davidc-flymake-jshint
+  (davidc-flymake--make-backend
+   "jshint"
+   davidc-flymake-jshint-path
+   (lambda (source-file)
+     (list davidc-flymake-jshint-path source-file))
+   "^\\(.+\\): line \\([0-9]+\\), col \\([0-9]+\\), \\(.+\\)$"
+   #'davidc-flymake--basename-file-matcher)
+  "Flymake backend for JavaScript files using jshint.
+REPORT-FN is the callback function for reporting diagnostics.")
+
 ;; Setup functions.
 (defun davidc-flymake-clang-tidy-setup ()
   "Set up flymake for clang-tidy.
@@ -498,6 +526,14 @@ Call this function in html-mode-hook to enable automatic HTML linting."
   (interactive)
   (message "Setting up htmlhint for flymake.")
   (add-hook 'flymake-diagnostic-functions #'davidc-flymake-html-htmlhint nil t)
+  (flymake-mode 1))
+
+(defun davidc-flymake-jshint-setup ()
+  "Set up flymake for JavaScript files using jshint.
+Call this function in js-mode-hook to enable automatic JavaScript linting."
+  (interactive)
+  (message "Setting up jshint for flymake.")
+  (add-hook 'flymake-diagnostic-functions #'davidc-flymake-jshint nil t)
   (flymake-mode 1))
 
 (defun davidc-python-flymake-mypy-setup ()

@@ -147,6 +147,11 @@ Possible values: \\='ruff or \\='black."
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-flymake-jshint nil
+  "Use jshint with flymake for JavaScript linting."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-html-prettier nil
   "Use prettier for HTML formatting."
   :type 'boolean
@@ -830,6 +835,19 @@ Different computers can use different default values by customizing this variabl
               (setq-local flymake-no-changes-timeout nil)
               (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
               (davidc-flymake-html-htmlhint-setup)))
+  )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; JSHint Flymake for JavaScript
+
+(when davidc-config-use-flymake-jshint
+  (require 'davidc-flymake)
+  (add-hook 'js-mode-hook
+            (lambda ()
+              (setq-local flymake-no-changes-timeout nil)
+              (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
+              (davidc-flymake-jshint-setup)))
   )
 
 
