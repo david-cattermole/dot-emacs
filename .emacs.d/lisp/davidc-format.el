@@ -19,9 +19,9 @@
   "Path to the ruff executable for Python formatting.
 Set this variable before loading this package to use a custom path.")
 
-(defvar davidc-format-html-prettier-path
+(defvar davidc-format-prettier-path
   (davidc-format--get-executable-path "prettier")
-  "Path to the prettier executable for HTML formatting.
+  "Path to the prettier executable for HTML, JavaScript, CSS, and JSON formatting.
 Set this variable before loading this package to use a custom path.")
 
 
@@ -41,8 +41,8 @@ For now we use 'clang-format'."
 
 
 ;; https://emacs.stackexchange.com/questions/12148/how-to-pretty-format-code-auto-insert-newlines-indent-etc
-(defun davidc-format-region-json ()
-  "Formats a region of JSON."
+(defun davidc-format-region-json-python ()
+  "Formats a region of JSON using python -m json.tool."
   (interactive)
   (save-excursion
     (shell-command-on-region (region-beginning)
@@ -51,6 +51,15 @@ For now we use 'clang-format'."
                              (buffer-name)
                              t)))
 
+(defun davidc-format-buffer-json-python ()
+  "Formats a buffer of JSON using python -m json.tool."
+  (interactive)
+  (save-excursion
+    (shell-command-on-region (point-min)
+                             (point-max)
+                             "python -m json.tool"
+                             (buffer-name)
+                             t)))
 
 (defun davidc--format-python-region-with-file (program args)
   "Write the buffer to a temp .py file, run PROGRAM with ARGS and the file path.
@@ -117,7 +126,7 @@ For now we use 'rustfmt'."
     (unwind-protect
         (let ((exit-code (call-process-region
                           (point-min) (point-max)
-                          davidc-format-html-prettier-path
+                          davidc-format-prettier-path
                           nil (list outbuf nil) nil
                           "--stdin-filepath" "dummy.html" "--parser" "html")))
           (if (zerop exit-code)
@@ -125,13 +134,81 @@ For now we use 'rustfmt'."
                 (erase-buffer)
                 (insert-buffer-substring outbuf)
                 (goto-char (min pos (point-max))))
-            (message "prettier formatting failed (exit code %d)" exit-code)))
+            (message "prettier HTML formatting failed (exit code %d)" exit-code)))
+      (kill-buffer outbuf))))
+
+(defun davidc-format-buffer-js ()
+  "Format a JavaScript buffer using prettier."
+  (interactive)
+  (let ((pos (point))
+        (outbuf (generate-new-buffer " *prettier-format*")))
+    (unwind-protect
+        (let ((exit-code (call-process-region
+                          (point-min) (point-max)
+                          davidc-format-prettier-path
+                          nil (list outbuf nil) nil
+                          "--stdin-filepath" "dummy.js" "--parser" "babel")))
+          (if (zerop exit-code)
+              (progn
+                (erase-buffer)
+                (insert-buffer-substring outbuf)
+                (goto-char (min pos (point-max))))
+            (message "prettier JavaScript formatting failed (exit code %d)" exit-code)))
+      (kill-buffer outbuf))))
+
+(defun davidc-format-buffer-css ()
+  "Format a CSS buffer using prettier."
+  (interactive)
+  (let ((pos (point))
+        (outbuf (generate-new-buffer " *prettier-format*")))
+    (unwind-protect
+        (let ((exit-code (call-process-region
+                          (point-min) (point-max)
+                          davidc-format-prettier-path
+                          nil (list outbuf nil) nil
+                          "--stdin-filepath" "dummy.css" "--parser" "css")))
+          (if (zerop exit-code)
+              (progn
+                (erase-buffer)
+                (insert-buffer-substring outbuf)
+                (goto-char (min pos (point-max))))
+            (message "prettier CSS formatting failed (exit code %d)" exit-code)))
+      (kill-buffer outbuf))))
+
+(defun davidc-format-buffer-json ()
+  "Format a JSON buffer using prettier with JSONC parser.
+The JSONC parser allows comments in the input.
+No trailing commas are added; output is valid JSON."
+  (interactive)
+  (let ((pos (point))
+        (outbuf (generate-new-buffer " *prettier-format*")))
+    (unwind-protect
+        (let ((exit-code (call-process-region
+                          (point-min) (point-max)
+                          davidc-format-prettier-path
+                          nil (list outbuf nil) nil
+                          "--stdin-filepath" "dummy.json" "--parser" "jsonc" "--trailing-comma" "none")))
+          (if (zerop exit-code)
+              (progn
+                (erase-buffer)
+                (insert-buffer-substring outbuf)
+                (goto-char (min pos (point-max))))
+            (message "prettier JSON formatting failed (exit code %d)" exit-code)))
       (kill-buffer outbuf))))
 
 (defun davidc-format-region ()
   "Format the selected region of text for supported major modes.
-Supported major modes are C++ (c++-mode) and Python (python-mode).
-For Rust (rust-mode) and HTML (html-mode), we format the entire buffer instead."
+Supported major modes for region formatting:
+- C++ (c++-mode)
+- Python (python-mode)
+
+For these major modes, region formatting is not supported and the
+entire buffer is formatted instead:
+- Rust (rust-mode)
+- HTML (html-mode, mhtml-mode)
+- JavaScript (js-mode, js-ts-mode)
+- CSS (css-mode, css-ts-mode)
+- JSON (js-json-mode)"
   (interactive)
   (cond
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-region-c++))
@@ -143,12 +220,35 @@ For Rust (rust-mode) and HTML (html-mode), we format the entire buffer instead."
         (string-equal major-mode "mhtml-mode"))
     (message "Region formatting not supported for HTML - formatting entire buffer")
     (call-interactively 'davidc-format-buffer-html))
+   ((or (string-equal major-mode "js-mode")
+        (string-equal major-mode "js-ts-mode"))
+    (message "Region formatting not supported for JavaScript - formatting entire buffer")
+    (call-interactively 'davidc-format-buffer-js))
+   ((or (string-equal major-mode "css-mode")
+        (string-equal major-mode "css-ts-mode"))
+    (message "Region formatting not supported for CSS - formatting entire buffer")
+    (call-interactively 'davidc-format-buffer-css))
+   ((string-equal major-mode "js-json-mode")
+    (cond
+     (davidc-config-use-prettier
+      (message "Region formatting not supported for JSON - formatting entire buffer with prettier")
+      (call-interactively 'davidc-format-buffer-json))
+     (davidc-config-use-python-json-format
+      (call-interactively 'davidc-format-region-json-python))
+     (t
+      (message "No JSON formatter configured. Enable davidc-config-use-prettier or davidc-config-use-python-json-format."))))
    ))
 
 (defun davidc-format-buffer ()
   "Format the selected buffer of text for supported major modes.
-Supported major modes are C++ (c++-mode), Python (python-mode),
-Rust (rust-mode) and HTML (html-mode)."
+Supported major modes:
+- C++ (c++-mode)
+- Python (python-mode)
+- Rust (rust-mode)
+- HTML (html-mode, mhtml-mode)
+- JavaScript (js-mode, js-ts-mode) - with prettier
+- CSS (css-mode, css-ts-mode) - with prettier
+- JSON (js-json-mode) - with prettier or python -m json.tool"
   (interactive)
   (cond
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-buffer-c++))
@@ -157,13 +257,37 @@ Rust (rust-mode) and HTML (html-mode)."
    ((or (string-equal major-mode "html-mode")
         (string-equal major-mode "mhtml-mode"))
     (call-interactively 'davidc-format-buffer-html))
-   )
-  )
+   ((or (string-equal major-mode "js-mode")
+        (string-equal major-mode "js-ts-mode"))
+    (call-interactively 'davidc-format-buffer-js))
+   ((or (string-equal major-mode "css-mode")
+        (string-equal major-mode "css-ts-mode"))
+    (call-interactively 'davidc-format-buffer-css))
+   ((string-equal major-mode "js-json-mode")
+    (cond
+     (davidc-config-use-prettier
+      (call-interactively 'davidc-format-buffer-json))
+     (davidc-config-use-python-json-format
+      (call-interactively 'davidc-format-buffer-json-python))
+     (t
+      (message "No JSON formatter configured. Enable davidc-config-use-prettier or davidc-config-use-python-json-format."))))
+   ))
 
 (defun davidc-format ()
   "Format the buffer or region for supported major modes.
-Supported major modes are C++ (c++-mode), Python (python-mode),
-Rust (rust-mode) and HTML (html-mode)."
+
+Supported major modes:
+- C++ (c++-mode)
+- Python (python-mode)
+- Rust (rust-mode)
+- HTML (html-mode, mhtml-mode)
+- JavaScript (js-mode, js-ts-mode) - requires prettier, enabled via davidc-config-use-prettier
+- CSS (css-mode, css-ts-mode) - requires prettier, enabled via davidc-config-use-prettier
+- JSON (js-json-mode) - requires prettier (davidc-config-use-prettier) or
+  python -m json.tool (davidc-config-use-python-json-format). When both are
+  enabled, prettier takes precedence.
+
+Keybind: \\[davidc-format]"
   (interactive)
   ;; http://xahlee.info/emacs/emacs/emacs_region.html
   (if (use-region-p)

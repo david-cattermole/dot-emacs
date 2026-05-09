@@ -152,8 +152,15 @@ Possible values: \\='ruff or \\='black."
   :type 'boolean
   :group 'davidc-config)
 
-(defcustom davidc-config-use-html-prettier nil
-  "Use prettier for HTML formatting."
+(defcustom davidc-config-use-prettier nil
+  "Use prettier for formatting HTML, JavaScript, CSS, and JSON files."
+  :type 'boolean
+  :group 'davidc-config)
+
+(defcustom davidc-config-use-python-json-format nil
+  "Use python -m json.tool for JSON formatting.
+Prettier takes precedence when both davidc-config-use-prettier and
+davidc-config-use-python-json-format are enabled."
   :type 'boolean
   :group 'davidc-config)
 
