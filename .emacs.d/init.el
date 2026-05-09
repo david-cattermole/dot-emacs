@@ -153,7 +153,7 @@ Possible values: \\='ruff or \\='black."
   :group 'davidc-config)
 
 (defcustom davidc-config-use-prettier nil
-  "Use prettier for formatting HTML, JavaScript, CSS, and JSON files."
+  "Use prettier for formatting HTML, JavaScript, CSS, JSON, and Markdown files."
   :type 'boolean
   :group 'davidc-config)
 

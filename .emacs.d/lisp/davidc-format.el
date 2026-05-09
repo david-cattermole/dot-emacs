@@ -21,7 +21,7 @@ Set this variable before loading this package to use a custom path.")
 
 (defvar davidc-format-prettier-path
   (davidc-format--get-executable-path "prettier")
-  "Path to the prettier executable for HTML, JavaScript, CSS, and JSON formatting.
+  "Path to the prettier executable for HTML, JavaScript, CSS, JSON, and Markdown formatting.
 Set this variable before loading this package to use a custom path.")
 
 
@@ -196,6 +196,25 @@ No trailing commas are added; output is valid JSON."
             (message "prettier JSON formatting failed (exit code %d)" exit-code)))
       (kill-buffer outbuf))))
 
+(defun davidc-format-buffer-markdown ()
+  "Format a Markdown buffer using prettier."
+  (interactive)
+  (let ((pos (point))
+        (outbuf (generate-new-buffer " *prettier-format*")))
+    (unwind-protect
+        (let ((exit-code (call-process-region
+                          (point-min) (point-max)
+                          davidc-format-prettier-path
+                          nil (list outbuf nil) nil
+                          "--stdin-filepath" "dummy.md" "--parser" "markdown")))
+          (if (zerop exit-code)
+              (progn
+                (erase-buffer)
+                (insert-buffer-substring outbuf)
+                (goto-char (min pos (point-max))))
+            (message "prettier Markdown formatting failed (exit code %d)" exit-code)))
+      (kill-buffer outbuf))))
+
 (defun davidc-format-region ()
   "Format the selected region of text for supported major modes.
 Supported major modes for region formatting:
@@ -208,7 +227,8 @@ entire buffer is formatted instead:
 - HTML (html-mode, mhtml-mode)
 - JavaScript (js-mode, js-ts-mode)
 - CSS (css-mode, css-ts-mode)
-- JSON (js-json-mode)"
+- JSON (js-json-mode)
+- Markdown (davidc-markdown-mode)"
   (interactive)
   (cond
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-region-c++))
@@ -237,6 +257,9 @@ entire buffer is formatted instead:
       (call-interactively 'davidc-format-region-json-python))
      (t
       (message "No JSON formatter configured. Enable davidc-config-use-prettier or davidc-config-use-python-json-format."))))
+   ((string-equal major-mode "davidc-markdown-mode")
+    (message "Region formatting not supported for Markdown - formatting entire buffer")
+    (call-interactively 'davidc-format-buffer-markdown))
    ))
 
 (defun davidc-format-buffer ()
@@ -248,7 +271,8 @@ Supported major modes:
 - HTML (html-mode, mhtml-mode)
 - JavaScript (js-mode, js-ts-mode) - with prettier
 - CSS (css-mode, css-ts-mode) - with prettier
-- JSON (js-json-mode) - with prettier or python -m json.tool"
+- JSON (js-json-mode) - with prettier or python -m json.tool
+- Markdown (davidc-markdown-mode) - with prettier"
   (interactive)
   (cond
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-buffer-c++))
@@ -271,6 +295,8 @@ Supported major modes:
       (call-interactively 'davidc-format-buffer-json-python))
      (t
       (message "No JSON formatter configured. Enable davidc-config-use-prettier or davidc-config-use-python-json-format."))))
+   ((string-equal major-mode "davidc-markdown-mode")
+    (call-interactively 'davidc-format-buffer-markdown))
    ))
 
 (defun davidc-format ()
@@ -286,6 +312,7 @@ Supported major modes:
 - JSON (js-json-mode) - requires prettier (davidc-config-use-prettier) or
   python -m json.tool (davidc-config-use-python-json-format). When both are
   enabled, prettier takes precedence.
+- Markdown (davidc-markdown-mode) - requires prettier, enabled via davidc-config-use-prettier
 
 Keybind: \\[davidc-format]"
   (interactive)
