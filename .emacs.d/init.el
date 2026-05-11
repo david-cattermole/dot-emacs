@@ -786,6 +786,7 @@ Different computers can use different default values by customizing this variabl
   (require 'davidc-flymake)
   (add-hook 'js-json-mode-hook
             (lambda ()
+              (hs-minor-mode 1)
               (setq-local flymake-no-changes-timeout nil)
               (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
               (davidc-flymake-jsonc-setup))
@@ -839,6 +840,7 @@ Different computers can use different default values by customizing this variabl
   (require 'davidc-flymake)
   (add-hook 'html-mode-hook
             (lambda ()
+              (hs-minor-mode 1)
               (setq-local flymake-no-changes-timeout nil)
               (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
               (davidc-flymake-html-htmlhint-setup)))
@@ -852,10 +854,19 @@ Different computers can use different default values by customizing this variabl
   (require 'davidc-flymake)
   (add-hook 'js-mode-hook
             (lambda ()
+              (hs-minor-mode 1)
               (setq-local flymake-no-changes-timeout nil)
               (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
               (davidc-flymake-jshint-setup)))
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CSS mode
+
+(add-hook 'css-mode-hook
+          (lambda ()
+            (hs-minor-mode 1)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1274,6 +1285,20 @@ Different computers can use different default values by customizing this variabl
   (add-hook 'c++-mode-hook #'davidc-cpp-hideshow-setup)
   (add-hook 'c++-ts-mode-hook #'davidc-cpp-hideshow-setup)
   (add-hook 'c-mode-hook #'davidc-cpp-hideshow-setup)
+
+  ;; Custom hideshow behaviour for CSS mode.
+  (add-hook 'css-mode-hook #'davidc-css-hideshow-setup)
+  (add-hook 'css-ts-mode-hook #'davidc-css-hideshow-setup)
+
+  ;; Custom hideshow behaviour for JavaScript mode.
+  (add-hook 'js-mode-hook #'davidc-js-hideshow-setup)
+
+  ;; Custom hideshow behaviour for HTML mode.
+  (add-hook 'html-mode-hook #'davidc-html-hideshow-setup)
+  (add-hook 'mhtml-mode-hook #'davidc-html-hideshow-setup)
+
+  ;; Custom hideshow behaviour for JSON mode.
+  (add-hook 'js-json-mode-hook #'davidc-json-hideshow-setup)
   )
 
 

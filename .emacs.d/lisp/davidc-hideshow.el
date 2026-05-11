@@ -20,11 +20,9 @@
            (hs-hide-level 1)
            (setq this-command 'davidc-hs-cycle-children))
           ('davidc-hs-cycle-children
-           ;; TODO: Fix this case. `hs-show-block' needs to be
-           ;; called twice to open all folds of the parent
-           ;; block.
-           (save-excursion (hs-show-block))
-           (hs-show-block)
+           (save-excursion
+             (hs-show-block)
+             (hs-show-block))
            (setq this-command 'davidc-hs-cycle-subtree))
           ('davidc-hs-cycle-subtree
            (hs-hide-block))
@@ -175,5 +173,76 @@ Namespaces will not be hidden when running `hs-hide-all'."
   (when (derived-mode-p 'c++-mode 'c++-ts-mode 'c-mode)
     (setq-local hs-hide-all-non-comment-function
                 #'davidc-cpp-hs-hide-all-non-namespace)))
+
+(defun davidc-css-forward-block (_arg)
+  "Move forward over a CSS block by finding the matching closing brace."
+  (let ((depth 1))
+    (forward-char 1)
+    (while (and (> depth 0) (re-search-forward "[{}]" nil t))
+      (unless (nth 8 (syntax-ppss))
+        (if (string= (match-string 0) "{")
+            (setq depth (1+ depth))
+          (setq depth (1- depth)))))
+    (= depth 0)))
+
+(defun davidc-css-hideshow-setup ()
+  "Set up custom hideshow behaviour for CSS mode.
+Uses buffer-local variables instead of `hs-special-modes-alist'
+to ensure hideshow works regardless of syntax table support."
+  (when (derived-mode-p 'css-mode 'css-ts-mode)
+    (setq-local hs-block-start-regexp "{")
+    (setq-local hs-block-end-regexp "}")
+    (setq-local hs-forward-sexp-func #'davidc-css-forward-block)
+    (setq-local hs-hide-all-non-comment-function nil)))
+
+(defun davidc-js-hideshow-setup ()
+  "Set up custom hideshow behaviour for JavaScript mode."
+  (add-to-list 'hs-special-modes-alist
+               '(js-mode
+                 "{" "}" "//" forward-sexp
+                 hs-c-like-adjust-block-beginning
+                 nil nil nil)))
+
+(defun davidc-mhtml-hs-forward (arg)
+  "Move forward over an HTML/embedded block for hideshow.
+When point is in an embedded CSS/JS submode, use `forward-sexp'.
+Otherwise, skip forward past the HTML tag element using
+`sgml-skip-tag-forward'."
+  (interactive "P")
+  (pcase (get-text-property (point) 'mhtml-submode)
+    (`nil (sgml-skip-tag-forward 1))
+    (submode (forward-sexp 1))))
+
+(defun davidc-html-hideshow-setup ()
+  "Set up custom hideshow behaviour for HTML mode."
+  (add-to-list 'hs-special-modes-alist
+               '(mhtml-mode
+                   "{\\|<[^/>]+?"
+                 "}\\|</[^/>]*[^/]>"
+                 "<!--"
+                 davidc-mhtml-hs-forward
+                 nil nil nil nil)))
+
+(defun davidc-json-hs-hide-all-nested ()
+  "Hide nested JSON blocks, keeping the top level visible.
+Only hides blocks that are not at the top level of the JSON structure."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "{" nil t)
+      (backward-char)
+      (when (and (funcall hs-looking-at-block-start-p-func)
+                 (> (car (syntax-ppss)) 0))
+        (hs-hide-block-at-point t))
+      (forward-char 1))))
+
+(defun davidc-json-hideshow-setup ()
+  "Set up custom hideshow behaviour for JSON mode."
+  (add-to-list 'hs-special-modes-alist
+               '(js-json-mode
+                 "{" "}" nil forward-sexp
+                 nil nil nil nil))
+  (when (derived-mode-p 'js-json-mode)
+    (setq-local hs-hide-all-non-comment-function
+                #'davidc-json-hs-hide-all-nested)))
 
 (provide 'davidc-hideshow)
