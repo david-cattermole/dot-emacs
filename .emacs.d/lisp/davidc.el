@@ -298,4 +298,42 @@ In other buffers: toggle symbol highlight lock."
   (setq truncate-lines (not truncate-lines)))
 
 
+(defun davidc-jump-to-matching-paren ()
+  "Jump to the matching delimiter at or near point.
+
+If point is on an opening delimiter (e.g.  (, [, {, <), jump to
+its matching closer.
+If point is on a closing delimiter (e.g.  ), ], }, >), jump to
+its matching opener.
+If point is inside a balanced expression, jump to the matching
+end of the enclosing expression.
+
+This is a non-evil equivalent of `evil-jump-item' (Vim's `%')."
+  (interactive)
+  (let ((syntax (syntax-after (point))))
+    (cond
+     ;; On an opening paren/delimiter (syntax class 4).
+     ((and syntax (= (syntax-class syntax) 4))
+      (forward-sexp)
+      (backward-char))
+     ;; On a closing paren/delimiter (syntax class 5).
+     ((and syntax (= (syntax-class syntax) 5))
+      (up-list -1))
+     ;; Otherwise, try to jump from inside an expression to its
+     ;; matching end.
+     (t
+      (condition-case nil
+          (progn
+            (backward-up-list)
+            (forward-sexp)
+            (backward-char))
+        (error
+         (condition-case nil
+             (backward-sexp)
+           (error
+            (condition-case nil
+                (forward-sexp)
+              (error (message "No matching delimiter found")))))))))))
+
+
 (provide 'davidc)

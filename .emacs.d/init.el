@@ -490,6 +490,10 @@ Different computers can use different default values by customizing this variabl
 ;; (CTRL + ALT + Shift + Left arrow)
 (global-set-key (kbd "C-M-S-<left>") 'backward-sexp)
 
+;; Jump to matching delimiter (like Vim's `%' / `evil-jump-item').
+;; (CTRL + ALT + Return)
+(global-set-key (kbd "C-M-<return>") 'davidc-jump-to-matching-paren)
+
 ;; Move text up or down.
 (global-set-key (kbd "M-<down>") 'davidc-move-line-or-region-down)
 (global-set-key (kbd "M-<up>") 'davidc-move-line-or-region-up)
