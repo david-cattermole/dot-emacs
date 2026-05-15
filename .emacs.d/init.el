@@ -147,6 +147,11 @@ Possible values: \\='ruff or \\='black."
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-sgml nil
+  "Use enhanced HTML/SGML tag navigation keybindings."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-flymake-jshint nil
   "Use jshint with flymake for JavaScript linting."
   :type 'boolean
@@ -416,7 +421,11 @@ Different computers can use different default values by customizing this variabl
     (require 'davidc-restart)
     ))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Enhanced HTML/SGML tag navigation.
+(when davidc-config-use-sgml
+  (require 'davidc-sgml))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Automatic highlighting of lines.
 (add-hook 'find-file-hook 'davidc-highlight-it)
 
@@ -845,6 +854,22 @@ Different computers can use different default values by customizing this variabl
               (add-hook 'after-save-hook 'davidc-flymake-on-save nil t)
               (davidc-flymake-html-htmlhint-setup)))
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; HTML/SGML Tag Navigation
+;;
+;; Enhanced directional keybindings for navigating HTML/SGML tags.
+;;
+;; C-c C-<right>  - Skip to next tag (forward).
+;; C-c C-<left>   - Skip to previous tag (backward).
+;; C-c C-<up>     - Jump up to parent tag.
+;; C-c C-<down>   - Jump down into first child tag.
+;;
+(when davidc-config-use-sgml
+  (add-hook 'sgml-mode-hook 'davidc-sgml-setup-keybindings)
+  (add-hook 'html-mode-hook 'davidc-sgml-setup-keybindings)
+  (add-hook 'mhtml-mode-hook 'davidc-sgml-setup-keybindings))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

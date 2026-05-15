@@ -114,6 +114,7 @@
  '(davidc-config-use-rsl-mode nil)
  '(davidc-config-use-rust-mode t)
  '(davidc-config-use-server t)
+ '(davidc-config-use-sgml nil)
  '(davidc-config-use-skeletons t)
  '(davidc-config-use-string-inflection t)
  '(davidc-config-use-symbol-highlight t)
