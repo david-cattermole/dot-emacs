@@ -24,6 +24,11 @@ Set this variable before loading this package to use a custom path.")
   "Path to the prettier executable for HTML, JavaScript, CSS, JSON, and Markdown formatting.
 Set this variable before loading this package to use a custom path.")
 
+(defvar davidc-format-python-formatter 'ruff
+  "Formatter to use for Python region and buffer formatting.
+Possible values: `ruff' or `black'.
+Set this variable before loading this package to use a custom formatter.")
+
 
 ;; Tools
 (defun davidc-format-region-c++ ()
@@ -98,19 +103,46 @@ Passes the full buffer file context; only the selected lines are modified."
 
 (defun davidc-format-region-python ()
   "Format a region of Python code.
-The formatter is controlled by `davidc-config-python-region-formatter'."
+The formatter is controlled by `davidc-format-python-formatter'."
   (interactive)
   (cond
-   ((eq davidc-config-python-region-formatter 'ruff)
+   ((eq davidc-format-python-formatter 'ruff)
     (call-interactively 'davidc-format-region-ruff))
    (t
     (call-interactively 'davidc-format-region-black))))
 
-(defun davidc-format-buffer-python ()
-  "Formats a Python buffer.
-For now we use 'python black'."
+;; TODO: Refactor davidc--format-python-buffer-with-file and
+;; davidc--format-python-region-with-file to share common logic.
+(defun davidc--format-python-buffer-with-file (program args)
+  "Write the buffer to a temp .py file, run PROGRAM with ARGS and the file path.
+Replaces buffer contents with the formatted result on success."
+  (let ((temp-file (make-temp-file "python-format" nil ".py")))
+    (unwind-protect
+        (progn
+          (write-region (point-min) (point-max) temp-file nil :quiet)
+          (let ((exit-code (apply #'call-process program nil nil nil
+                                  (append args (list temp-file)))))
+            (if (zerop exit-code)
+                (insert-file-contents temp-file nil nil nil t)
+              (message "%s failed (exit code %d)" program exit-code))))
+      (delete-file temp-file))))
+
+(defun davidc-format-buffer-ruff ()
+  "Format a Python buffer using 'ruff format'."
   (interactive)
-  (call-interactively 'python-black-buffer))
+  (davidc--format-python-buffer-with-file
+   davidc-python-format-ruff-path
+   (list "format")))
+
+(defun davidc-format-buffer-python ()
+  "Format a Python buffer.
+The formatter is controlled by `davidc-format-python-formatter'."
+  (interactive)
+  (cond
+   ((eq davidc-format-python-formatter 'ruff)
+    (call-interactively 'davidc-format-buffer-ruff))
+   (t
+    (call-interactively 'python-black-buffer))))
 
 (defun davidc-format-buffer-rust ()
   "Format a Rust buffer.

@@ -68,7 +68,7 @@
  '(davidc-config-color-theme 'modus-vivendi)
  '(davidc-config-override-ispell-binary t)
  '(davidc-config-override-rg-binary nil)
- '(davidc-config-python-region-formatter 'ruff)
+ '(davidc-format-python-formatter 'ruff)
  '(davidc-config-use-bat-mode t)
  '(davidc-config-use-clang-format t)
  '(davidc-config-use-cmake-mode t)
