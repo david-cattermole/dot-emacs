@@ -145,6 +145,11 @@
   :type 'boolean
   :group 'davidc-config)
 
+(defcustom davidc-config-use-sailfish-template-mode nil
+  "Use sailfish-template-mode for Sailfish Rust template files."
+  :type 'boolean
+  :group 'davidc-config)
+
 (defcustom davidc-config-use-flymake-jshint nil
   "Use jshint with flymake for JavaScript linting."
   :type 'boolean
@@ -752,6 +757,19 @@ Different computers can use different default values by customizing this variabl
    (require 'rsl-mode)
    (setq auto-mode-alist (append '(("\\.sl$" . rsl-mode)) auto-mode-alist))
    )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Sailfish Template Mode for Rust HTML templates.
+(when davidc-config-use-sailfish-template-mode
+   (require 'davidc-sailfish)
+   (add-to-list 'auto-mode-alist '("\\.stpl\\'" . sailfish-template-mode))
+   (add-hook 'sailfish-template-mode-hook
+             (lambda ()
+               ;; Flymake is explicitly disabled because template
+               ;; syntax is not valid HTML and triggers many linting
+               ;; errors.
+               (flymake-mode -1))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

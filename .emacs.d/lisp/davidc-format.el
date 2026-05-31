@@ -263,6 +263,8 @@ entire buffer is formatted instead:
 - Markdown (davidc-markdown-mode)"
   (interactive)
   (cond
+   ((string-equal major-mode "sailfish-template-mode")
+    (message "Region formatting is disabled for Sailfish template buffers"))
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-region-c++))
    ((string-equal major-mode "python-mode") (call-interactively 'davidc-format-region-python))
    ((string-equal major-mode "rust-mode")
@@ -307,6 +309,8 @@ Supported major modes:
 - Markdown (davidc-markdown-mode) - with prettier"
   (interactive)
   (cond
+   ((string-equal major-mode "sailfish-template-mode")
+    (message "Buffer formatting is disabled for Sailfish template buffers"))
    ((string-equal major-mode "c++-mode") (call-interactively 'davidc-format-buffer-c++))
    ((string-equal major-mode "python-mode") (call-interactively 'davidc-format-buffer-python))
    ((string-equal major-mode "rust-mode") (call-interactively 'davidc-format-buffer-rust))

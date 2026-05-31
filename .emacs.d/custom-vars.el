@@ -113,6 +113,7 @@
  '(davidc-config-use-rib-mode nil)
  '(davidc-config-use-rsl-mode nil)
  '(davidc-config-use-rust-mode t)
+ '(davidc-config-use-sailfish-template-mode nil)
  '(davidc-config-use-server t)
  '(davidc-config-use-sgml nil)
  '(davidc-config-use-skeletons t)
