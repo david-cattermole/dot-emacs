@@ -521,7 +521,7 @@ Different computers can use different default values by customizing this variabl
 ;; 'C-x Tab' key will setup an interactive mode to indent selected code.
 ;; Note: <backtab> is used for outline folding in prog-mode
 
-;; Press CTRL+RETURN to Compile
+;; Press SHIFT+F5 to Compile
 (global-set-key (kbd "S-<f5>") 'compile)
 
 ;; The opposite of `fill-paragraph` (M-q), joining all lines in the
