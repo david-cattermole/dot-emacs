@@ -10,6 +10,7 @@
 ;;
 
 (require 'font-lock)
+(require 'outline)
 
 (defgroup davidc-markdown nil
   "Markdown editing mode with comprehensive syntax highlighting."
@@ -371,6 +372,25 @@ Customization:
   (setq-local fill-column 80)
   (setq-local paragraph-start "\\s-*$\\|\\s-*[#>*+-]\\|\\s-*[0-9]+\\.")
   (setq-local paragraph-separate "\\s-*$")
+
+  ;; Outline-based folding (like org-mode)
+  ;;
+  ;; ATX-style headings: 1-6 '#' characters at the start of a line.
+  ;; Set `outline-minor-mode-cycle' so TAB cycles visibility on headings
+  ;; and falls through to normal TAB elsewhere, matching org-mode behavior.
+  (setq-local outline-regexp "\\(#\\{1,6\\}\\) ")
+  (setq-local outline-heading-end-regexp "\n")
+  (setq-local outline-level
+              (lambda ()
+                (save-excursion
+                  (beginning-of-line)
+                  (let ((end (line-end-position)))
+                    (cond
+                     ((re-search-forward "^#+" end t)
+                      (min 6 (- (match-end 0) (match-beginning 0))))
+                     (t 7))))))
+  (setq outline-minor-mode-cycle t)
+  (outline-minor-mode 1)
 
   ;; Force immediate fontification
   (font-lock-mode 1)
